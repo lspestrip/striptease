@@ -1,0 +1,10 @@
+{
+  "user_conf" : "~/.strip/conf.json",
+  "urls":
+  {
+    "schema" : "http",
+    "base" : "night-fury.oats.inaf.it:8000",
+    "login": "/rest/login",
+    "logout":"/rest/logout"
+  }
+}

@@ -29,10 +29,10 @@
      </widget>
     </item>
     <item row="1" column="1">
-     <widget class="QWidget" name="plot_dx" native="true"/>
+     <widget class="MyStaticMplCanvas" name="plot_dx" native="true"/>
     </item>
     <item row="1" column="0">
-     <widget class="QWidget" name="plot_sx" native="true"/>
+     <widget class="MyDynamicMplCanvas" name="plot_sx" native="true"/>
     </item>
     <item row="2" column="0">
      <widget class="QComboBox" name="combo_sx"/>
@@ -54,6 +54,20 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MyDynamicMplCanvas</class>
+   <extends>QWidget</extends>
+   <header location="global">widgets.plot.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>MyStaticMplCanvas</class>
+   <extends>QWidget</extends>
+   <header location="global">widgets.plot.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

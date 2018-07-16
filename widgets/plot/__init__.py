@@ -68,21 +68,3 @@ class MyDynamicMplCanvas(MyMplCanvas):
         self.axes.cla()
         self.axes.plot([0, 1, 2, 3], l, 'r')
         self.draw()
-
-
-
-# matplotlib stuff
-
-class ApplicationWindow(QtWidgets.QMainWindow):
-    def __init__(self):
-        super(ApplicationWindow, self).__init__()
-
-        self.ui = Ui_MainWindow()
-        self.ui.setupUi(self)
-
-
-def main():
-    app = QtWidgets.QApplication(sys.argv)
-    application = ApplicationWindow()
-    application.show()
-    sys.exit(app.exec_())

@@ -7,7 +7,6 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from widgets.plot import MyStaticMplCanvas,MyDynamicMplCanvas
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -21,12 +20,12 @@ class Ui_MainWindow(object):
         self.label.setMaximumSize(QtCore.QSize(16777215, 12))
         self.label.setObjectName("label")
         self.gridLayout_2.addWidget(self.label, 0, 1, 1, 1)
-        self.plot_dx = MyStaticMplCanvas(self.centralwidget, width=5, height=4, dpi=100)
+        self.plot_dx = MyStaticMplCanvas(self.centralwidget)
         self.plot_dx.setObjectName("plot_dx")
         self.gridLayout_2.addWidget(self.plot_dx, 1, 1, 1, 1)
-        #self.plot_sx = MyDynamicMplCanvas(self.centralwidget, width=5, height=4, dpi=100)
-        #self.plot_sx.setObjectName("plot_sx")
-        #elf.gridLayout_2.addWidget(self.plot_sx, 1, 0, 1, 1)
+        self.plot_sx = MyDynamicMplCanvas(self.centralwidget)
+        self.plot_sx.setObjectName("plot_sx")
+        self.gridLayout_2.addWidget(self.plot_sx, 1, 0, 1, 1)
         self.combo_sx = QtWidgets.QComboBox(self.centralwidget)
         self.combo_sx.setObjectName("combo_sx")
         self.gridLayout_2.addWidget(self.combo_sx, 2, 0, 1, 1)
@@ -49,3 +48,5 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.label.setText(_translate("MainWindow", "TextLabel"))
+
+from widgets.plot import MyDynamicMplCanvas, MyStaticMplCanvas
