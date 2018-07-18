@@ -1,41 +1,40 @@
-#from program_viewer import main
-from PyQt5 import QtCore, QtWidgets
-import sys
-import os
-import websocket
-import json
+from widgets.plot import MplCanvas
+from web.ws.base import WsBase
+from config import Config
+import asyncio
+from threading import Thread
 import numpy as np
 import time
 import astropy.time as at
 import datetime as dt
-from program_viewer.ui.main_window import Ui_MainWindow
-from web.rest.base import Connection
-from web.ws.base import WsBase
 
-N_SEC = 20
+def f(loop):
+    asyncio.set_event_loop(loop)
+    loop.run_forever()
 
-class ApplicationWindow(QtWidgets.QMainWindow):
-    def __init__(self):
-        super(ApplicationWindow, self).__init__()
+class PolMplCanvas(MplCanvas):
+    def __init__(self, *args, **kwargs):
+        MyMplCanvas.__init__(self, *args, **kwargs)
+        self.loop = asyncio.new_event_loop()
+        self.th = Thread(target=f, args=(self.loop,))
 
-        self.conn = Connection()
-        self.conn.login('stefano.sartor','lucciola88')
+    def start(self,conn,pol,sec=30,data=['DEMU1','DEMU1','DEMQ1','DEMQ2','PWRQ1','PWRQ2','PWRU1','PWRU2']):
+        self.url = Config().get_ws_pol(pol)
+        self.ws  = WsBase(conn)
+        self.sec = sec
+        self.items = data
 
-        self.ws_dx =  WsBase(self.conn)
-        self.ws_sx =  WsBase(self.conn)
+        self.loop.call_soon_threadsafe(asyncio.async,self.recv())
+        self.th.start()
 
-        self.ui = Ui_MainWindow()
-        self.ui.setupUi(self)
-
-
-    async def __recv(self,url,ws,wdg):
-        await ws.connect(url)
+    async def recv(self):
+        await ws.connect(self.url)
         t0 = time.time()
 
         data = np.ndarray([0], dtype=np.int32)
         ts = np.ndarray([0],dtype=dt.datetime)
 
-        while True:
+            while True:
             pkt = await ws.recv()
             t1 = time.time()
             tt = at.Time(pkt['mjd'], format='mjd')
@@ -66,9 +65,3 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 wdg.axes.cla()
                 wdg.axes.plot(ts,data)
                 wdg.draw()
-
-    async def recv_dx(self,url):
-        await self.__recv(url,self.ws_dx,self.ui.plot_dx)
-
-    async def recv_sx(self,url):
-        await self.__recv(url,self.ws_sx,self.ui.plot_sx)

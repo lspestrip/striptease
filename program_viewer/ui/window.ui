@@ -14,31 +14,60 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout_2">
-    <item row="0" column="1">
-     <widget class="QLabel" name="label">
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>12</height>
-       </size>
-      </property>
-      <property name="text">
-       <string>TextLabel</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="1">
-     <widget class="MyStaticMplCanvas" name="plot_dx" native="true"/>
-    </item>
-    <item row="1" column="0">
-     <widget class="MyDynamicMplCanvas" name="plot_sx" native="true"/>
+   <layout class="QGridLayout" name="gridLayout_2" rowstretch="1,1,0">
+    <item row="0" column="0">
+     <widget class="StaticMplCanvas" name="plot_sx" native="true"/>
     </item>
     <item row="2" column="0">
-     <widget class="QComboBox" name="combo_sx"/>
+     <layout class="QGridLayout" name="gridLayout">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetFixedSize</enum>
+      </property>
+      <item row="0" column="0">
+       <widget class="QPushButton" name="pushButton_2">
+        <property name="text">
+         <string>PushButton</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="pushButton_6">
+        <property name="text">
+         <string>PushButton</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QPushButton" name="pushButton_5">
+        <property name="text">
+         <string>PushButton</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QPushButton" name="pushButton_4">
+        <property name="text">
+         <string>PushButton</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4">
+       <widget class="QPushButton" name="pushButton_3">
+        <property name="text">
+         <string>PushButton</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
-    <item row="2" column="1">
-     <widget class="QComboBox" name="combo_dx"/>
+    <item row="1" column="0">
+     <widget class="StaticMplCanvas" name="plot_sx_b" native="true"/>
+    </item>
+    <item row="1" column="1">
+     <widget class="StaticMplCanvas" name="plot_dx_b" native="true"/>
+    </item>
+    <item row="0" column="1">
+     <widget class="StaticMplCanvas" name="plot_dx" native="true"/>
     </item>
    </layout>
   </widget>
@@ -56,13 +85,7 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>MyDynamicMplCanvas</class>
-   <extends>QWidget</extends>
-   <header location="global">widgets.plot.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>MyStaticMplCanvas</class>
+   <class>StaticMplCanvas</class>
    <extends>QWidget</extends>
    <header location="global">widgets.plot.h</header>
    <container>1</container>

@@ -17,10 +17,7 @@ from numpy import arange, sin, pi
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-progname = os.path.basename(sys.argv[0])
-
-
-class MyMplCanvas(FigureCanvas):
+class MplCanvas(FigureCanvas):
     """Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
 
     def __init__(self, parent=None, width=5, height=4, dpi=100):
@@ -41,7 +38,7 @@ class MyMplCanvas(FigureCanvas):
         pass
 
 
-class MyStaticMplCanvas(MyMplCanvas):
+class StaticMplCanvas(MplCanvas):
     """Simple canvas with a sine plot."""
 
     def compute_initial_figure(self):
@@ -50,7 +47,7 @@ class MyStaticMplCanvas(MyMplCanvas):
         self.axes.plot(t, s)
 
 
-class MyDynamicMplCanvas(MyMplCanvas):
+class DynamicMplCanvas(MplCanvas):
     """A canvas that updates itself every second with a new plot."""
 
     def __init__(self, *args, **kwargs):
