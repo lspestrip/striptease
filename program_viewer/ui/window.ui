@@ -16,7 +16,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2" rowstretch="1,1,0">
     <item row="0" column="0">
-     <widget class="StaticMplCanvas" name="plot_sx" native="true"/>
+     <widget class="PolMplCanvas" name="plot_sx" native="true"/>
     </item>
     <item row="2" column="0">
      <layout class="QGridLayout" name="gridLayout">
@@ -61,13 +61,13 @@
      </layout>
     </item>
     <item row="1" column="0">
-     <widget class="StaticMplCanvas" name="plot_sx_b" native="true"/>
+     <widget class="PolMplCanvas" name="plot_sx_b" native="true"/>
     </item>
     <item row="1" column="1">
-     <widget class="StaticMplCanvas" name="plot_dx_b" native="true"/>
+     <widget class="PolMplCanvas" name="plot_dx_b" native="true"/>
     </item>
     <item row="0" column="1">
-     <widget class="StaticMplCanvas" name="plot_dx" native="true"/>
+     <widget class="PolMplCanvas" name="plot_dx" native="true"/>
     </item>
    </layout>
   </widget>
@@ -85,9 +85,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>StaticMplCanvas</class>
+   <class>PolMplCanvas</class>
    <extends>QWidget</extends>
-   <header location="global">widgets.plot.h</header>
+   <header location="global">widgets.plot.pol.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

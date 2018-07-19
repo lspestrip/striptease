@@ -37,5 +37,5 @@ class Config(object):
     def get_password(self):
         return self.password
 
-    def get_ws_pol(pol):
-        return 'ws://' + self.conf['urls']['ws_pol_base'] + '/' + pol
+    def get_ws_pol(self,pol):
+        return 'ws://' + self.conf['urls']['base'] + self.conf['urls']['ws_pol_base'] + '/' + pol

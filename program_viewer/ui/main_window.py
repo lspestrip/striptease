@@ -16,7 +16,7 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout_2 = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout_2.setObjectName("gridLayout_2")
-        self.plot_sx = StaticMplCanvas(self.centralwidget)
+        self.plot_sx = PolMplCanvas(self.centralwidget)
         self.plot_sx.setObjectName("plot_sx")
         self.gridLayout_2.addWidget(self.plot_sx, 0, 0, 1, 1)
         self.gridLayout = QtWidgets.QGridLayout()
@@ -38,13 +38,13 @@ class Ui_MainWindow(object):
         self.pushButton_3.setObjectName("pushButton_3")
         self.gridLayout.addWidget(self.pushButton_3, 0, 4, 1, 1)
         self.gridLayout_2.addLayout(self.gridLayout, 2, 0, 1, 1)
-        self.plot_sx_b = StaticMplCanvas(self.centralwidget)
+        self.plot_sx_b = PolMplCanvas(self.centralwidget)
         self.plot_sx_b.setObjectName("plot_sx_b")
         self.gridLayout_2.addWidget(self.plot_sx_b, 1, 0, 1, 1)
-        self.plot_dx_b = StaticMplCanvas(self.centralwidget)
+        self.plot_dx_b = PolMplCanvas(self.centralwidget)
         self.plot_dx_b.setObjectName("plot_dx_b")
         self.gridLayout_2.addWidget(self.plot_dx_b, 1, 1, 1, 1)
-        self.plot_dx = StaticMplCanvas(self.centralwidget)
+        self.plot_dx = PolMplCanvas(self.centralwidget)
         self.plot_dx.setObjectName("plot_dx")
         self.gridLayout_2.addWidget(self.plot_dx, 0, 1, 1, 1)
         self.gridLayout_2.setRowStretch(0, 1)
@@ -70,4 +70,4 @@ class Ui_MainWindow(object):
         self.pushButton_4.setText(_translate("MainWindow", "PushButton"))
         self.pushButton_3.setText(_translate("MainWindow", "PushButton"))
 
-from widgets.plot import StaticMplCanvas
+from widgets.plot.pol import PolMplCanvas
