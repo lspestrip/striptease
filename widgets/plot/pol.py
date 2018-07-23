@@ -71,6 +71,13 @@ class PolMplCanvas(MplCanvas):
                 self.data[hk]['ts'][0] = ts
                 self.data[hk]['ts'] = np.roll(self.data[hk]['ts'],-1)
 
+    def stop(self):
+        self.loop.stop()
+        print("loop stopped")
+
+        if self.th.is_alive():
+            self.th.join()
+
     async def recv(self):
         await self.ws.connect(self.url)
         t0 = time.time()
@@ -82,6 +89,7 @@ class PolMplCanvas(MplCanvas):
 
             if t1 - t0 > 0.5:
                 t0 = t1
+                dt0 = time.time()
                 self.axes.cla()
                 for i in self.items:
                     if i in SCI:
@@ -90,4 +98,4 @@ class PolMplCanvas(MplCanvas):
                         self.axes.plot(self.data[i]['ts'],self.data[i]['data'])
 
                 self.draw()
-                print(self.ws.ws.messages.qsize())
+                print((time.time()-dt0)*1000)

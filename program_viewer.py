@@ -15,10 +15,10 @@ def f(loop):
     print("STOPPED")
 
 t0 = Thread(target=f, args=(loop0,))
-t0.start()
+#t0.start()
 
 t1 = Thread(target=f, args=(loop1,))
-t1.start()
+#t1.start()
 
 if __name__ == "__main__":
     import time
@@ -29,6 +29,7 @@ if __name__ == "__main__":
     #loop1.call_soon_threadsafe(asyncio.async,application.recv_sx('ws://night-fury.oats.inaf.it:8000/ws/hk/I1'))
     ec = app.exec_()
     print("stop loop")
-    loop0.stop()
-    loop1.stop()
+    #loop0.stop()
+    #loop1.stop()
+    application.stop()
     sys.exit(ec)

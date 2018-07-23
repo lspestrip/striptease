@@ -37,6 +37,8 @@ class MplCanvas(FigureCanvas):
     def compute_initial_figure(self):
         pass
 
+    def stop(self):
+        pass
 
 class StaticMplCanvas(MplCanvas):
     """Simple canvas with a sine plot."""
