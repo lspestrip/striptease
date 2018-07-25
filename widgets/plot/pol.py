@@ -27,7 +27,7 @@ class PolMplCanvas(MplCanvas):
         for s in SCI:
             self.data[s] = np.ndarray([0], dtype=np.float64)
 
-        self.data['ts'] = np.ndarray([0],dtype=np.float64)
+        self.data['ts'] = np.ndarray([0],dtype=dt.datetime)
 
         for hk in self.conf.conf['daq_addr']['hk']:
             self.data[hk['name']] = {
@@ -45,8 +45,7 @@ class PolMplCanvas(MplCanvas):
         self.th.start()
 
     def __append(self,pkt):
-        ts = pkt['mjd']
-        tts = at.Time(pkt['mjd'], format='mjd').to_datetime()
+        ts = at.Time(pkt['mjd'], format='mjd').to_datetime()
 
         if self.data['ts'].size == 0 or (ts - self.data['ts'][0]).total_seconds() <= self.sec:
             for s in SCI:
@@ -74,8 +73,6 @@ class PolMplCanvas(MplCanvas):
 
     def stop(self):
         self.loop.stop()
-        print("loop stopped")
-
         if self.th.is_alive():
             self.th.join()
 
@@ -85,12 +82,13 @@ class PolMplCanvas(MplCanvas):
 
         while True:
             pkt = await self.ws.recv()
+
             t1 = time.time()
             self.__append(pkt)
 
             if t1 - t0 > 0.5:
                 t0 = t1
-                dt0 = time.time()
+                dt0=time.time()
                 self.axes.cla()
                 for i in self.items:
                     if i in SCI:

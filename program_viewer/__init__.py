@@ -25,13 +25,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.ui.plot_sx.start(self.conn,'R0')
-#        self.ui.plot_dx.start(self.conn,'R1',items=['VD0_HK','VD1_HK'])
-#        self.ui.plot_sx_b.start(self.conn,'R0',items=['PWRQ1','PWRQ2','PWRU1','PWRU2'])
-#        self.ui.plot_dx_b.start(self.conn,'R0',items=['DEMU1','DEMU2','DEMQ1','DEMQ2'])
+        self.ui.plot_sx.start(self.conn,'R0',items=['DEMU1'])
+        #self.ui.plot_dx.start(self.conn,'R1',items=['VD0_HK','VD1_HK'])
+        #self.ui.plot_sx_b.start(self.conn,'R0',items=['PWRQ1','PWRQ2','PWRU1','PWRU2'])
+        #self.ui.plot_dx_b.start(self.conn,'R0',items=['DEMU1','DEMU2','DEMQ1','DEMQ2'])
 
     def stop(self):
         self.ui.plot_sx.stop()
-#        self.ui.plot_dx.stop()
-#        self.ui.plot_sx_b.stop()
-#        self.ui.plot_dx_b.stop()
+        #self.ui.plot_dx.stop()
+        #self.ui.plot_sx_b.stop()
+        #self.ui.plot_dx_b.stop()
