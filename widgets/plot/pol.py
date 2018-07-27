@@ -121,6 +121,7 @@ class PolMplCanvas(MplCanvas):
                             min = np.nanmin([np.min(self.data[i]['data']),min])
                             max = np.nanmax([np.max(self.data[i]['data']),max])
 
-                self.axes.set_ylim([min,max])
-                self.flush_events()
-                self.draw()
+                if not (np.isnan(min) or np.isnan(max)):
+                    self.axes.set_ylim([min,max])
+                    self.flush_events()
+                    self.draw()
