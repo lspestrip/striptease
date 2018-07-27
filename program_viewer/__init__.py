@@ -11,13 +11,14 @@ import datetime as dt
 from program_viewer.ui.main_window import Ui_MainWindow
 from web.rest.base import Connection
 from web.ws.base import WsBase
+import os
 
 class ApplicationWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(ApplicationWindow, self).__init__()
 
         self.conn = Connection()
-        self.conn.login('stefano.sartor','lucciola88')
+        self.conn.login(os.environ['STRIP_USER'],os.environ['STRIP_PASSWORD'])
 
         self.ws_dx =  WsBase(self.conn)
         self.ws_sx =  WsBase(self.conn)

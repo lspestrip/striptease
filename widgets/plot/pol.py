@@ -17,6 +17,7 @@ def f(loop):
 
 SCI = ['DEMU1','DEMU2','DEMQ1','DEMQ2','PWRQ1','PWRQ2','PWRU1','PWRU2']
 
+
 class PolMplCanvas(MplCanvas):
     def __init__(self, *args, **kwargs):
         MplCanvas.__init__(self, *args, **kwargs)
@@ -41,11 +42,13 @@ class PolMplCanvas(MplCanvas):
         #plt.pause(0.000000000001)
         for i in self.items:
             if i in SCI:
-                self.data[i]['line'], = self.axes.plot(self.data['ts'],self.data[i]['data'])
+                self.data[i]['line'], = self.axes.plot(self.data['ts'],self.data[i]['data'],label=i)
             else:
-                self.data[i]['line'], = self.axes.plot(self.data[i]['ts'],self.data[i]['data'])
+                self.data[i]['line'], = self.axes.plot(self.data[i]['ts'],self.data[i]['data'],label=i)
 
+        self.axes.legend(loc='upper right')
         self.axes.set_xlim([0,self.wsec])
+        self.date = self.axes.text(0.01,0.01,"",verticalalignment='bottom', horizontalalignment='left',transform=self.axes.transAxes)
 
         ##self.background = self.copy_from_bbox(self.axes.bbox)
 
@@ -105,6 +108,7 @@ class PolMplCanvas(MplCanvas):
             self.__append(pkt)
 
             if t1 - t0 > self.rsec:
+                date_ts = at.Time(pkt['mjd'], format='mjd').to_datetime()
                 t0 = t1
                 min = np.nan
                 max = np.nan
@@ -122,6 +126,8 @@ class PolMplCanvas(MplCanvas):
                             max = np.nanmax([np.max(self.data[i]['data']),max])
 
                 if not (np.isnan(min) or np.isnan(max)):
-                    self.axes.set_ylim([min,max])
+                    exc = (max-min) / 100 * 2
+                    self.axes.set_ylim([min-exc,max+exc])
+                    self.date.set_text(date_ts.strftime("%H:%M:%S.%f"))
                     self.flush_events()
                     self.draw()
