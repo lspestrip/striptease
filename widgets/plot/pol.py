@@ -8,6 +8,7 @@ import time
 import astropy.time as at
 import datetime as dt
 import gc
+import matplotlib.pyplot as plt
 
 def f(loop):
     asyncio.set_event_loop(loop)
@@ -25,31 +26,48 @@ class PolMplCanvas(MplCanvas):
         self.data={}
 
         for s in SCI:
-            self.data[s] = np.ndarray([0], dtype=np.float64)
+            self.data[s] = {'data':np.ndarray([0],dtype=np.float64)}
 
-        self.data['ts'] = np.ndarray([0],dtype=dt.datetime)
+        self.data['ts'] = np.ndarray([0],dtype=np.float64)
 
         for hk in self.conf.conf['daq_addr']['hk']:
             self.data[hk['name']] = {
                 'data': np.ndarray([0], dtype=np.float64),
-                'ts'  : np.ndarray([0], dtype=dt.datetime)
+                'ts'  : np.ndarray([0], dtype=np.float64)
                 }
 
-    def start(self,conn,pol,sec=30,items=SCI):
+    def prepare_canvas(self):
+        self.draw()   # note that the first draw comes before setting data
+        #plt.pause(0.000000000001)
+        for i in self.items:
+            if i in SCI:
+                self.data[i]['line'], = self.axes.plot(self.data['ts'],self.data[i]['data'])
+            else:
+                self.data[i]['line'], = self.axes.plot(self.data[i]['ts'],self.data[i]['data'])
+
+        self.axes.set_xlim([0,self.wsec])
+
+        ##self.background = self.copy_from_bbox(self.axes.bbox)
+
+    def start(self,conn,pol,window_sec=30,items=SCI,refresh=0.33):
         self.url = self.conf.get_ws_pol(pol)
         self.ws  = WsBase(conn)
-        self.sec = sec
+        self.wsec = window_sec
+        self.rsec = refresh
         self.items = items
+
+        self.prepare_canvas()
 
         self.loop.call_soon_threadsafe(asyncio.async,self.recv())
         self.th.start()
 
     def __append(self,pkt):
-        ts = at.Time(pkt['mjd'], format='mjd').to_datetime()
+#        ts = at.Time(pkt['mjd'], format='mjd').to_datetime()
+        ts = pkt['mjd']
 
-        if self.data['ts'].size == 0 or (ts - self.data['ts'][0]).total_seconds() <= self.sec:
+        if self.data['ts'].size == 0 or (ts - self.data['ts'][0])*86400 <= self.wsec:
             for s in SCI:
-                self.data[s] = np.append(self.data[s],pkt[s]) #TODO do calibration
+                self.data[s]['data'] = np.append(self.data[s]['data'],pkt[s]) #TODO do calibration
 
             self.data['ts']  = np.append(self.data['ts'],ts)
 
@@ -58,8 +76,8 @@ class PolMplCanvas(MplCanvas):
                 self.data[hk]['ts']  = np.append(self.data[hk]['ts'],ts)
         else:
             for s in SCI:
-                self.data[s][0] = pkt[s] #TODO do calibration
-                self.data[s] = np.roll(self.data[s],-1)
+                self.data[s]['data'][0] = pkt[s] #TODO do calibration
+                self.data[s]['data'] = np.roll(self.data[s]['data'],-1)
 
             self.data['ts'][0]  = ts
             self.data['ts'] = np.roll(self.data['ts'],-1)
@@ -86,15 +104,23 @@ class PolMplCanvas(MplCanvas):
             t1 = time.time()
             self.__append(pkt)
 
-            if t1 - t0 > 0.5:
+            if t1 - t0 > self.rsec:
                 t0 = t1
-                dt0=time.time()
-                self.axes.cla()
+                min = np.nan
+                max = np.nan
                 for i in self.items:
                     if i in SCI:
-                        self.axes.plot(self.data['ts'],self.data[i])
+                        self.data[i]['line'].set_xdata((pkt['mjd'] - self.data['ts'])*86400)
+                        self.data[i]['line'].set_ydata(self.data[i]['data'])
+                        min = np.nanmin([np.min(self.data[i]['data']),min])
+                        max = np.nanmax([np.max(self.data[i]['data']),max])
                     else:
-                        self.axes.plot(self.data[i]['ts'],self.data[i]['data'])
+                        if self.data[i]['data'].size > 0:
+                            self.data[i]['line'].set_xdata((pkt['mjd'] - self.data[i]['ts'])*86400)
+                            self.data[i]['line'].set_ydata(self.data[i]['data'])
+                            min = np.nanmin([np.min(self.data[i]['data']),min])
+                            max = np.nanmax([np.max(self.data[i]['data']),max])
 
+                self.axes.set_ylim([min,max])
+                self.flush_events()
                 self.draw()
-                print((time.time()-dt0)*1000)

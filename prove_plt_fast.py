@@ -20,19 +20,19 @@ ws =  WsBase(conn)
 
 data={}
 for s in SCI:
-    data[s] = np.ndarray([SAMPLES], dtype=np.float64)
-    data[s].fill(np.NAN)
+    data[s] = np.ndarray([0], dtype=np.float64)
+    #data[s].fill(np.NAN)
 
-data['ts'] = np.ndarray([SAMPLES],dtype=np.float64)
-data['ts'].fill(np.NAN)
+data['ts'] = np.ndarray([0],dtype=np.float64)
+#data['ts'].fill(np.NAN)
 
 for hk in conf.conf['daq_addr']['hk']:
     data[hk['name']] = {
-        'data': np.ndarray([SAMPLES], dtype=np.float64),
-        'ts'  : np.ndarray([SAMPLES], dtype=np.float64)
+        'data': np.ndarray([0], dtype=np.float64),
+        'ts'  : np.ndarray([0], dtype=np.float64)
         }
-    data[hk['name']]['data'].fill(np.NAN)
-    data[hk['name']]['ts'].fill(np.NAN)
+#    data[hk['name']]['data'].fill(np.NAN)
+#    data[hk['name']]['ts'].fill(np.NAN)
 
 
 
@@ -45,19 +45,29 @@ async def recv():
     pkt = await ws.recv()
     ts = pkt['mjd']
 
-    for s in SCI:
-        data[s][0] = pkt[s] #TODO do calibration
-        data[s] = np.roll(data[s],-1)
+    if data['ts'].size == 0 or (ts - data['ts'][0])*86400 <= 30:
+        for s in SCI:
+            data[s] = np.append(data[s],pkt[s]) #TODO do calibration
 
-    data['ts'][0]  = ts
-    data['ts'] = np.roll(data['ts'],-1)
+        data['ts']  = np.append(data['ts'],ts)
 
-    for hk,val in pkt.get('hk',{}).items():
-        data[hk]['data'][0] = val #TODO do calibration
-        data[hk]['data'] = np.roll(data[hk]['data'],-1)
+        for hk,val in pkt.get('hk',{}).items():
+            data[hk]['data'] =  np.append(data[hk]['data'],val) #TODO do calibration
+            data[hk]['ts']  = np.append(data[hk]['ts'],ts)
+    else:
+        for s in SCI:
+            data[s][0] = pkt[s] #TODO do calibration
+            data[s] = np.roll(data[s],-1)
 
-        data[hk]['ts'][0] = ts
-        data[hk]['ts'] = np.roll(data[hk]['ts'],-1)
+        data['ts'][0]  = ts
+        data['ts'] = np.roll(data['ts'],-1)
+
+        for hk,val in pkt.get('hk',{}).items():
+            data[hk]['data'][0] = val #TODO do calibration
+            data[hk]['data'] = np.roll(data[hk]['data'],-1)
+
+            data[hk]['ts'][0] = ts
+            data[hk]['ts'] = np.roll(data[hk]['ts'],-1)
 
 
 def live_update_demo(blit = False):
@@ -83,8 +93,9 @@ def live_update_demo(blit = False):
 
     t_start = time.time()
     k=0.
-    i=0
-    while True:
+#    i=0
+#    while True:
+    for i in range(2000):
         t0=time.time()
         loop.run_until_complete(recv())
         tr = time.time()-t0
@@ -120,7 +131,8 @@ def live_update_demo(blit = False):
         #http://bastibe.de/2013-05-30-speeding-up-matplotlib.html
         #however with Qt4 (and TkAgg??) this is needed. It seems,using a different backend,
         #one can avoid plt.pause() and gain even more speed.
+    print(((time.time() - t_start)/(i+1)-tr)*1000)
 
 
-live_update_demo(True) # 28 fps
-#live_update_demo(False) # 18 fps
+#live_update_demo(True) # 28 fps
+live_update_demo(False) # 18 fps
