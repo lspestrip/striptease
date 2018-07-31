@@ -15,6 +15,10 @@ class Connection(object):
         self.session = requests.Session()
         self.id = None
 
+    def has_login(self):
+        return self.conf.get_user() is not None and self.conf.get_password() is not None
+
+
     def login(self,user=None,password=None):
         """login function, if user or password are not provided, it tries to
             find login credentials stored in user config file.        """

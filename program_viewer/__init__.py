@@ -11,6 +11,7 @@ import datetime as dt
 from program_viewer.ui.main_window import Ui_MainWindow
 from web.rest.base import Connection
 from web.ws.base import WsBase
+from widgets.login import LoginWidget
 import os
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -18,7 +19,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         super(ApplicationWindow, self).__init__()
 
         self.conn = Connection()
-        self.conn.login()
+        if self.conn.has_login():
+            self.conn.login()
+        else:
+            dialog = LoginWidget()
+            dialog.exec_()
+            self.conn.login(dialog.user,dialog.password)
 
         self.ws_dx =  WsBase(self.conn)
         self.ws_sx =  WsBase(self.conn)
