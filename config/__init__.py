@@ -3,7 +3,7 @@
 # Copyright (C) 2018 Stefano Sartor - stefano.sartor@inaf.it
 
 import json
-import os.path
+import os
 
 class Config(object):
     def __init__(self):
@@ -15,10 +15,15 @@ class Config(object):
 
         user_path = os.path.expandvars(self.conf['user_conf'])
         user_path = os.path.expanduser(user_path)
-        if os.path.isfile(user_path):
+        user_path = os.path.abspath(user_path)
+
+        if os.environ.get('STRIP_USER') is not None and os.environ.get('STRIP_PASSWORD') is not None:
+            self.user = os.environ['STRIP_USER']
+            self.password = os.environ['STRIP_PASSWORD']
+        elif os.path.isfile(user_path):
             with open(user_path,'rt') as conf:
                 jss = conf.read()
-                js = json.loads(js)
+                js = json.loads(jss)
                 self.user = js['user']
                 self.password = js['password']
         else:

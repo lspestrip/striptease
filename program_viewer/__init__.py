@@ -18,7 +18,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         super(ApplicationWindow, self).__init__()
 
         self.conn = Connection()
-        self.conn.login(os.environ['STRIP_USER'],os.environ['STRIP_PASSWORD'])
+        self.conn.login()
 
         self.ws_dx =  WsBase(self.conn)
         self.ws_sx =  WsBase(self.conn)
