@@ -8,6 +8,37 @@
 	"logout"      : "/rest/logout",
 	"ws_pol_base" : "/ws/hk"
     },
+    "daq_boards":
+    [
+      	{
+      	    "name":"R",
+      	    "pols": ["R0","R1","R2","R3","R4","R5","R6","W3"]
+      	},
+      	{
+      	    "name":"O",
+      	    "pols":["O0","O1","O2","O3","O4","O5","O6","W2"]
+      	},
+      	{
+      	    "name":"Y",
+      	    "pols":["Y0","Y1","Y2","Y3","Y4","Y5","Y6","W1"]
+      	},
+      	{
+      	    "name":"G",
+      	    "pols":["G0","G1","G2","G3","G4","G5","G6","W6"]
+      	},
+      	{
+      	    "name":"B",
+      	    "pols":["B0","B1","B2","B3","B4","B5","B6","W5"]
+      	},
+      	{
+      	    "name":"V",
+      	    "pols":["V0","V1","V2","V3","V4","V5","V6","W4"]
+      	},
+      	{
+      	    "name":"I",
+      	    "pols":["I0","I1","I2","I3","I4","I5","I6"]
+      	}
+    ],
     "daq_addr" :
     {
 	"mmic":

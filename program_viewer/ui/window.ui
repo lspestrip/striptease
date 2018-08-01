@@ -14,66 +14,34 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout_2" rowstretch="1,0,0,0,1,0">
-    <item row="5" column="0">
-     <layout class="QGridLayout" name="gridLayout">
-      <property name="sizeConstraint">
-       <enum>QLayout::SetFixedSize</enum>
-      </property>
-      <item row="0" column="0">
-       <widget class="QPushButton" name="pushButton_2">
-        <property name="text">
-         <string>Useseless Button</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QPushButton" name="pushButton_6">
-        <property name="text">
-         <string>Useseless Button</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item row="4" column="0">
-     <widget class="PolMplCanvas" name="plot_sx_b" native="true"/>
-    </item>
-    <item row="4" column="1">
-     <widget class="PolMplCanvas" name="plot_dx_b" native="true"/>
-    </item>
+   <layout class="QGridLayout" name="gridLayout_2" rowstretch="1,0,0" columnstretch="0,1">
     <item row="0" column="1">
-     <widget class="PolMplCanvas" name="plot_dx" native="true"/>
+     <widget class="PolMplCanvas" name="plot" native="true"/>
     </item>
     <item row="0" column="0">
-     <widget class="PolMplCanvas" name="plot_sx" native="true"/>
-    </item>
-    <item row="1" column="1">
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="QPushButton" name="pushButton_3">
-        <property name="text">
-         <string>Useseless Button</string>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QComboBox" name="polList"/>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_4">
-        <property name="text">
-         <string>Useseless Button</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item row="1" column="0">
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
-      <item>
-       <widget class="QPushButton" name="pushButton_5">
-        <property name="text">
-         <string>Useseless Button</string>
-        </property>
-       </widget>
+       <widget class="QTableWidget" name="hk_table"/>
       </item>
      </layout>
     </item>
