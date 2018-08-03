@@ -1,3 +1,6 @@
+# widgets/plot/pol.py --- Polarimeter plot classes
+#
+# Copyright (C) 2018 Stefano Sartor - stefano.sartor@inaf.it
 from widgets.plot import MplCanvas
 from web.ws.base import WsBase
 from config import Config
@@ -12,15 +15,12 @@ import matplotlib.pyplot as plt
 from copy import deepcopy
 
 
-def f(loop):
-    asyncio.set_event_loop(loop)
-    loop.run_forever()
-
-
 SCI = ['DEMU1','DEMU2','DEMQ1','DEMQ2','PWRQ1','PWRQ2','PWRU1','PWRU2']
 
 
 class PolMplCanvas(MplCanvas):
+    '''QtWidget for polarimer data plot
+    '''
     def __init__(self, *args, **kwargs):
         MplCanvas.__init__(self, *args, **kwargs)
         self.conf = Config()
@@ -33,15 +33,64 @@ class PolMplCanvas(MplCanvas):
 
         self.__clear_data()
 
+
     def add_plot(self,hk):
+        '''add an housekeeping to the plot
+          :param str hk: housekeeping or scientific parameter name
+        '''
         self.mtx.acquire()
         self.list_add.append(hk)
         self.mtx.release()
 
+
     def del_plot(self,hk):
+        '''remove an housekeeping to the plot
+          :param str hk: housekeeping or scientific parameter name
+        '''
         self.mtx.acquire()
         self.list_del.append(hk)
         self.mtx.release()
+
+
+    def start(self,conn,pol,window_sec=30,items=SCI,refresh=0.33):
+        '''starts the stream listening and plot in a dedicated thread.
+
+           :param web.rest.base.Connection conn: the backend http connection
+           :param str pol: the polarimer name
+           :param float window_sec: the time interval in seconds to display. default=30.0
+           :param [str] items: the list of housekeeping names to display from the start. Default is scientific data only.
+           :param float refresh: choose the number of seconds to wait between one plot and the next one. If you experience
+            poor performance, think about increase this number. Please note that the data acquisition continues even if the
+            graph is not redrawn. Default value is 0.33
+        '''
+        self.th = Thread(target=self.__f)
+        self.url = self.conf.get_ws_pol(pol)
+        self.pol = pol
+        self.ws  = WsBase(conn)
+        self.wsec = window_sec
+        self.rsec = refresh
+        self.items = deepcopy(items)
+
+        self.__prepare_canvas()
+
+        self.loop.call_soon_threadsafe(asyncio.async,self.__recv())
+        self.th.start()
+
+
+    def stop(self):
+        '''Stops to listen to the data stream, closes websocket connection, stops the worker thread
+           and clears the plot data.
+        '''
+        self.loop.stop()
+
+        if self.th.is_alive():
+            self.th.join()
+
+        self.loop.run_until_complete(self.ws.ws.close())
+        self.th = None
+        self.ws = None
+        self.__clear_data()
+
 
     def __replot(self):
         self.axes.cla()
@@ -57,36 +106,42 @@ class PolMplCanvas(MplCanvas):
         self.date = self.axes.text(0.01,0.01,"",verticalalignment='bottom', horizontalalignment='left',transform=self.axes.transAxes)
 
 
-    def prepare_canvas(self):
+    def __prepare_canvas(self):
         self.draw()   # note that the first draw comes before setting data
         self.__replot()
 
 
-    def start(self,conn,pol,window_sec=30,items=SCI,refresh=0.33):
-        self.th = Thread(target=f, args=(self.loop,))
-        self.url = self.conf.get_ws_pol(pol)
-        self.pol = pol
-        self.ws  = WsBase(conn)
-        self.wsec = window_sec
-        self.rsec = refresh
-        self.items = deepcopy(items)
+    async def __recv(self):
+        await self.ws.connect(self.url)
+        t0 = time.time()
 
-        self.prepare_canvas()
+        while True:
+            try:
+                pkt = await self.ws.recv()
+            except Exception as e:
+                print(e)
+                break
 
-        self.loop.call_soon_threadsafe(asyncio.async,self.recv())
-        self.th.start()
+            t1 = time.time()
+            self.__append(pkt)
 
+            if t1 - t0 > self.rsec:
+                t0 = t1
+                if len(self.list_add) != 0 or len(self.list_del) != 0:
+                    self.mtx.acquire()
+                    for i in self.list_add:
+                        if i not in self.items:
+                            self.items.append(i)
+                    for i in self.list_del:
+                        if i in self.items:
+                            self.items.remove(i)
+                    self.list_add.clear()
+                    self.list_del.clear()
+                    self.mtx.release()
+                    self.__replot()
+                else:
+                    self.__set_data(pkt)
 
-    def stop(self):
-        self.loop.stop()
-
-        if self.th.is_alive():
-            self.th.join()
-
-        self.loop.run_until_complete(self.ws.ws.close())
-        self.th = None
-        self.ws = None
-        self.__clear_data()
 
     def __append(self,pkt):
         ts = pkt['mjd']
@@ -153,33 +208,7 @@ class PolMplCanvas(MplCanvas):
                 'ts'  : np.ndarray([0], dtype=np.float64)
                 }
 
-    async def recv(self):
-        await self.ws.connect(self.url)
-        t0 = time.time()
 
-        while True:
-            try:
-                pkt = await self.ws.recv()
-            except Exception as e:
-                print(e)
-                break
-
-            t1 = time.time()
-            self.__append(pkt)
-
-            if t1 - t0 > self.rsec:
-                t0 = t1
-                if len(self.list_add) != 0 or len(self.list_del) != 0:
-                    self.mtx.acquire()
-                    for i in self.list_add:
-                        if i not in self.items:
-                            self.items.append(i)
-                    for i in self.list_del:
-                        if i in self.items:
-                            self.items.remove(i)
-                    self.list_add.clear()
-                    self.list_del.clear()
-                    self.mtx.release()
-                    self.__replot()
-                else:
-                    self.__set_data(pkt)
+    def __f(self):
+        asyncio.set_event_loop(self.loop)
+        self.loop.run_forever()

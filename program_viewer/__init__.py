@@ -1,8 +1,9 @@
-#from program_viewer import main
+# program_viewer/__ini__.py --- Example program
+#
+# Copyright (C) 2018 Stefano Sartor - stefano.sartor@inaf.it
 from PyQt5 import QtCore, QtWidgets
 import sys
 import os
-import websocket
 import json
 import numpy as np
 import time
@@ -18,11 +19,15 @@ import os
 
 
 class CheckBoxCallBack(object):
+    '''CheckBox callback container
+    '''
     def __init__(self,plot,hk):
         self.plot = plot
         self.hk = hk
 
     def callback(self,val):
+        '''called when the registred checkbox changes status
+        '''
         #print(self.hk,val)
         if val == 0:
             self.plot.del_plot(self.hk)
@@ -30,7 +35,9 @@ class CheckBoxCallBack(object):
             self.plot.add_plot(self.hk)
 
 class ApplicationWindow(QtWidgets.QMainWindow):
+    '''Main window class'''
     def __init__(self):
+        '''initializes the ui and polulates the housekeeping table'''
         super(ApplicationWindow, self).__init__()
 
         self.conn = Connection()
@@ -79,6 +86,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.plot.start(self.conn,self.ui.polList.currentText())
 
     def polChanged(self,i):
+        '''callback for polarimer change on the dropdown list.
+           stops the current polatimeter streaming and starts a new streaming
+           for the selected polarimeter.
+        '''
         pol = self.ui.polList.currentText()
         hklist = []
         for cb,call in self.callbacks:

@@ -1,3 +1,6 @@
+# widgets/plot/__ini__.py --- Base plot widgets
+#
+# Code copied from matplotlib online documentation
 from PyQt5 import QtWidgets
 import sys
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas

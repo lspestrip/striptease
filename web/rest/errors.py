@@ -1,5 +1,6 @@
-
-
+# web/rest/errors.py --- Base Exceptions
+#
+# Copyright (C) 2018 Stefano Sartor - stefano.sartor@inaf.it
 
 class RestError(Exception):
     """Base class for exceptions in this module."""

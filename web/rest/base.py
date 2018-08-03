@@ -20,8 +20,12 @@ class Connection(object):
 
 
     def login(self,user=None,password=None):
-        """login function, if user or password are not provided, it tries to
-            find login credentials stored in user config file.        """
+        '''login function, if user or password are not provided, it tries to
+            find login credentials from Config class.
+            On succesful login it sets the sessiondid self.id
+
+            :raises HTTPError: any error that occours while communicating with the server.
+        '''
         if user is None or password is None:
             user = self.conf.get_user()
             password = self.conf.get_password()
@@ -37,6 +41,10 @@ class Connection(object):
             self.id = self.session.cookies.get('sessionid')
 
     def logout(self):
+        '''logout the user and delete the sessionid.
+
+            :raises HTTPError: any error that occours while communicating with the server.
+        '''
         response = self.session.post(self.conf.get_logout(), data=json.dumps({}))
         if response.status_code != 200:
             response.raise_for_status()
