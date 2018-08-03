@@ -1,24 +1,15 @@
 # widgets/plot/__ini__.py --- Base plot widgets
 #
 # Code copied from matplotlib online documentation
-from PyQt5 import QtWidgets
-import sys
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
-
-# matplotlib stuff
-import sys
-import os
-import random
+from PyQt5 import  QtCore,QtWidgets
 import matplotlib
 # Make sure that we are using QT5
 matplotlib.use('Qt5Agg')
-from PyQt5 import QtCore, QtWidgets
-
-from numpy import arange, sin, pi
+import sys
+import os
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 
 class MplCanvas(FigureCanvas):
     """Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""

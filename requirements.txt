@@ -1,1 +1,6 @@
-PyQt5~=5.11
+PyQt5       ~= 5.11
+numpy       >= 1.15
+astropy     ~= 3.0.4
+matplotlib  ~= 2.2
+websockets  ~= 6.0
+requests    ~= 2.19
