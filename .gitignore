@@ -89,6 +89,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+STRIP_ENV/
 
 # Spyder project settings
 .spyderproject

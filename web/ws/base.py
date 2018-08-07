@@ -35,3 +35,10 @@ class WsBase(object):
         message = await self.ws.recv()
         pkt = json.loads(message)
         return pkt
+
+    async def send(self,message):
+        '''encode the message in json format and send it.
+           :param message: dictionary or list to send
+        '''
+        pkt = json.dumps(message)
+        await self.ws.send(pkt)

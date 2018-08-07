@@ -36,6 +36,10 @@ class Config(object):
             self.user=None
             self.password=None
 
+    def get_rest_base(self):
+        '''returns the base url for REST requests'''
+        return self.conf['urls']['schema']+'://'+self.conf['urls']['base']+"/rest"
+
     def get_login(self):
         '''returns the full url for the REST login'''
         return self.conf['urls']['schema']+'://'+self.conf['urls']['base']+self.conf['urls']['login']
@@ -55,6 +59,10 @@ class Config(object):
            and then in the user config file. Returns None if no password is found
         '''
         return self.password
+
+    def get_ws_base(self):
+        '''returns the base url for ws connections'''
+        return 'ws://' + self.conf['urls']['base'] +  '/ws'
 
     def get_ws_pol(self,pol):
         '''return the full url for the 'pol' polarimeter

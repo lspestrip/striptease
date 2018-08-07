@@ -50,3 +50,55 @@ class Connection(object):
             response.raise_for_status()
         else:
             self.id = None
+
+    def post(self,url,message):
+        '''encode the message in json format and send it using POST http method.
+           :param str url: url to send the message.
+           :param message: dictionary or list to send.
+           :return: dictionary of the decoded json response.
+           :raises HTTPError: any error that occours while communicating with the server.
+        '''
+        pkt = json.dumps(message)
+        response = self.session.post(url, data=pkt)
+        if response.status_code != 200:
+            response.raise_for_status()
+        else:
+            return response.json()
+
+    def put(self,url,message):
+        '''encode the message in json format and send it using PUT http method.
+           :param str url: url to send the message.
+           :param message: dictionary or list to send.
+           :return: dictionary of the decoded json response.
+           :raises HTTPError: any error that occours while communicating with the server.
+        '''
+        pkt = json.dumps(message)
+        response = self.session.put(url, data=pkt)
+        if response.status_code != 200:
+            response.raise_for_status()
+        else:
+            return response.json()
+
+    def delete(self,url):
+        '''send a delete request to the url using DELETE http method.
+           :param str url: url to send the message.
+           :return: dictionary of the decoded json response.
+           :raises HTTPError: any error that occours while communicating with the server.
+        '''
+        response = self.session.delete(url)
+        if response.status_code != 200:
+            response.raise_for_status()
+        else:
+            return response.json()
+
+    def get(self,url):
+        '''send a get request to the url using GET http method.
+           :param str url: url to send the message.
+           :return: dictionary of the decoded json response.
+           :raises HTTPError: any error that occours while communicating with the server.
+        '''
+        response = self.session.get(url)
+        if response.status_code != 200:
+            response.raise_for_status()
+        else:
+            return response.json()
