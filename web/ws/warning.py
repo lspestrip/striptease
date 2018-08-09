@@ -10,7 +10,7 @@ import warnings
 import asyncio
 
 class WsWarning(object):
-    def __init__(self,con):
+    def __init__(self,con,loop=None):
         ''':param web.rest.base.Connection con: the base http connection
         '''
         self.conn = con
@@ -20,7 +20,7 @@ class WsWarning(object):
         self.url = conf.get_rest_base()+ "/warning"
         self.ws_url = conf.get_ws_base()+ "/warn"
         self.configs = []
-        if loop is not None
+        if loop is not None:
             self.loop = loop
         else:
             self.loop = asyncio.new_event_loop()
@@ -92,21 +92,21 @@ class WsWarning(object):
         if self.__current.get('config') is None:
             self.__current['config'] = []
         self.__current['config'].append(warn)
-                    
+
         if self.ws is not None:
             self.__add_warning(warn)
 
-    def connect(self):
+    async def connect(self):
         if self.ws is None:
             self.ws = WsBase(self.conn)
-            self.ws.connect(self.ws_url)
+            await self.ws.connect(self.ws_url)
 
 
     def clear_config(self):
-        if self.ws is not None and self.__current.get('data') is not None:
-            for c in self.__current['data']:
-                pkt = json.dumps({'pol':c['pol'],'remove':c['warn']})
-                self.loop.call_soon(self.ws.send(pkt))
+        if self.ws is not None and self.__current.get('config') is not None:
+            for c in self.__current['config']:
+                pkt = {'pol':c['pol'],'remove':c['warn']}
+                self.loop.call_soon_threadsafe(asyncio.async,self.ws.send(pkt))
         self.__current = {}
 
 
@@ -119,13 +119,12 @@ class WsWarning(object):
         pkt = {'save':self.__current.get('name','unnamed_config'),
                'config' : self.__current.get('config',[])
         }
-        message = json.dumps(pkt)
         res = {'status':'ERROR'}
         if self.__current.get('id') is None: #save new config
             res = self.conn.post(self.url,message)
         else: #update existing conf
             url = self.url + "/" + str(self.__current['id'])
-            res = self.conn.put(self.url,message)
+            res = self.conn.put(self.url,pkt)
         if res['status'] == 'OK':
             self.__current['id'] = res['id']
 
@@ -134,8 +133,7 @@ class WsWarning(object):
         ''' waits for warning packet and decodes it from json string
            :return: dictionary of the decoded json.
         '''
-        message = await self.ws.recv()
-        pkt = json.loads(message)
+        pkt = await self.ws.recv()
         return pkt
 
 
@@ -161,5 +159,4 @@ class WsWarning(object):
 
 
     def __add_warning(self,warn):
-        pkt = json.dumps(warn)
-        self.loop.call_soon(self.ws.send(pkt))
+        self.loop.call_soon_threadsafe(asyncio.async,self.ws.send(warn))
