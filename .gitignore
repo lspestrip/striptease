@@ -103,3 +103,6 @@ STRIP_ENV/
 
 # mypy
 .mypy_cache/
+
+# other files
+*~
