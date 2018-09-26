@@ -10,6 +10,7 @@ Welcome to Striptease's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   authentication
 
 
 Indices and tables
