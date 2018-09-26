@@ -1,2 +1,3 @@
 PyQt5~=5.11
 websocket-client
+h5py~=2.8
