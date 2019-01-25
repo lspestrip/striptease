@@ -4,6 +4,8 @@
 
 import json
 import os
+from urllib.parse import urljoin
+
 
 class Config(object):
     '''the Config class parses the configuration file and provides shortcuts for
@@ -12,10 +14,11 @@ class Config(object):
        Attributes:
           conf     dictionary with all the configuration settings
     '''
+
     def __init__(self):
         path_dir = os.path.abspath(os.path.dirname(__file__))
         path = os.path.join(path_dir, "conf.json")
-        with open(path,'rt') as c:
+        with open(path, 'rt') as c:
             js = c.read()
             self.conf = json.loads(js)
 
@@ -27,18 +30,21 @@ class Config(object):
             self.user = os.environ['STRIP_USER']
             self.password = os.environ['STRIP_PASSWORD']
         elif os.path.isfile(user_path):
-            with open(user_path,'rt') as conf:
+            with open(user_path, 'rt') as conf:
                 jss = conf.read()
                 js = json.loads(jss)
                 self.user = js['user']
                 self.password = js['password']
         else:
-            self.user=None
-            self.password=None
+            self.user = None
+            self.password = None
 
     def get_rest_base(self):
         '''returns the base url for REST requests'''
         return self.conf['urls']['schema']+'://'+self.conf['urls']['base']+"/rest"
+
+    def get_rest_url(self, rel_url):
+        return urljoin(self.get_rest_base(), rel_url)
 
     def get_login(self):
         '''returns the full url for the REST login'''
@@ -62,9 +68,9 @@ class Config(object):
 
     def get_ws_base(self):
         '''returns the base url for ws connections'''
-        return 'ws://' + self.conf['urls']['base'] +  '/ws'
+        return 'ws://' + self.conf['urls']['base'] + '/ws'
 
-    def get_ws_pol(self,pol):
+    def get_ws_pol(self, pol):
         '''return the full url for the 'pol' polarimeter
         :param pol: the polarimeter name
         :type pol: string
