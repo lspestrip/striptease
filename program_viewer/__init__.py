@@ -11,7 +11,6 @@ import astropy.time as at
 import datetime as dt
 from program_viewer.ui.main_window import Ui_MainWindow
 from web.rest.base import Connection
-from web.ws.base import WsBase
 from widgets.login import LoginWidget
 from config import Config
 import os
