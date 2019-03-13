@@ -70,3 +70,16 @@ class Config(object):
         :type pol: string
         '''
         return 'ws://' + self.conf['urls']['base'] + self.conf['urls']['ws_pol_base'] + '/' + pol
+
+    def get_wamp_url(self):
+        return "wss://" + self.conf['urls']['base'] + self.conf['urls']['wamp_url']
+
+    def get_wamp_pol(self,pol):
+        '''return the topic for the 'pol' polarimeter
+        :param pol: the polarimeter name
+        :type pol: string
+        '''
+        return "strip.fp.pol."+ pol.upper()
+
+    def get_wamp_realm(self):
+        return self.conf['urls']['wamp_realm']

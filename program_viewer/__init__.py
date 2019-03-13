@@ -14,25 +14,25 @@ from web.rest.base import Connection
 from web.ws.base import WsBase
 from widgets.login import LoginWidget
 from config import Config
-from widgets.plot.pol import SCI
 import os
 
 
 class CheckBoxCallBack(object):
     '''CheckBox callback container
     '''
-    def __init__(self,plot,hk):
-        self.plot = plot
-        self.hk = hk
+    def __init__(self,plot,table,hk):
+        self.plot  = plot
+        self.table = table
+        self.hk    = hk
 
     def callback(self,val):
         '''called when the registred checkbox changes status
         '''
         #print(self.hk,val)
         if val == 0:
-            self.plot.del_plot(self.hk)
+            self.plot.del_plot(self.table,self.hk)
         elif val == 2:
-            self.plot.add_plot(self.hk)
+            self.plot.add_plot(self.table,self.hk)
 
 class ApplicationWindow(QtWidgets.QMainWindow):
     '''Main window class'''
@@ -55,27 +55,39 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.callbacks=[]
 
         t = self.ui.hk_table
-        t.setRowCount(len(conf.conf['daq_addr']['hk'])+len(SCI))
-        t.setColumnCount(1)
+        t.setRowCount(sum([len(conf.conf['daq_board_addr'][x])  for x in conf.conf['daq_board_addr'] if x.endswith('POL')]))
+        t.setColumnCount(3)
         i = 0
-        for s in SCI:
-            cb = QtWidgets.QCheckBox(t)
-            cb.setText(s)
-            cb.setCheckState(2)
-            callb = CheckBoxCallBack(self.ui.plot,s)
-            cb.stateChanged.connect(callb.callback)
-            self.callbacks.append((cb,callb))
-            t.setCellWidget(i,0,cb)
-            i += 1
+#        for s in SCI:
+#            cb = QtWidgets.QCheckBox(t)
+#            cb.setText(s)
+#            cb.setCheckState(2)
+#            callb = CheckBoxCallBack(self.ui.plot,s)
+#            cb.stateChanged.connect(callb.callback)
+#            self.callbacks.append((cb,callb))
+#            t.setCellWidget(i,0,cb)
+#            i += 1
 
-        for hk in conf.conf['daq_addr']['hk']:
-            cb = QtWidgets.QCheckBox(t)
-            cb.setText(hk['name'])
-            callb = CheckBoxCallBack(self.ui.plot,hk['name'])
-            cb.stateChanged.connect(callb.callback)
-            self.callbacks.append((cb,callb))
-            t.setCellWidget(i,0,cb)
-            i += 1
+        for table in conf.conf['daq_board_addr']:
+            if not table.endswith('POL'):
+                continue
+            for hk in conf.conf['daq_board_addr'][table]:
+                cb = QtWidgets.QCheckBox(t)
+                #cb.setText(hk['name'])
+                callb = CheckBoxCallBack(self.ui.plot,table,hk['name'])
+                cb.stateChanged.connect(callb.callback)
+                self.callbacks.append((cb,callb))
+
+                item_table = QtWidgets.QTableWidgetItem()
+                item_table.setText(table)
+                t.setItem(i, 1, item_table)
+
+                item_hk = QtWidgets.QTableWidgetItem()
+                item_hk.setText(hk['name'])
+                t.setItem(i, 2, item_hk)
+
+                t.setCellWidget(i,0,cb)
+                i += 1
 
         for b in conf.conf['daq_boards']:
             for p in b['pols']:
@@ -91,13 +103,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
            for the selected polarimeter.
         '''
         pol = self.ui.polList.currentText()
-        hklist = []
+        hkdict = {}
         for cb,call in self.callbacks:
             if cb.checkState() == 2:
-                hklist.append(call.hk)
+                if hkdict.get(call.table) is None:
+                    hkdict[call.table] = set()
+                hkdict[call.table].add(call.hk)
+
+        print(hkdict)
 
         self.ui.plot.stop()
-        self.ui.plot.start(self.conn,pol,items=hklist)
+        self.ui.plot.start(self.conn,pol,items=hkdict)
 
     def stop(self):
         self.ui.plot.stop()
