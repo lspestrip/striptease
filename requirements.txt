@@ -5,4 +5,5 @@ matplotlib  ~= 2.2
 websockets  ~= 6.0
 requests    ~= 2.19
 h5py        ~= 2.8
-authobahn   ~= 19.2
+autobahn   ~= 19.2
+pyserial    ~= 3.4
