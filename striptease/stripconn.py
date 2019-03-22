@@ -23,60 +23,58 @@ class StripConnection(Connection):
 
     5. Etc.
 
-    Creation:
+    To create the object, you can pass one or more of the
+    following parameters:
 
-        To create the object, you can pass one or more of the
-        following parameters:
+    - `user` (None or str): a string containing the username. If
+      None
 
-        - `user` (None or str): a string containing the username. If
-          None
+    - `password` (None or str): the password to use while
+      establishing the connection
 
-        - `password` (None or str): the password to use while
-          establishing the connection
+    - `addr` (None or str): the hostname of the server, optionally
+      followed by the port, e.g., "myserver.foo.bar:8123".
 
-        - `addr` (None or str): the hostname of the server, optionally
-          followed by the port, e.g., "myserver.foo.bar:8123".
+    - `schema` (None or str): either "http" or "https"
 
-        - `schema` (None or str): either "http" or "https"
+    The following code shows how to connect to a machine. It
+    assumes that the user has properly configured the library
+    following the documentation
+    (https://lspestrip.github.io/striptease/authentication.html)::
 
-        The following code shows how to connect to a machine. It
-        assumes that the user has properly configured the library
-        following the documentation
-        (https://lspestrip.github.io/striptease/authentication.html):
+        from stripeline import StripConnection
 
-            from stripeline import StripConnection
+        conn = StripConnection()
+        conn.login()
+        print("I am connected to Strip, the ID is ", conn.id)
+        conn.logout()
 
-            conn = StripConnection()
-            conn.login()
-            print("I am connected to Strip, the ID is ", conn.id)
-            conn.logout()
 
-        Another alternative is to use it as a context manager:
+    Another alternative is to use it as a context manager::
 
-            from stripeline import StripConnection
+         from stripeline import StripConnection
 
-            with StripConnection(server="foo.bar.org:1234", schema="https") as conn:
-                # No need to call conn.login() and conn.logout()
-                print("I am connected to Strip, the ID is ", conn.id)
+         with StripConnection(server="foo.bar.org:1234",
+                              schema="https") as conn:
+             # No need to call conn.login() and conn.logout()
+             print("I am connected to Strip, the ID is ", conn.id)
 
-    Communication:
+    Once a connection is established, a `StripConnection` object
+    implements the following methods:
 
-        Once a connection is established, a `StripConnection` object
-        implements the following methods:
+    - `slo_command`
 
-        - `slo_command`
+    - `system_command`
 
-        - `system_command`
+    - `query_file`
 
-        - `query_file`
+    - `request_data`
 
-        - `request_data`
+    - `tag_query`
 
-        - `tag_query`
+    - `tag_start`
 
-        - `tag_start`
-
-        - `tag_stop`
+    - `tag_stop`
 
     Attributes:
 

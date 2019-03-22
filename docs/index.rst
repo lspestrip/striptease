@@ -11,7 +11,7 @@ Welcome to Striptease's documentation!
    :caption: Contents:
 
    authentication
-
+   API
 
 Indices and tables
 ==================
