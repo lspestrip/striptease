@@ -26,7 +26,7 @@ used to create forms to be used in Python programs too.
 
 Here is a screenshot of Qt Designer:
 
-.. figure:: _images/qtdesigner.png
+.. figure:: _static/qtdesigner.png
             :align: center
             :alt: Qt Designer 5.9 screenshot
                
@@ -52,7 +52,7 @@ proper type. This is called *promotion*: select the new transparent
 widget and pick the entry «Promote to…» from the contextual menu under
 the object inspector, as shown in the following figure.
 
-.. figure:: _images/polmplcanvas-01-promote.png
+.. figure:: _static/polmplcanvas-01-promote.png
             :align: center
             :alt: Contextual menu to promote a widget in Qt Designer
 
@@ -72,14 +72,14 @@ extension must be inserted because Qt Designer always thinks that
 modules are defined in C++ header files; this extension will be
 silently dropped once we load the form in our Python script.
 
-.. figure:: _images/polmplcanvas-02-promoted-widget-1.png
+.. figure:: _static/polmplcanvas-02-promoted-widget-1.png
             :align: center
             :alt: Specifying how to promote a widget to ``PolMplCanvas`` (1/2)
 
 Once you have entered the values listed above, press *Add*; the new
 promotion should be added to the list *Promoted classes*:
                   
-.. figure:: _images/polmplcanvas-03-promoted-widget-2.png
+.. figure:: _static/polmplcanvas-03-promoted-widget-2.png
             :align: center
             :alt: Specifying how to promote a widget to ``PolMplCanvas`` (2/2)
 
@@ -96,7 +96,7 @@ and thus the scaling of the form might look weird when opened in Qt
 Designer. To fix this, you can set the field *minimumSize* in the
 Property Editor on the left. Setting it to 640×480 is usually fine:
 
-.. figure:: _images/polmplcanvas-04-minimum-size.png
+.. figure:: _static/polmplcanvas-04-minimum-size.png
             :align: center
             :alt: Specifying the minimum size for a custom widget
 
