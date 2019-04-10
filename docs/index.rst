@@ -12,6 +12,7 @@ Welcome to Striptease's documentation!
 
    authentication
    API
+   development
 
 Indices and tables
 ==================
