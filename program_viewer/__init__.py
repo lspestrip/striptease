@@ -51,10 +51,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
 
         conf = Config()
+        conf.load(self.conn)
         self.callbacks=[]
 
         t = self.ui.hk_table
-        t.setRowCount(sum([len(conf.conf['daq_board_addr'][x])  for x in conf.conf['daq_board_addr'] if x.endswith('POL')]))
+        t.setRowCount(sum([len(conf.board_addr[x])  for x in conf.board_addr if x.endswith('POL')]))
         t.setColumnCount(3)
         i = 0
 #        for s in SCI:
@@ -67,10 +68,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 #            t.setCellWidget(i,0,cb)
 #            i += 1
 
-        for table in conf.conf['daq_board_addr']:
+        for table in conf.board_addr:
             if not table.endswith('POL'):
                 continue
-            for hk in conf.conf['daq_board_addr'][table]:
+            for hk in conf.board_addr[table]:
                 cb = QtWidgets.QCheckBox(t)
                 #cb.setText(hk['name'])
                 callb = CheckBoxCallBack(self.ui.plot,table,hk['name'])
@@ -88,7 +89,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 t.setCellWidget(i,0,cb)
                 i += 1
 
-        for b in conf.conf['daq_boards']:
+        for b in conf.boards:
             for p in b['pols']:
                 self.ui.polList.addItem(p)
 

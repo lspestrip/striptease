@@ -10,6 +10,7 @@ import numpy as np
 import time
 import astropy.time as at
 import datetime as dt
+import time
 import gc
 import matplotlib.pyplot as plt
 from copy import deepcopy
@@ -24,8 +25,6 @@ class PolMplCanvas(MplCanvas):
         self.data={}
         self.dict_add = {}
         self.dict_del = {}
-
-        self.__clear_data()
 
 
     def add_plot(self,table,hk):
@@ -43,8 +42,67 @@ class PolMplCanvas(MplCanvas):
         self.items[table].remove(hk)
         self.replot()
 
+    def poll_HK(self):
+        pol = self.pol
 
-    def start(self,conn,pol,window_sec=30,items={},refresh=0.09):
+        board = ''
+        for b in self.conf.boards:
+            for p in b['pols']:
+                if p == pol:
+                    board = b['name']
+
+
+        url = self.conf.get_rest_base()+'/slo'
+        d = {
+                "board": board,
+                "pol": "BOARD",
+                "base_addr": "HK_SCAN",
+                "type": "BIAS",
+                "method": "SET",
+                "data": [23295],
+                "timeout": 500
+            }
+
+        hk_req = {
+              "board": board,
+              "pol": pol,
+              "base_addr": "VD0_SET",
+              "type": "BIAS",
+              "method": "GET",
+              "size": 16,
+              "timeout": 500
+        }
+
+        res = self.wamp.conn.post(url,d)
+        if res.get('status','NOT_OK') != 'OK':
+            print('error while refreshing HK')
+            return
+
+        mjd = at.Time.now().mjd
+        bias = {}
+        i = 0
+        while i < 256:
+            item = self.conf.addr_int['BIAS_POL'].get(i)
+            if item is None:
+                i +=1
+                continue
+            hk_req['base_addr'] = item['name']
+            res = self.wamp.conn.post(url,hk_req)
+            if res.get('status','NOT_OK') != 'OK':
+                print('error while refreshing HK')
+                break
+            for j in res['data']:
+                item = self.conf.addr_int['BIAS_POL'].get(i)
+                if item is None:
+                    i +=1
+                    continue
+                bias[item['name']]=j
+                i += 1
+        pkt = {'pol':pol,'mjd':mjd,'bias':bias}
+        self.append(pkt)
+
+
+    def start(self,conn,pol,window_sec=60,items={},refresh=0.09):
         '''starts the stream listening and plot in a dedicated thread.
 
            :param web.rest.base.Connection conn: the backend http connection
@@ -61,7 +119,10 @@ class PolMplCanvas(MplCanvas):
         self.wsec = window_sec
         self.rsec = refresh
         self.items = {}
-        for t in [x for x in self.conf.conf['daq_board_addr'].keys() if x.endswith('POL')]:
+        self.conf.load(conn)
+        self.__clear_data()
+
+        for t in [x for x in self.conf.board_addr.keys() if x.endswith('POL')]:
             self.items[t]=set()
 
         for t in items:
@@ -70,7 +131,8 @@ class PolMplCanvas(MplCanvas):
 
         self.__prepare_canvas()
         self.sub = self.__connect()
-        print(self.sub)
+        self.th = Thread(target=self.__f)
+        self.th.start()
 
     def stop(self):
         '''Stops to listen to the data stream, closes websocket connection, stops the worker thread
@@ -78,16 +140,17 @@ class PolMplCanvas(MplCanvas):
         '''
         self.wamp.leave()
         self.wamp = None
+        self.th.join()
         self.__clear_data()
 
     def replot(self):
-        self.wamp.loop.call_soon(self.__replot)
+        self.wamp.loop.call_soon_threadsafe(self.__replot)
 
     def set_data(self,pkt):
-        self.wamp.loop.call_soon(self.__set_data,pkt)
+        self.wamp.loop.call_soon_threadsafe(self.__set_data,pkt)
 
     def append(self,pkt):
-        self.wamp.loop.call_soon(self.__append,pkt)
+        self.wamp.loop.call_soon_threadsafe(self.__append,pkt)
 
     def __replot(self):
         self.axes.cla()
@@ -112,7 +175,6 @@ class PolMplCanvas(MplCanvas):
         self.__replot()
 
     def __connect(self):
-        print("CONNECT")
         self.wamp.connect(self.url,self.conf.get_wamp_realm())
 
         s = time.time()
@@ -135,12 +197,12 @@ class PolMplCanvas(MplCanvas):
 
     def __append(self,pkt):
         ts = pkt['mjd']
-
         if self.data['ts'].size == 0 or (ts - self.data['ts'][0])*86400 <= self.wsec:
-            for s in self.data['SCI_POL'].keys():
-                self.data['SCI_POL'][s]['data'] = np.append(self.data['SCI_POL'][s]['data'],pkt[s]) #TODO do calibration
+            if 'DEMU1' in pkt.keys():
+                for s in self.data['SCI_POL'].keys():
+                    self.data['SCI_POL'][s]['data'] = np.append(self.data['SCI_POL'][s]['data'],pkt[s]) #TODO do calibration
 
-            self.data['ts']  = np.append(self.data['ts'],ts)
+                self.data['ts']  = np.append(self.data['ts'],ts)
 
             for hk,val in pkt.get('bias',{}).items():
                 self.data['BIAS_POL'][hk]['data'] =  np.append(self.data['BIAS_POL'][hk]['data'],val) #TODO do calibration
@@ -149,12 +211,13 @@ class PolMplCanvas(MplCanvas):
                 self.data['DAQ_POL'][hk]['data'] =  np.append(self.data['DAQ_POL'][hk]['data'],val) #TODO do calibration
                 self.data['DAQ_POL'][hk]['ts']  = np.append(self.data['DAQ_POL'][hk]['ts'],ts)
         else:
-            for s in self.data['SCI_POL'].keys():
-                self.data['SCI_POL'][s]['data'][0] = pkt[s] #TODO do calibration
-                self.data['SCI_POL'][s]['data'] = np.roll(self.data['SCI_POL'][s]['data'],-1)
+            if 'DEMU1' in pkt.keys():
+                for s in self.data['SCI_POL'].keys():
+                    self.data['SCI_POL'][s]['data'][0] = pkt[s] #TODO do calibration
+                    self.data['SCI_POL'][s]['data'] = np.roll(self.data['SCI_POL'][s]['data'],-1)
 
-            self.data['ts'][0]  = ts
-            self.data['ts'] = np.roll(self.data['ts'],-1)
+                self.data['ts'][0]  = ts
+                self.data['ts'] = np.roll(self.data['ts'],-1)
 
             for hk,val in pkt.get('bias',{}).items():
                 self.data['BIAS_POL'][hk]['data'][0] = val #TODO do calibration
@@ -201,15 +264,20 @@ class PolMplCanvas(MplCanvas):
     def __clear_data(self):
         self.data={}
         self.data['SCI_POL'] = {}
-        for s in self.conf.conf['daq_board_addr']['SCI_POL']:
+        for s in self.conf.board_addr['SCI_POL']:
             self.data['SCI_POL'][s['name']] = {'data':np.ndarray([0],dtype=np.float64)}
 
         self.data['ts'] = np.ndarray([0],dtype=np.float64)
 
         for table in ['BIAS_POL','DAQ_POL']:
             self.data[table] = {}
-            for hk in self.conf.conf['daq_board_addr'][table]:
+            for hk in self.conf.board_addr[table]:
                 self.data[table][hk['name']] = {
                     'data': np.ndarray([0], dtype=np.float64),
                     'ts'  : np.ndarray([0], dtype=np.float64)
                     }
+
+    def __f(self):
+        while self.wamp is not None:
+            self.poll_HK()
+            time.sleep(0.2)

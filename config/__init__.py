@@ -36,6 +36,32 @@ class Config(object):
             self.user=None
             self.password=None
 
+    def load(self,con):
+        '''requests the instrument configuration from the server and populates the attributes boards, board_addr, addr_str, addr_int
+
+           :param web.rest.base.Connection con: the backend http connection
+           :return str: 'OK' if the request went fine, "ERROR_XX" otherwise 
+        '''
+        res = con.get(self.get_rest_base()+'/config')
+
+        if res['status'] != 'OK':
+            return res['status']
+
+        self.boards = res['boards']
+        self.board_addr = res['board_addr']
+
+        self.addr_str = {}
+        self.addr_int = {}
+
+        for k in self.board_addr:
+            self.addr_str[k] = {}
+            self.addr_int[k] = {}
+            for i in self.board_addr[k]:
+                self.addr_str[k][i['name']] = i
+                self.addr_int[k][int(i['addr'],16)] = i
+
+        return res['status']
+
     def get_rest_base(self):
         '''returns the base url for REST requests'''
         return self.conf['urls']['schema']+'://'+self.conf['urls']['base']+"/rest"
