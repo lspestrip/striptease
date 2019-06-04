@@ -280,4 +280,4 @@ class PolMplCanvas(MplCanvas):
     def __f(self):
         while self.wamp is not None:
             self.poll_HK()
-            time.sleep(0.2)
+            time.sleep(1.0)
