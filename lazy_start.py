@@ -5,6 +5,7 @@ import csv
 import sys
 import pandas as pd
 from pprint import pprint
+from striptease.biases import InstrumentBiases
 
 board_on = [
 {
@@ -182,68 +183,99 @@ def read_board_calib(path):
 
 def get_step(v,cal,step):
     val = v*step * cal['slope'] + cal['intercept']
+    if val < 0:
+        val = 0
     return int(val)
 
-def setup(con,conf,bc,calib,pol_list,step=1):
+def setup_VD(con,conf,bc,calib,pol_chan,step=1):
     global template
-    #url = conf.get_rest_base()+'/slo'
+    url = conf.get_rest_base()+'/slo'
 
-    for i in pol_list:
-        template['board'] = 'R'
-        template['pol'] = 'R'+str(i)
-        data = []
-        print(calib['DRAIN']['SET VOLTAGE']['0'])
-        print(bc['VD0'][i])
-        data.append(get_step(bc['VD0'][i],calib['DRAIN']['SET VOLTAGE']['0'],step))
-        data.append(get_step(bc['VD1'][i],calib['DRAIN']['SET VOLTAGE']['1'],step))
-        data.append(get_step(bc['VD2'][i],calib['DRAIN']['SET VOLTAGE']['2'],step))
-        data.append(get_step(bc['VD3'][i],calib['DRAIN']['SET VOLTAGE']['3'],step))
-        data.append(get_step(bc['VD4'][i],calib['DRAIN']['SET VOLTAGE']['4'],step))
-        data.append(get_step(bc['VD5'][i],calib['DRAIN']['SET VOLTAGE']['5'],step))
-        template['base_addr'] = "VD0_SET"
-        template['data'] = data
-        print(template)
-        #r = con.post(url,template)
-        #if r['status'] != 'OK':
-        #    print(r)
-        #    sys.exit(1)
-        time.sleep(0.5)
+    template['board'] = 'R'
+    template['pol'] = 'R'+str(pol_chan)
+    data = []
+    print(calib['DRAIN']['SET VOLTAGE'][0])
+    data.append(get_step(bc.vd0,calib['DRAIN']['SET VOLTAGE'][0],step))
+    data.append(get_step(bc.vd1,calib['DRAIN']['SET VOLTAGE'][1],step))
+    data.append(get_step(bc.vd2,calib['DRAIN']['SET VOLTAGE'][2],step))
+    data.append(get_step(bc.vd3,calib['DRAIN']['SET VOLTAGE'][3],step))
+    data.append(get_step(bc.vd4,calib['DRAIN']['SET VOLTAGE'][4],step))
+    data.append(get_step(bc.vd5,calib['DRAIN']['SET VOLTAGE'][5],step))
+    template['base_addr'] = "VD0_SET"
+    template['data'] = data
+    print(template)
+    r = con.post(url,template)
+    if r['status'] != 'OK':
+        print(r)
+        sys.exit(1)
+    time.sleep(0.5)
 
-        data = []
-        print(calib['GATE']['SET VOLTAGE']['0'])
-        print(bc['VG0'][i])
-        data.append(get_step(bc['VG0'][i],calib['GATE']['SET VOLTAGE']['0'],step))
-        data.append(get_step(bc['VG1'][i],calib['GATE']['SET VOLTAGE']['1'],step))
-        data.append(get_step(bc['VG2'][i],calib['GATE']['SET VOLTAGE']['2'],step))
-        data.append(get_step(bc['VG3'][i],calib['GATE']['SET VOLTAGE']['3'],step))
-        data.append(get_step(bc['VG4'][i],calib['GATE']['SET VOLTAGE']['4'],step))
-        data.append(get_step(bc['VG5'][i],calib['GATE']['SET VOLTAGE']['5'],step))
-        data.append(get_step(bc['VG4A'][i],calib['GATE']['SET VOLTAGE']['4A'],step))
-        data.append(get_step(bc['VG5A'][i],calib['GATE']['SET VOLTAGE']['5A'],step))
-        template['base_addr'] = "VG0_SET"
-        template['data'] = data
-        print(template)
-        #r = con.post(url,template)
-        #if r['status'] != 'OK':
-        #    print(r)
-        #    sys.exit(1)
-        time.sleep(0.5)
+def setup_VG(con,conf,bc,calib,pol_chan,step=1):
+    global template
+    url = conf.get_rest_base()+'/slo'
 
-        data = []
-        print(calib['PIN DIODES']['SET VOLTAGE']['0'])
-        print(bc['VPIN0'][i])
-        data.append(get_step(bc['VPIN0'][i],calib['PIN DIODES']['SET VOLTAGE']['0'],step))
-        data.append(get_step(bc['VPIN1'][i],calib['PIN DIODES']['SET VOLTAGE']['1'],step))
-        data.append(get_step(bc['VPIN2'][i],calib['PIN DIODES']['SET VOLTAGE']['2'],step))
-        data.append(get_step(bc['VPIN3'][i],calib['PIN DIODES']['SET VOLTAGE']['3'],step))
-        template['base_addr'] = "VPIN0_SET"
-        template['data'] = data
-        print(template)
-        #r = con.post(url,template)
-        #if r['status'] != 'OK':
-        #    print(r)
-        #    sys.exit(1)
-        time.sleep(0.5)
+    template['board'] = 'R'
+    template['pol'] = 'R'+str(pol_chan)
+    data = []
+    print(calib['GATE']['SET VOLTAGE'][0])
+    data.append(get_step(bc.vg0,calib['GATE']['SET VOLTAGE'][0],step))
+    data.append(get_step(bc.vg1,calib['GATE']['SET VOLTAGE'][1],step))
+    data.append(get_step(bc.vg2,calib['GATE']['SET VOLTAGE'][2],step))
+    data.append(get_step(bc.vg3,calib['GATE']['SET VOLTAGE'][3],step))
+    data.append(get_step(bc.vg4,calib['GATE']['SET VOLTAGE'][4],step))
+    data.append(get_step(bc.vg5,calib['GATE']['SET VOLTAGE'][5],step))
+    data.append(get_step(bc.vg4a,calib['GATE']['SET VOLTAGE']['4A'],step))
+    data.append(get_step(bc.vg5a,calib['GATE']['SET VOLTAGE']['5A'],step))
+    template['base_addr'] = "VG0_SET"
+    template['data'] = data
+    print(template)
+    r = con.post(url,template)
+    if r['status'] != 'OK':
+        print(r)
+        sys.exit(1)
+    time.sleep(0.5)
+
+def setup_VPIN(con,conf,bc,calib,pol_chan,step=1):
+    global template
+    url = conf.get_rest_base()+'/slo'
+
+    template['board'] = 'R'
+    template['pol'] = 'R'+str(pol_chan)
+    data = []
+    print(calib['PIN DIODES']['SET VOLTAGE'][0])
+    data.append(get_step(bc.vpin0,calib['PIN DIODES']['SET VOLTAGE'][0],step))
+    data.append(get_step(bc.vpin1,calib['PIN DIODES']['SET VOLTAGE'][1],step))
+    data.append(get_step(bc.vpin2,calib['PIN DIODES']['SET VOLTAGE'][2],step))
+    data.append(get_step(bc.vpin3,calib['PIN DIODES']['SET VOLTAGE'][3],step))
+    template['base_addr'] = "VPIN0_SET"
+    template['data'] = data
+    print(template)
+    r = con.post(url,template)
+    if r['status'] != 'OK':
+        print(r)
+        sys.exit(1)
+    time.sleep(0.5)
+
+def setup_IPIN(con,conf,bc,calib,pol_chan,step=1):
+    global template
+    url = conf.get_rest_base()+'/slo'
+
+    template['board'] = 'R'
+    template['pol'] = 'R'+str(pol_chan)
+    data = []
+    print(calib['PIN DIODES']['SET VOLTAGE'][0])
+    data.append(get_step(bc.ipin0,calib['PIN DIODES']['SET CURRENT'][0],step))
+    data.append(get_step(bc.ipin1,calib['PIN DIODES']['SET CURRENT'][1],step))
+    data.append(get_step(bc.ipin2,calib['PIN DIODES']['SET CURRENT'][2],step))
+    data.append(get_step(bc.ipin3,calib['PIN DIODES']['SET CURRENT'][3],step))
+    template['base_addr'] = "IPIN0_SET"
+    template['data'] = data
+    print(template)
+    r = con.post(url,template)
+    if r['status'] != 'OK':
+        print(r)
+        sys.exit(1)
+    time.sleep(0.5)
 
 def turn_on_board(con,conf):
     global board_on
@@ -257,34 +289,38 @@ def turn_on_board(con,conf):
 
         time.sleep(0.5)
 
-def turn_on(con,conf,pol_list):
+def turn_on(con,conf,pol_chan):
     global template_on
     url = conf.get_rest_base()+'/slo'
 
-    for i in pol_list:
-        for c in template_on:
-            c['board'] = 'R'
-            c['pol'] = 'R'+str(i)
-            print(c)
-            r = con.post(url,c)
-            if r['status'] != 'OK':
-                print(r)
-                sys.exit(1)
+    for c in template_on:
+        c['board'] = 'R'
+        c['pol'] = 'R'+str(pol_chan)
+        print(c)
+        r = con.post(url,c)
+        if r['status'] != 'OK':
+            print(r)
+            sys.exit(1)
 
-            time.sleep(0.5)
+        time.sleep(0.5)
 
 if __name__ == '__main__':
-    d = read_board_xlsx(sys.argv[1])
-    pprint(d)
-    sys.exit(0)
+    pol_chan = 0
+    pol_chan_conf = 'Pol1'
+    pol_name = 'STRIP24'
 
-    if len(sys.argv) != 3:
-        print('usage: python ',sys.argv[0],'<BOARDx_bias_calibration.csv> <Polarimeters_calibration.csv>')
+
+    d = read_board_xlsx(sys.argv[1])
+
+    if len(sys.argv) != 2:
+        print('usage: python ',sys.argv[0],'<BOARD_cal.xlsx>')
         sys.exit(-1)
 
-    calib = read_board_calib(sys.argv[1])
+    d = read_board_xlsx(sys.argv[1])
+    calib = d[pol_chan_conf]
 
-    bc = read_csv_conf(sys.argv[2])
+    pol_biases = InstrumentBiases()
+    bc = pol_biases.get_biases(polarimeter_name=pol_name)
 
     con = Connection()
     con.login()
@@ -293,30 +329,11 @@ if __name__ == '__main__':
     conf.load(con)
     time.sleep(0.5)
 
-    pol_list = [0]
+    pol_chan = 0
 
-    setup(con,conf,bc,calib,pol_list,1)
-#    turn_on_board(con,conf)
-#    time.sleep(2)
-
-#    turn_on(con,conf,pol_list)
-#    print("TURNED ON POLARIMETERS")
-#    time.sleep(10)
-
-#    setup(con,conf,bc,zero_c,pol_list,0)
-#    print("POLARIMETERS AT STEP 0.00")
-
-    #setup(con,conf,bc,zero_c,pol_list,0.25)
-    #print("POLARIMETERS AT STEP 0.25")
-    #time.sleep(10)
-
-    #setup(con,conf,bc,zero_c,pol_list,0.5)
-    #print("POLARIMETERS AT STEP 0.50")
-    #time.sleep(10)
-
-    #setup(con,conf,bc,zero_c,pol_list,0.75)
-    #print("POLARIMETERS AT STEP 0.75")
-    #time.sleep(10)
-
-    #setup(con,conf,bc,zero_c,pol_list,1)
-    #print("POLARIMETERS AT STEP 1.00")
+    #turn_on_board(con,conf)
+    #turn_on(con,conf,pol_chan)
+    setup_VD(con,conf,bc,calib,pol_chan,0)
+    setup_VG(con,conf,bc,calib,pol_chan,0)
+    setup_VPIN(con,conf,bc,calib,pol_chan,0)
+    setup_IPIN(con,conf,bc,calib,pol_chan,0)

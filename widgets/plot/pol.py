@@ -102,7 +102,7 @@ class PolMplCanvas(MplCanvas):
         self.append(pkt)
 
 
-    def start(self,conn,pol,window_sec=60,items={},refresh=0.09):
+    def start(self,conn,pol,window_sec=300,items={},refresh=0.09):
         '''starts the stream listening and plot in a dedicated thread.
 
            :param web.rest.base.Connection conn: the backend http connection
