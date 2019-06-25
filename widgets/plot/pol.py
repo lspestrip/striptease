@@ -42,65 +42,6 @@ class PolMplCanvas(MplCanvas):
         self.items[table].remove(hk)
         self.replot()
 
-    def poll_HK(self):
-        pol = self.pol
-
-        board = ''
-        for b in self.conf.boards:
-            for p in b['pols']:
-                if p == pol:
-                    board = b['name']
-
-
-        url = self.conf.get_rest_base()+'/slo'
-        d = {
-                "board": board,
-                "pol": "BOARD",
-                "base_addr": "HK_SCAN",
-                "type": "BIAS",
-                "method": "SET",
-                "data": [23295],
-                "timeout": 500
-            }
-
-        hk_req = {
-              "board": board,
-              "pol": pol,
-              "base_addr": "VD0_SET",
-              "type": "BIAS",
-              "method": "GET",
-              "size": 16,
-              "timeout": 500
-        }
-
-        res = self.wamp.conn.post(url,d)
-        if res.get('status','NOT_OK') != 'OK':
-            print('error while refreshing HK')
-            return
-
-        mjd = at.Time.now().mjd
-        bias = {}
-        i = 0
-        while i < 256:
-            item = self.conf.addr_int['BIAS_POL'].get(i)
-            if item is None:
-                i +=1
-                continue
-            hk_req['base_addr'] = item['name']
-            res = self.wamp.conn.post(url,hk_req)
-            if res.get('status','NOT_OK') != 'OK':
-                print('error while refreshing HK')
-                break
-            for j in res['data']:
-                item = self.conf.addr_int['BIAS_POL'].get(i)
-                if item is None:
-                    i +=1
-                    continue
-                bias[item['name']]=j
-                i += 1
-        pkt = {'pol':pol,'mjd':mjd,'bias':bias}
-        self.append(pkt)
-
 
     def start(self,conn,pol,window_sec=300,items={},refresh=0.09):
         '''starts the stream listening and plot in a dedicated thread.
@@ -131,8 +72,6 @@ class PolMplCanvas(MplCanvas):
 
         self.__prepare_canvas()
         self.sub = self.__connect()
-        self.th = Thread(target=self.__f)
-        self.th.start()
 
     def stop(self):
         '''Stops to listen to the data stream, closes websocket connection, stops the worker thread
@@ -140,7 +79,6 @@ class PolMplCanvas(MplCanvas):
         '''
         self.wamp.leave()
         self.wamp = None
-        self.th.join()
         self.__clear_data()
 
     def replot(self):
@@ -277,7 +215,3 @@ class PolMplCanvas(MplCanvas):
                     'ts'  : np.ndarray([0], dtype=np.float64)
                     }
 
-    def __f(self):
-        while self.wamp is not None:
-            self.poll_HK()
-            time.sleep(1.0)
