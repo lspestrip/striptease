@@ -21,9 +21,15 @@
         "polarimeter": "STRIP02",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/355/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 86900,
+            "q2_adu": 89120,
+            "u1_adu": 88780,
+            "u2_adu": 89760
+        }
     },
     "STRIP04": {
         "ha1_id_mA": 7.2,
@@ -47,9 +53,9 @@
         "polarimeter": "STRIP04",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/88/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26"
     },
     "STRIP05": {
         "ha1_id_mA": 7.0,
@@ -73,9 +79,15 @@
         "polarimeter": "STRIP05",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/123/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 97240,
+            "q2_adu": 94085,
+            "u1_adu": 95500,
+            "u2_adu": 94050
+        }
     },
     "STRIP07": {
         "ha1_id_mA": 4.4,
@@ -99,9 +111,9 @@
         "polarimeter": "STRIP07",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/22/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26"
     },
     "STRIP08": {
         "ha1_id_mA": 4.3,
@@ -125,9 +137,9 @@
         "polarimeter": "STRIP08",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/275/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26"
     },
     "STRIP09": {
         "ha1_id_mA": 6.2,
@@ -151,9 +163,15 @@
         "polarimeter": "STRIP09",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/396/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 94800,
+            "q2_adu": 96000,
+            "u1_adu": 96400,
+            "u2_adu": 97350
+        }
     },
     "STRIP10": {
         "ha1_id_mA": 4.0,
@@ -177,9 +195,15 @@
         "polarimeter": "STRIP10",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/270/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 99260,
+            "q2_adu": 103450,
+            "u1_adu": 100675,
+            "u2_adu": 192525
+        }
     },
     "STRIP12": {
         "ha1_id_mA": 4.25,
@@ -203,9 +227,15 @@
         "polarimeter": "STRIP12",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/265/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 68700,
+            "q2_adu": 69800,
+            "u1_adu": 67630,
+            "u2_adu": 66400
+        }
     },
     "STRIP13": {
         "ha1_id_mA": 5.18,
@@ -229,9 +259,15 @@
         "polarimeter": "STRIP13",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/458/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 100760,
+            "q2_adu": 104135,
+            "u1_adu": 102330,
+            "u2_adu": 101265
+        }
     },
     "STRIP15": {
         "ha1_id_mA": 4.4,
@@ -255,9 +291,15 @@
         "polarimeter": "STRIP15",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/261/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": -410,
+            "q2_adu": -520,
+            "u1_adu": -15,
+            "u2_adu": -445
+        }
     },
     "STRIP16": {
         "ha1_id_mA": 5.5,
@@ -281,9 +323,15 @@
         "polarimeter": "STRIP16",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/308/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 1085,
+            "q2_adu": -960,
+            "u1_adu": -2360,
+            "u2_adu": 1400
+        }
     },
     "STRIP17": {
         "ha1_id_mA": 9.0,
@@ -307,9 +355,15 @@
         "polarimeter": "STRIP17",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/255/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 74200,
+            "q2_adu": 73020,
+            "u1_adu": 76300,
+            "u2_adu": 72580
+        }
     },
     "STRIP20": {
         "ha1_id_mA": 5.0,
@@ -333,9 +387,15 @@
         "polarimeter": "STRIP20",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/409/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 103420,
+            "q2_adu": 99210,
+            "u1_adu": 100930,
+            "u2_adu": 100210
+        }
     },
     "STRIP21": {
         "ha1_id_mA": 12.0,
@@ -359,9 +419,15 @@
         "polarimeter": "STRIP21",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/386/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 84670,
+            "q2_adu": 85940,
+            "u1_adu": 84350,
+            "u2_adu": 86370
+        }
     },
     "STRIP22": {
         "ha1_id_mA": 4.22,
@@ -385,9 +451,15 @@
         "polarimeter": "STRIP22",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/251/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 101000,
+            "q2_adu": 98700,
+            "u1_adu": 97200,
+            "u2_adu": 101270
+        }
     },
     "STRIP24": {
         "ha1_id_mA": 7.6,
@@ -411,9 +483,15 @@
         "polarimeter": "STRIP24",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/45/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 1990,
+            "q2_adu": 800,
+            "u1_adu": -3900,
+            "u2_adu": -950
+        }
     },
     "STRIP25": {
         "ha1_id_mA": 5.38,
@@ -437,9 +515,15 @@
         "polarimeter": "STRIP25",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/402/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 102800,
+            "q2_adu": 100950,
+            "u1_adu": 102900,
+            "u2_adu": 104000
+        }
     },
     "STRIP26": {
         "ha1_id_mA": 4.6,
@@ -463,9 +547,15 @@
         "polarimeter": "STRIP26",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/423/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 104300,
+            "q2_adu": 110200,
+            "u1_adu": 102900,
+            "u2_adu": 112500
+        }
     },
     "STRIP27": {
         "ha1_id_mA": 5.0,
@@ -489,9 +579,15 @@
         "polarimeter": "STRIP27",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/230/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 660,
+            "q2_adu": 660,
+            "u1_adu": 1160,
+            "u2_adu": 2670
+        }
     },
     "STRIP28": {
         "ha1_id_mA": 6.5,
@@ -515,9 +611,15 @@
         "polarimeter": "STRIP28",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/120/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 83400,
+            "q2_adu": 95300,
+            "u1_adu": 84800,
+            "u2_adu": 84600
+        }
     },
     "STRIP29": {
         "ha1_id_mA": 6.5,
@@ -541,9 +643,15 @@
         "polarimeter": "STRIP29",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/245/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": -125,
+            "q2_adu": 1610,
+            "u1_adu": -50,
+            "u2_adu": -2025
+        }
     },
     "STRIP30": {
         "ha1_id_mA": 11.7,
@@ -567,9 +675,15 @@
         "polarimeter": "STRIP30",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/240/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 82250,
+            "q2_adu": 83210,
+            "u1_adu": 84150,
+            "u2_adu": 80895
+        }
     },
     "STRIP31": {
         "ha1_id_mA": 3.0,
@@ -593,9 +707,15 @@
         "polarimeter": "STRIP31",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/158/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": -630,
+            "q2_adu": -2090,
+            "u1_adu": -1050,
+            "u2_adu": -3540
+        }
     },
     "STRIP33": {
         "ha1_id_mA": 6.0,
@@ -619,9 +739,9 @@
         "polarimeter": "STRIP33",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/32/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26"
     },
     "STRIP34": {
         "ha1_id_mA": 8.61,
@@ -645,9 +765,15 @@
         "polarimeter": "STRIP34",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/232/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 97230,
+            "q2_adu": 93400,
+            "u1_adu": 97220,
+            "u2_adu": 96350
+        }
     },
     "STRIP35": {
         "ha1_id_mA": 6.15,
@@ -671,9 +797,15 @@
         "polarimeter": "STRIP35",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/361/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 121050,
+            "q2_adu": 122830,
+            "u1_adu": 118920,
+            "u2_adu": 117950
+        }
     },
     "STRIP36": {
         "ha1_id_mA": 6.67,
@@ -697,9 +829,15 @@
         "polarimeter": "STRIP36",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/222/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 99510,
+            "q2_adu": 101030,
+            "u1_adu": 100700,
+            "u2_adu": 99530
+        }
     },
     "STRIP37": {
         "ha1_id_mA": 6.15,
@@ -723,9 +861,15 @@
         "polarimeter": "STRIP37",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/61/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 101200,
+            "q2_adu": 100100,
+            "u1_adu": 99500,
+            "u2_adu": 97150
+        }
     },
     "STRIP39": {
         "ha1_id_mA": 3.5,
@@ -749,9 +893,15 @@
         "polarimeter": "STRIP39",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/213/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 99760,
+            "q2_adu": 100800,
+            "u1_adu": 101360,
+            "u2_adu": 98000
+        }
     },
     "STRIP40": {
         "ha1_id_mA": 4.1,
@@ -775,9 +925,15 @@
         "polarimeter": "STRIP40",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/502/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 49950,
+            "q2_adu": 54400,
+            "u1_adu": 51250,
+            "u2_adu": 53450
+        }
     },
     "STRIP41": {
         "ha1_id_mA": 4.1,
@@ -801,9 +957,15 @@
         "polarimeter": "STRIP41",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/169/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 400,
+            "q2_adu": -260,
+            "u1_adu": 2580,
+            "u2_adu": 2100
+        }
     },
     "STRIP43": {
         "ha1_id_mA": 4.45,
@@ -827,9 +989,15 @@
         "polarimeter": "STRIP43",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/52/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 103150,
+            "q2_adu": 103700,
+            "u1_adu": 101500,
+            "u2_adu": 103270
+        }
     },
     "STRIP44": {
         "ha1_id_mA": 4.8,
@@ -853,9 +1021,15 @@
         "polarimeter": "STRIP44",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/182/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 125048,
+            "q2_adu": 111700,
+            "u1_adu": 137270,
+            "u2_adu": 125840
+        }
     },
     "STRIP45": {
         "ha1_id_mA": 4.15,
@@ -879,9 +1053,15 @@
         "polarimeter": "STRIP45",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/101/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 95600,
+            "q2_adu": 97000,
+            "u1_adu": 95150,
+            "u2_adu": 95400
+        }
     },
     "STRIP46": {
         "ha1_id_mA": 7.7,
@@ -905,9 +1085,15 @@
         "polarimeter": "STRIP46",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/430/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 101790,
+            "q2_adu": 100250,
+            "u1_adu": 99700,
+            "u2_adu": 102060
+        }
     },
     "STRIP47": {
         "ha1_id_mA": 4.5,
@@ -931,9 +1117,15 @@
         "polarimeter": "STRIP47",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/153/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": -800,
+            "q2_adu": 980,
+            "u1_adu": -2020,
+            "u2_adu": -530
+        }
     },
     "STRIP48": {
         "ha1_id_mA": 2.13,
@@ -957,9 +1149,9 @@
         "polarimeter": "STRIP48",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/50/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26"
     },
     "STRIP50": {
         "ha1_id_mA": 4.3,
@@ -983,9 +1175,15 @@
         "polarimeter": "STRIP50",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/114/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": -2250,
+            "q2_adu": -1900,
+            "u1_adu": -1700,
+            "u2_adu": -2200
+        }
     },
     "STRIP51": {
         "ha1_id_mA": 4.55,
@@ -1009,9 +1207,15 @@
         "polarimeter": "STRIP51",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/436/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 86450,
+            "q2_adu": 91870,
+            "u1_adu": 87570,
+            "u2_adu": 89140
+        }
     },
     "STRIP52": {
         "ha1_id_mA": 5.0,
@@ -1035,9 +1239,15 @@
         "polarimeter": "STRIP52",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/148/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 81840,
+            "q2_adu": 79970,
+            "u1_adu": 80130,
+            "u2_adu": 79000
+        }
     },
     "STRIP54": {
         "ha1_id_mA": 3.2,
@@ -1061,9 +1271,15 @@
         "polarimeter": "STRIP54",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/279/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 84550,
+            "q2_adu": 85720,
+            "u1_adu": 86730,
+            "u2_adu": 86700
+        }
     },
     "STRIP55": {
         "ha1_id_mA": 4.5,
@@ -1087,9 +1303,15 @@
         "polarimeter": "STRIP55",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/95/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": -1300,
+            "q2_adu": -1000,
+            "u1_adu": 1050,
+            "u2_adu": -1700
+        }
     },
     "STRIP56": {
         "ha1_id_mA": 3.45,
@@ -1113,9 +1335,15 @@
         "polarimeter": "STRIP56",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/175/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 65750,
+            "q2_adu": 66600,
+            "u1_adu": 68900,
+            "u2_adu": 67250
+        }
     },
     "STRIP57": {
         "ha1_id_mA": 4.95,
@@ -1139,9 +1367,15 @@
         "polarimeter": "STRIP57",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/144/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 90800,
+            "q2_adu": 87860,
+            "u1_adu": 89400,
+            "u2_adu": 88070
+        }
     },
     "STRIP58": {
         "ha1_id_mA": 3.0,
@@ -1165,9 +1399,15 @@
         "polarimeter": "STRIP58",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/140/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 79550,
+            "q2_adu": 79000,
+            "u1_adu": 82300,
+            "u2_adu": 80400
+        }
     },
     "STRIP59": {
         "ha1_id_mA": 3.02,
@@ -1191,9 +1431,15 @@
         "polarimeter": "STRIP59",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/107/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 84940,
+            "q2_adu": 85760,
+            "u1_adu": 83150,
+            "u2_adu": 84000
+        }
     },
     "STRIP61": {
         "ha1_id_mA": 3.02,
@@ -1217,9 +1463,15 @@
         "polarimeter": "STRIP61",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/367/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 57400,
+            "q2_adu": 60900,
+            "u1_adu": 59700,
+            "u2_adu": 59800
+        }
     },
     "STRIP62": {
         "ha1_id_mA": 3.93,
@@ -1243,9 +1495,15 @@
         "polarimeter": "STRIP62",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/491/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 47970,
+            "q2_adu": 46400,
+            "u1_adu": 48300,
+            "u2_adu": 50200
+        }
     },
     "STRIP63": {
         "ha1_id_mA": 3.0,
@@ -1269,9 +1527,15 @@
         "polarimeter": "STRIP63",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/136/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 78700,
+            "q2_adu": 79790,
+            "u1_adu": 77930,
+            "u2_adu": 78000
+        }
     },
     "STRIP64": {
         "ha1_id_mA": 2.96,
@@ -1295,9 +1559,9 @@
         "polarimeter": "STRIP64",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/72/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26"
     },
     "STRIP65": {
         "ha1_id_mA": 3.05,
@@ -1321,9 +1585,15 @@
         "polarimeter": "STRIP65",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/472/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 85900,
+            "q2_adu": 86150,
+            "u1_adu": 87400,
+            "u2_adu": 84000
+        }
     },
     "STRIP66": {
         "ha1_id_mA": 3.07,
@@ -1347,9 +1617,15 @@
         "polarimeter": "STRIP66",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/374/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 64600,
+            "q2_adu": 66700,
+            "u1_adu": 63800,
+            "u2_adu": 65000
+        }
     },
     "STRIP67": {
         "ha1_id_mA": 4.45,
@@ -1373,9 +1649,15 @@
         "polarimeter": "STRIP67",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/189/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 58740,
+            "q2_adu": 55640,
+            "u1_adu": 57100,
+            "u2_adu": 60120
+        }
     },
     "STRIP68": {
         "ha1_id_mA": 3.16,
@@ -1399,9 +1681,15 @@
         "polarimeter": "STRIP68",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/380/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 87700,
+            "q2_adu": 88000,
+            "u1_adu": 85200,
+            "u2_adu": 87400
+        }
     },
     "STRIP69": {
         "ha1_id_mA": 9.45,
@@ -1425,9 +1713,9 @@
         "polarimeter": "STRIP69",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/81/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26"
     },
     "STRIP70": {
         "ha1_id_mA": 3.78,
@@ -1451,9 +1739,15 @@
         "polarimeter": "STRIP70",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/481/json",
         "band": "Q",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 86000,
+            "q2_adu": 82430,
+            "u1_adu": 84370,
+            "u2_adu": 83100
+        }
     },
     "STRIP71": {
         "ha1_id_mA": 4.1,
@@ -1477,9 +1771,15 @@
         "polarimeter": "STRIP71",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/644/json",
         "band": "W",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 100500,
+            "q2_adu": 99270,
+            "u1_adu": 98000,
+            "u2_adu": 98300
+        }
     },
     "STRIP72": {
         "ha1_id_mA": 4.86,
@@ -1503,35 +1803,47 @@
         "polarimeter": "STRIP72",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/653/json",
         "band": "W",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 98200,
+            "q2_adu": 97210,
+            "u1_adu": 94100,
+            "u2_adu": 97500
+        }
     },
     "STRIP73": {
-        "ha1_id_mA": 2.28,
-        "ha1_vd_mV": 228.0,
-        "ha1_vg_mV": 352.0,
-        "ha2_id_mA": 6.0,
-        "ha2_vd_mV": 320.0,
-        "ha2_vg_mV": 293.0,
-        "ha3_id_mA": 6.0,
-        "ha3_vd_mV": 320.0,
-        "ha3_vg_mV": 293.0,
-        "hb1_id_mA": 2.51,
-        "hb1_vd_mV": 209.0,
-        "hb1_vg_mV": 148.0,
-        "hb2_id_mA": 4.91,
-        "hb2_vd_mV": 355.0,
-        "hb2_vg_mV": 215.0,
-        "hb3_id_mA": 4.91,
-        "hb3_vd_mV": 355.0,
-        "hb3_vg_mV": 215.0,
+        "ha1_id_mA": 4.66,
+        "ha1_vd_mV": 700.0,
+        "ha1_vg_mV": 334.0,
+        "ha2_id_mA": 6.25,
+        "ha2_vd_mV": 370.0,
+        "ha2_vg_mV": 280.0,
+        "ha3_id_mA": 6.25,
+        "ha3_vd_mV": 370.0,
+        "ha3_vg_mV": 280.0,
+        "hb1_id_mA": 7.79,
+        "hb1_vd_mV": 700.0,
+        "hb1_vg_mV": 153.0,
+        "hb2_id_mA": 5.21,
+        "hb2_vd_mV": 405.0,
+        "hb2_vg_mV": 210.0,
+        "hb3_id_mA": 5.21,
+        "hb3_vd_mV": 405.0,
+        "hb3_vg_mV": 210.0,
         "polarimeter": "STRIP73",
-        "data_url": "https://striptest.fisica.unimi.it/unittests/tests/557/json",
+        "data_url": "https://striptest.fisica.unimi.it/unittests/tests/605/json",
         "band": "W",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 100430,
+            "q2_adu": 98300,
+            "u1_adu": 98220,
+            "u2_adu": 97900
+        }
     },
     "STRIP74": {
         "ha1_id_mA": 3.0,
@@ -1555,9 +1867,47 @@
         "polarimeter": "STRIP74",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/666/json",
         "band": "W",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 98340,
+            "q2_adu": 98720,
+            "u1_adu": 99780,
+            "u2_adu": 97200
+        }
+    },
+    "STRIP75": {
+        "ha1_id_mA": 4.96,
+        "ha1_vd_mV": 499.0,
+        "ha1_vg_mV": 73.0,
+        "ha2_id_mA": 6.19,
+        "ha2_vd_mV": 411.0,
+        "ha2_vg_mV": 532.0,
+        "ha3_id_mA": 6.19,
+        "ha3_vd_mV": 411.0,
+        "ha3_vg_mV": 532.0,
+        "hb1_id_mA": 5.24,
+        "hb1_vd_mV": 504.0,
+        "hb1_vg_mV": 199.0,
+        "hb2_id_mA": 4.26,
+        "hb2_vd_mV": 412.0,
+        "hb2_vg_mV": 496.0,
+        "hb3_id_mA": 4.26,
+        "hb3_vd_mV": 412.0,
+        "hb3_vg_mV": 496.0,
+        "polarimeter": "STRIP75",
+        "data_url": "https://striptest.fisica.unimi.it/unittests/tests/672/json",
+        "band": "W",
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 104250,
+            "q2_adu": 103800,
+            "u1_adu": 103200,
+            "u2_adu": 103400
+        }
     },
     "STRIP76": {
         "ha1_id_mA": 5.01,
@@ -1581,9 +1931,15 @@
         "polarimeter": "STRIP76",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/518/json",
         "band": "W",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 99480,
+            "q2_adu": 100780,
+            "u1_adu": 102830,
+            "u2_adu": 100620
+        }
     },
     "STRIP77": {
         "ha1_id_mA": 4.79,
@@ -1607,9 +1963,15 @@
         "polarimeter": "STRIP77",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/548/json",
         "band": "W",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 103700,
+            "q2_adu": 101200,
+            "u1_adu": 101350,
+            "u2_adu": 101670
+        }
     },
     "STRIP78": {
         "ha1_id_mA": 4.06,
@@ -1633,9 +1995,15 @@
         "polarimeter": "STRIP78",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/533/json",
         "band": "W",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 100200,
+            "q2_adu": 103600,
+            "u1_adu": 102200,
+            "u2_adu": 101800
+        }
     },
     "STRIP81": {
         "ha1_id_mA": 5.2,
@@ -1659,9 +2027,15 @@
         "polarimeter": "STRIP81",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/529/json",
         "band": "W",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 84570,
+            "q2_adu": 88080,
+            "u1_adu": 81800,
+            "u2_adu": 85400
+        }
     },
     "STRIP82": {
         "ha1_id_mA": 3.78,
@@ -1685,9 +2059,15 @@
         "polarimeter": "STRIP82",
         "data_url": "https://striptest.fisica.unimi.it/unittests/tests/541/json",
         "band": "W",
-        "striptun_version": "0.4",
-        "latest_git_commit": "092808061d79c8e0d603d6566bf60f552ed85563",
-        "analysis_date": "2018-05-31"
+        "striptun_version": "0.4.1",
+        "latest_git_commit": "8fe4efb750c7165a46f65ca9ea3fc6ed4da0def5",
+        "analysis_date": "2019-06-26",
+        "output": {
+            "q1_adu": 100470,
+            "q2_adu": 101024,
+            "u1_adu": 102800,
+            "u2_adu": 102600
+        }
     },
     "STRIP84": {
         "ha1_id_mA": 3.74,
