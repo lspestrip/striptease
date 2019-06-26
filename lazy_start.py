@@ -1,5 +1,6 @@
 from web.rest.base import Connection
 from config import Config
+from copy import deepcopy
 import time
 import csv
 import sys
@@ -304,6 +305,26 @@ def turn_on(con,conf,pol_chan):
 
         time.sleep(0.5)
 
+
+def turn_off(con,conf,pol_chan):
+    global template_on
+    url = conf.get_rest_base()+'/slo'
+
+    template_off = deepcopy(template_on)
+    template_off.reverse()
+
+    for c in template_off:
+        c['board'] = 'R'
+        c['pol'] = 'R'+str(pol_chan)
+        c['data'] = [0]
+        print(c)
+        r = con.post(url,c)
+        if r['status'] != 'OK':
+            print(r)
+            sys.exit(1)
+
+        time.sleep(0.5)
+
 PINCON_DEFAULT = 0
 PINCON_PHA     = 1
 PINCON_PHB     = 2
@@ -317,9 +338,6 @@ if __name__ == '__main__':
     pol_chan = 1
     pol_chan_conf = 'Pol2'
     pol_name = 'STRIP24'
-
-
-    d = read_board_xlsx(sys.argv[1])
 
     if len(sys.argv) != 2:
         print('usage: python ',sys.argv[0],'<BOARD_cal.xlsx>')
@@ -338,9 +356,13 @@ if __name__ == '__main__':
     conf.load(con)
     time.sleep(0.5)
 
+
     #turn_on_board(con,conf)
     #turn_on(con,conf,pol_chan)
-    setup_VD(con,conf,bc,calib,pol_chan,1)
-    setup_VG(con,conf,bc,calib,pol_chan,1)
-    setup_VPIN(con,conf,bc,calib,pol_chan,1)
-    setup_IPIN(con,conf,bc,calib,pol_chan,1)
+
+    #setup_VD(con,conf,bc,calib,pol_chan,0)
+    #setup_VG(con,conf,bc,calib,pol_chan,1)
+    #setup_VPIN(con,conf,bc,calib,pol_chan,0)
+    #setup_IPIN(con,conf,bc,calib,pol_chan,0)
+
+    turn_off(con,conf,pol_chan)
