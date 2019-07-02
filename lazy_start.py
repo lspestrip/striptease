@@ -335,8 +335,8 @@ PINCON_0       = 6
 
 
 if __name__ == '__main__':
-    pol_chan = 1
-    pol_chan_conf = 'Pol2'
+    pol_chan = 0
+    pol_chan_conf = 'Pol1'
     pol_name = 'STRIP24'
 
     if len(sys.argv) != 2:
@@ -361,7 +361,7 @@ if __name__ == '__main__':
     #turn_on(con,conf,pol_chan)
 
     #setup_VD(con,conf,bc,calib,pol_chan,0)
-    #setup_VG(con,conf,bc,calib,pol_chan,1)
+    #setup_VG(con,conf,bc,calib,pol_chan,0)
     #setup_VPIN(con,conf,bc,calib,pol_chan,0)
     #setup_IPIN(con,conf,bc,calib,pol_chan,0)
 
