@@ -162,6 +162,37 @@ class SetupBoard(object):
                 sys.exit(1)
             time.sleep(0.5)
 
+    def setup_ID(self,step=1):
+        url = self.conf.get_rest_base()+'/slo'
+
+        cmd = {}
+        cmd['board']   = self.board
+        cmd['type']    = "BIAS"
+        cmd['method']  = "SET"
+        cmd['timeout'] = 500
+
+        for p in self.pols:
+            cmd['pol'] = p[0]
+            data = []
+            bc = self.ib.get_biases(module_name=p[0])
+            calib = self.bc['Pol'+str(p[1]+1)]
+
+            print(calib['DRAIN']['SET CURRENT'][0])
+            data.append(get_step(bc.id0,calib['DRAIN']['SET CURRENT'][0],step))
+            data.append(get_step(bc.id1,calib['DRAIN']['SET CURRENT'][1],step))
+            data.append(get_step(bc.id2,calib['DRAIN']['SET CURRENT'][2],step))
+            data.append(get_step(bc.id3,calib['DRAIN']['SET CURRENT'][3],step))
+            data.append(get_step(bc.id4,calib['DRAIN']['SET CURRENT'][4],step))
+            data.append(get_step(bc.id5,calib['DRAIN']['SET CURRENT'][5],step))
+            cmd['base_addr'] = "ID0_SET"
+            cmd['data'] = data
+            print(cmd)
+            r = self.con.post(url,cmd)
+            if r['status'] != 'OK':
+                print(r)
+                sys.exit(1)
+            time.sleep(0.5)
+
     def setup_VG(self,step=1):
         url = self.conf.get_rest_base()+'/slo'
 
@@ -253,6 +284,26 @@ class SetupBoard(object):
                 sys.exit(1)
             time.sleep(0.5)
 
+    def change_file(self):
+        url = self.conf.get_rest_base()+'/command'
+
+        cmd = {'command':"round_hdf5_files"}
+        print(cmd)
+        r = self.con.post(url,cmd)
+        if r['status'] != 'OK':
+            print(r)
+            sys.exit(1)
+        time.sleep(0.5)
+
+    def log(self,msg):
+        url = self.conf.get_rest_base()+'/log'
+        cmd={'level':'INFO','message':str(msg)}
+        print(cmd)
+        r = self.con.post(url,cmd)
+        if r['status'] != 'OK':
+            print(r)
+            sys.exit(1)
+        time.sleep(0.5)
 
 def read_board_xlsx(path):
     board = {}
@@ -293,6 +344,8 @@ def read_board_xlsx(path):
     return board
 
 
+
+
 if __name__ == '__main__':
 
     if len(sys.argv) != 2:
@@ -312,7 +365,7 @@ if __name__ == '__main__':
 
     sb.setup_VD(0)
     sb.setup_VG(1)
-    sb.setup_VPIN(0)
-    sb.setup_IPIN(0)
+    sb.setup_VPIN(1)
+    sb.setup_IPIN(1)
 
     sb.pols_off()
