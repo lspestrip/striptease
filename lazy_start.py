@@ -10,7 +10,7 @@ from striptease.biases import InstrumentBiases
 
 board_on = [
 {
-  "board": "R",
+  "board": "G",
   "pol": "BOARD",
   "base_addr": "POL_RCL",
   "type": "BIAS",
@@ -21,7 +21,7 @@ board_on = [
   "timeout": 500
 },
 {
-  "board": "R",
+  "board": "G",
   "pol": "BOARD",
   "base_addr": "CAL_RCL",
   "type": "BIAS",
@@ -34,7 +34,7 @@ board_on = [
 ]
 template_on = [
 {
-  "board": "R",
+  "board": "G",
   "pol": "R0",
   "base_addr": "POL_PWR",
   "type": "BIAS",
@@ -45,7 +45,7 @@ template_on = [
   "timeout": 500
 },
 {
-  "board": "R",
+  "board": "G",
   "pol": "R0",
   "base_addr": "DAC_REF",
   "type": "BIAS",
@@ -56,7 +56,7 @@ template_on = [
   "timeout": 500
 },
 {
-  "board": "R",
+  "board": "G",
   "pol": "R0",
   "base_addr": "POL_MODE",
   "type": "BIAS",
@@ -67,7 +67,7 @@ template_on = [
   "timeout": 500
 },
 {
-  "board": "R",
+  "board": "G",
   "pol": "R0",
   "base_addr": "PRE_EN",
   "type": "PREAMP",
@@ -80,7 +80,7 @@ template_on = [
 ]
 
 template = {
-  "board": "R",
+  "board": "G",
   "pol": "R0",
   "base_addr": "VD0_SET",
   "type": "BIAS",
@@ -192,8 +192,8 @@ def setup_VD(con,conf,bc,calib,pol_chan,step=1):
     global template
     url = conf.get_rest_base()+'/slo'
 
-    template['board'] = 'R'
-    template['pol'] = 'R'+str(pol_chan)
+    template['board'] = 'G'
+    template['pol'] = pol_chan
     data = []
     print(calib['DRAIN']['SET VOLTAGE'][0])
     data.append(get_step(bc.vd0,calib['DRAIN']['SET VOLTAGE'][0],step))
@@ -215,8 +215,8 @@ def setup_VG(con,conf,bc,calib,pol_chan,step=1):
     global template
     url = conf.get_rest_base()+'/slo'
 
-    template['board'] = 'R'
-    template['pol'] = 'R'+str(pol_chan)
+    template['board'] = 'G'
+    template['pol'] = pol_chan
     data = []
     print(calib['GATE']['SET VOLTAGE'][0])
     data.append(get_step(bc.vg0,calib['GATE']['SET VOLTAGE'][0],step))
@@ -240,8 +240,8 @@ def setup_VPIN(con,conf,bc,calib,pol_chan,step=1):
     global template
     url = conf.get_rest_base()+'/slo'
 
-    template['board'] = 'R'
-    template['pol'] = 'R'+str(pol_chan)
+    template['board'] = 'G'
+    template['pol'] = pol_chan
     data = []
     print(calib['PIN DIODES']['SET VOLTAGE'][0])
     data.append(get_step(bc.vpin0,calib['PIN DIODES']['SET VOLTAGE'][0],step))
@@ -261,8 +261,8 @@ def setup_IPIN(con,conf,bc,calib,pol_chan,step=1):
     global template
     url = conf.get_rest_base()+'/slo'
 
-    template['board'] = 'R'
-    template['pol'] = 'R'+str(pol_chan)
+    template['board'] = 'G'
+    template['pol'] = pol_chan
     data = []
     print(calib['PIN DIODES']['SET VOLTAGE'][0])
     data.append(get_step(bc.ipin0,calib['PIN DIODES']['SET CURRENT'][0],step))
@@ -295,8 +295,8 @@ def turn_on(con,conf,pol_chan):
     url = conf.get_rest_base()+'/slo'
 
     for c in template_on:
-        c['board'] = 'R'
-        c['pol'] = 'R'+str(pol_chan)
+        c['board'] = 'G'
+        c['pol'] = pol_chan
         print(c)
         r = con.post(url,c)
         if r['status'] != 'OK':
@@ -314,8 +314,8 @@ def turn_off(con,conf,pol_chan):
     template_off.reverse()
 
     for c in template_off:
-        c['board'] = 'R'
-        c['pol'] = 'R'+str(pol_chan)
+        c['board'] = 'G'
+        c['pol'] = pol_chan
         c['data'] = [0]
         print(c)
         r = con.post(url,c)
@@ -335,9 +335,9 @@ PINCON_0       = 6
 
 
 if __name__ == '__main__':
-    pol_chan = 1
-    pol_chan_conf = 'Pol2'
-    pol_name = 'STRIP24'
+    pol_chan = 'W6'# channel of the electronics (from G0:G6 and W6)
+    pol_chan_conf = 'Pol8'#Board ADC calibration (from 1:8)
+    pol_name = 'STRIP76'
 
     if len(sys.argv) != 2:
         print('usage: python ',sys.argv[0],'<BOARD_cal.xlsx>')
@@ -357,12 +357,12 @@ if __name__ == '__main__':
     time.sleep(0.5)
 
 
-    #turn_on_board(con,conf)
-    #turn_on(con,conf,pol_chan)
+    turn_on_board(con,conf)
+    turn_on(con,conf,pol_chan)
 
-    #setup_VD(con,conf,bc,calib,pol_chan,0)
-    #setup_VG(con,conf,bc,calib,pol_chan,1)
-    #setup_VPIN(con,conf,bc,calib,pol_chan,0)
-    #setup_IPIN(con,conf,bc,calib,pol_chan,0)
+    #setup_VD(con,conf,bc,calib,pol_chan,1.)
+    #setup_VG(con,conf,bc,calib,pol_chan,1.)
+    #setup_VPIN(con,conf,bc,calib,pol_chan,1.)
+    #setup_IPIN(con,conf,bc,calib,pol_chan,1.)
 
-    turn_off(con,conf,pol_chan)
+    #turn_off(con,conf,pol_chan)
