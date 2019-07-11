@@ -39,6 +39,12 @@ BiasConfiguration = namedtuple(
     ],
 )
 
+ChannelCalibration = namedtuple(
+    "ChannelCalibration",
+    [
+        
+    ],
+)
 
 class InstrumentBiases:
     """InstrumentBiases
@@ -123,3 +129,7 @@ class InstrumentBiases:
         )
 
         return result
+
+class BoardCalibration:
+    def __init__(self, filename=None):
+        pass
