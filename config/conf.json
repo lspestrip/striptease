@@ -2,12 +2,16 @@
     "user_conf" : "~/.strip/conf.json",
     "urls":
     {
-	"schema"      : "https",
-	"base"        : "striper.oas.inaf.it:8000",
-	"login"       : "/rest/login",
-	"logout"      : "/rest/logout",
-	"ws_pol_base" : "/ws/hk",
-	"wamp_url" : "/wamp",
-	"wamp_realm"  : "realm1"
+	     "schema"      : "https",
+	     "base"        : "striper.oas.inaf.it:8000",
+	     "login"       : "/rest/login",
+	     "logout"      : "/rest/logout",
+	     "ws_pol_base" : "/ws/hk",
+	     "wamp_url" : "/wamp",
+	     "wamp_realm"  : "realm1"
+    },
+    "board_associations": {
+      1: "default_bias_board_1.xslx",
+      2: "default_bias_board_2.xslx"
     }
 }
