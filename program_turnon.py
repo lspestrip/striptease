@@ -8,7 +8,7 @@ from widgets.plot.pol import PolMplCanvas
 from PyQt5 import QtCore, QtGui, QtWidgets
 from program_turnon import SetupBoard
 from program_turnon.ui.main_window import Ui_main_window
-
+from striptease.biases import InstrumentBiases
 
 class WorkerSignals(QtCore.QObject):
     finished = QtCore.pyqtSignal()
@@ -22,13 +22,14 @@ class WorkerSignals(QtCore.QObject):
 
 
 class Worker(QtCore.QRunnable):
-    def __init__(self, conn, conf, board_setup, delay_sec=0.5):
+    def __init__(self, conn, conf, board_setup, polarimeter, delay_sec=0.5):
         super(Worker, self).__init__()
         self.conn = conn
         self.conf = conf
         self.board_setup = board_setup
         self.paused = False
         self.must_stop = False
+        self.polarimeter = polarimeter
         self.delay_sec = delay_sec
 
         self.signals = WorkerSignals()
@@ -36,7 +37,17 @@ class Worker(QtCore.QRunnable):
         self.signals.resume.connect(self.on_resume)
         self.signals.stop.connect(self.on_stop)
 
+        self.biases = InstrumentBiases()
+
     def post_command(self, url, cmd):
+        if self.must_stop:
+            self.signals.finished.emit()
+            self.must_stop = False
+            self.paused = False
+            return False
+        self.check_pause()
+
+        log.info(f'Command : {cmd}')
         self.signals.command.emit((url, cmd))
         time.sleep(self.delay_sec)
         if False:
@@ -76,29 +87,36 @@ class Worker(QtCore.QRunnable):
         self.paused = False
         self.must_stop = False
 
-        self.signals.log.emit("Going to turn the board on…")
-        self.board_setup.board_on()
-        if self.must_stop:
-            self.signals.finished.emit()
-            return
-        self.check_pause()
-        self.signals.log.emit("Board has been turned on")
+        # 1
+        self.signals.log.emit("Going to set up the board…")
+        self.board_setup.board_setup()
+        self.signals.log.emit("Board has been set up")
 
-        self.signals.log.emit("Going to turn the polarimeters on…")
-        time.sleep(5)
-        for idx, curpol in enumerate(self.board_setup.pols):
-            self.signals.log.emit(
-                f"    {curpol} (#{idx + 1} of {len(self.board_setup.pols)})"
-            )
-            self.board_setup.polarimeter_on(
-                polarimeter=curpol, delay_sec=self.delay_sec
-            )
-            if self.must_stop:
-                self.signals.finished.emit()
-                return
-            self.check_pause()
+        # 2
+        self.signals.log.emit(
+            f"Enabling electronics for {self.polarimeter}…"
+        )
+        self.board_setup.enable_electronics(
+            polarimeter=self.polarimeter, delay_sec=self.delay_sec
+        )
+        self.signals.log.emit("The electronics has been turned on")
 
-        self.signals.log.emit("The polarimeters have been turned on")
+        # 3
+        for idx in (0, 1, 2, 3):
+            self.board_setup.turn_on_detector(self.polarimeter, idx)
+
+        # 4
+        biases = self.biases.get_biases(module_name=self.polarimeter)
+        for (index, vpin, ipin) in zip(
+            range(4),
+            [biases.vpin0, biases.vpin1, biases.vpin2, biases.vpin3],
+            [biases.ipin0, biases.ipin1, biases.ipin2, biases.ipin3],
+        ):
+            self.board_setup.set_phsw_bias(self.polarimeter, index, vpin, ipin)
+
+        # 5
+        for idx in (0, 1, 2, 3):
+            self.board_setup.set_phsw_status(self.polarimeter, idx, status=7)
 
         self.signals.finished.emit()
 
@@ -173,7 +191,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.log_widget.setItem(currow, 0, QtWidgets.QTableWidgetItem(time.strftime("%Y-%m-%d %H:%M:%S")))
         self.ui.log_widget.setItem(currow, 1, QtWidgets.QTableWidgetItem(message))
         self.ui.log_widget.resizeColumnsToContents()
-        
 
     def update_job_buttons(self):
         if self.worker is not None:
@@ -195,6 +212,7 @@ class MainWindow(QtWidgets.QMainWindow):
             conn=self.conn,
             conf=self.conf,
             board_setup=self.sb,
+            polarimeter=self.ui.list_channels.currentText(),
             delay_sec=self.ui.delay_spinbox.value(),
         )
         self.worker.signals.log.connect(self.worker_on_log)
@@ -230,7 +248,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.log_message(message)
 
     def worker_on_command(self, url_command):
-        assert self.worker
+        log.info(f"In worker_on_command: {url_command}")
         url, command = url_command
         self.ui.commands_widget.append(
             """{{
@@ -253,7 +271,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.list_channels.clear()
         board_name = self.ui.list_boards.itemText(self.ui.list_boards.currentIndex())
         self.sb = SetupBoard(config=self.conf, board_name=board_name, post_command=None)
-        for pol in self.sb.pols:
+        for (pol, _) in self.sb.pols:
             self.ui.list_channels.addItem(pol)
 
     def on_exit(self):
@@ -265,7 +283,7 @@ if __name__ == "__main__":
 
     log.basicConfig(
         level=log.INFO,
-        format="[%(asctime)s %(levelname)s %(filename)s:%(lineno)d] %(message)s",
+        format="[%(asctime)s %(levelname)s] %(message)s",
     )
 
     app = QtWidgets.QApplication(sys.argv)
