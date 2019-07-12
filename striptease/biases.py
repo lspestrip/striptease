@@ -42,7 +42,62 @@ BiasConfiguration = namedtuple(
 ChannelCalibration = namedtuple(
     "ChannelCalibration",
     [
-        
+        "vd0_set",
+        "vd1_set",
+        "vd2_set",
+        "vd3_set",
+        "vd4_set",
+        "vd5_set",
+        "vg0_set",
+        "vg1_set",
+        "vg2_set",
+        "vg3_set",
+        "vg4_set",
+        "vg5_set",
+        "vg4a_set",
+        "vg5a_set",
+        "vpin0_set",
+        "vpin1_set",
+        "vpin2_set",
+        "vpin3_set",
+        "ipin0_set",
+        "ipin1_set",
+        "ipin2_set",
+        "ipin3_set",
+        "id0_set",
+        "id1_set",
+        "id2_set",
+        "id3_set",
+        "id4_set",
+        "id5_set",
+        "vd0_hk",
+        "vd1_hk",
+        "vd2_hk",
+        "vd3_hk",
+        "vd4_hk",
+        "vd5_hk",
+        "vg0_hk",
+        "vg1_hk",
+        "vg2_hk",
+        "vg3_hk",
+        "vg4_hk",
+        "vg5_hk",
+        "vg4a_hk",
+        "vg5a_hk",
+        "vpin0_hk",
+        "vpin1_hk",
+        "vpin2_hk",
+        "vpin3_hk",
+        "ipin0_hk",
+        "ipin1_hk",
+        "ipin2_hk",
+        "ipin3_hk",
+        "id0_hk",
+        "id1_hk",
+        "id2_hk",
+        "id3_hk",
+        "id4_hk",
+        "id5_hk"
     ],
 )
 
@@ -131,5 +186,38 @@ class InstrumentBiases:
         return result
 
 class BoardCalibration:
-    def __init__(self, filename=None):
+    """InstrumentBiases
+
+    Query an Excel file containing the values for all calibrations needed to turn on the
+    Strip instrument.
+
+    Once you have created an instance of `BoardCalibration`, call `get_channel_calibration` to return
+    the calibration of one channel.
+    """
+    def __init__(self, filename):
         pass
+
+    def get_channel_calibration(self,channel_no=None,channel_name=None):
+        """Return the calibration needed to drive a channel.
+
+        The return value is an instance of `ChannelCalibration`. You can specify either the name
+        of the channel number (0:7) or the name of the channel ("Pol1" : "Pol8").
+        """
+        if channel_no is None and channel_name is None:
+            raise ValueError(
+                "You must provide either 'channel_no' or 'channel_name' to 'BoardCalibration.get_channel_calibration'"
+            )
+
+        if  channel_no is not None and channel_name is not None:
+            raise ValueError(
+                "You cannot provide both 'channel_no' and 'channel_name' to 'BoardCalibration.get_channel_calibration'"
+            )
+
+        if channel_no is no None:
+            if channel_no < 0 or channel_no > 7:
+                raise ValueError(
+                    "'channel_no' must be a value from 0 to 7"
+                    )
+            channel = 'Pol'+str(channel_no+1)
+        else:
+            if channel_name not in ['Pol1',]
