@@ -11,7 +11,7 @@
 	     "wamp_realm"  : "realm1"
     },
     "board_associations": {
-      1: "default_bias_board_1.xslx",
-      2: "default_bias_board_2.xslx"
+      "1": "default_bias_board_1.xslx",
+      "2": "default_bias_board_2.xslx"
     }
 }
