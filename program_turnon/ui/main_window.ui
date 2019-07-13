@@ -1,186 +1,265 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>main_window</class>
+ <widget class="QMainWindow" name="main_window">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>964</width>
-    <height>429</height>
+    <width>775</width>
+    <height>725</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Turn on Strip polarimeters</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../images/turnon_icon.svg</normaloff>../images/turnon_icon.svg</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QFormLayout" name="formLayout">
-    <item row="0" column="0">
-     <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QVBoxLayout" name="verticalLayout_5">
+    <item>
+     <widget class="QGroupBox" name="groupBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="title">
+       <string>Options</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <property name="sizeConstraint">
+        <enum>QLayout::SetDefaultConstraint</enum>
+       </property>
+       <item>
+        <layout class="QFormLayout" name="formLayout">
+         <property name="sizeConstraint">
+          <enum>QLayout::SetDefaultConstraint</enum>
+         </property>
+         <property name="fieldGrowthPolicy">
+          <enum>QFormLayout::ExpandingFieldsGrow</enum>
+         </property>
+         <item row="0" column="0">
+          <widget class="QLabel" name="board_label">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>&amp;Board</string>
+           </property>
+           <property name="buddy">
+            <cstring>list_boards</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="list_boards">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Name of the board to turn on&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="list_channels">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="channel_label">
+           <property name="text">
+            <string>&amp;Channel</string>
+           </property>
+           <property name="buddy">
+            <cstring>list_channels</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="delay_label">
+           <property name="text">
+            <string>&amp;Delay between commands (sec)</string>
+           </property>
+           <property name="buddy">
+            <cstring>delay_spinbox</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QDoubleSpinBox" name="delay_spinbox">
+           <property name="decimals">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <double>60.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.500000000000000</double>
+           </property>
+           <property name="value">
+            <double>0.500000000000000</double>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_6">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="QPushButton" name="btn_board_on">
-          <property name="text">
-           <string>Board ON</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <property name="sizeConstraint">
-         <enum>QLayout::SetDefaultConstraint</enum>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
         </property>
-        <item>
-         <widget class="QComboBox" name="list_channels"/>
-        </item>
-        <item>
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>select channel</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_6">
-        <item>
-         <widget class="QComboBox" name="list_pol_mode"/>
-        </item>
-        <item>
-         <widget class="QPushButton" name="btn_pol_on">
-          <property name="text">
-           <string>Pol ON</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="QTableWidget" name="table_calibration"/>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <widget class="QDoubleSpinBox" name="step_calib">
-          <property name="maximum">
-           <double>1.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.100000000000000</double>
-          </property>
-          <property name="value">
-           <double>1.000000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="btn_apply_calib">
-          <property name="text">
-           <string>apply</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="QScrollArea" name="scrollArea">
-        <property name="widgetResizable">
+       <widget class="QPushButton" name="start_button">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start the turn-on procedure&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>&amp;Start</string>
+        </property>
+        <property name="default">
          <bool>true</bool>
         </property>
-        <widget class="QWidget" name="scrollAreaWidgetContents">
-         <property name="geometry">
-          <rect>
-           <x>0</x>
-           <y>0</y>
-           <width>254</width>
-           <height>68</height>
-          </rect>
-         </property>
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <widget class="QListWidget" name="listWidget">
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>254</width>
-            <height>68</height>
-           </rect>
-          </property>
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-            <horstretch>1</horstretch>
-            <verstretch>1</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
-        </widget>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="stop_button">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>S&amp;top</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pause_button">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>&amp;Pause</string>
+        </property>
        </widget>
       </item>
      </layout>
     </item>
-    <item row="0" column="1">
-     <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0">
-      <property name="sizeConstraint">
-       <enum>QLayout::SetDefaultConstraint</enum>
+    <item>
+     <widget class="QSplitter" name="splitter">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
       </property>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <widget class="QWidget" name="">
+       <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QTableWidget" name="table_sci">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+         <widget class="QLabel" name="log_label">
+          <property name="text">
+           <string>Log messages</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="PolMplCanvas" name="plot_sci" native="true">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-            <horstretch>1</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+         <widget class="QTableWidget" name="log_widget">
+          <property name="alternatingRowColors">
+           <bool>true</bool>
           </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_5">
-        <item>
-         <widget class="QTableWidget" name="table_hk">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+          <property name="columnCount">
+           <number>2</number>
           </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="PolMplCanvas" name="plot_hk" native="true">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-            <horstretch>1</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
+          <column/>
+          <column/>
          </widget>
         </item>
        </layout>
-      </item>
-     </layout>
+      </widget>
+      <widget class="QWidget" name="">
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QLabel" name="command_label">
+          <property name="text">
+           <string>Commands</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTextBrowser" name="commands_widget"/>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="groupBox_2">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="title">
+       <string>Create log message</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <property name="sizeConstraint">
+        <enum>QLayout::SetDefaultConstraint</enum>
+       </property>
+       <item>
+        <widget class="QLineEdit" name="log_message_edit"/>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="new_log_button">
+           <property name="text">
+            <string>Cr&amp;eate</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -189,39 +268,53 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>964</width>
+     <width>775</width>
      <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>File</string>
+     <string>&amp;File</string>
     </property>
     <addaction name="actionload_board_file"/>
     <addaction name="actionload_pol_calibration"/>
+    <addaction name="separator"/>
+    <addaction name="action_exit"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionload_board_file">
    <property name="text">
-    <string>load board file</string>
+    <string>Load board file…</string>
    </property>
   </action>
   <action name="actionload_pol_calibration">
    <property name="text">
-    <string>load pol calibration</string>
+    <string>Load &amp;pol calibration…</string>
+   </property>
+  </action>
+  <action name="action_exit">
+   <property name="text">
+    <string>&amp;Exit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
    </property>
   </action>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>PolMplCanvas</class>
-   <extends>QWidget</extends>
-   <header location="global">widgets.plot.pol.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
+ <tabstops>
+  <tabstop>list_boards</tabstop>
+  <tabstop>list_channels</tabstop>
+  <tabstop>delay_spinbox</tabstop>
+  <tabstop>start_button</tabstop>
+  <tabstop>stop_button</tabstop>
+  <tabstop>pause_button</tabstop>
+  <tabstop>log_widget</tabstop>
+  <tabstop>commands_widget</tabstop>
+  <tabstop>log_message_edit</tabstop>
+  <tabstop>new_log_button</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
