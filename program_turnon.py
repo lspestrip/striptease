@@ -11,6 +11,7 @@ from program_turnon import SetupBoard
 from program_turnon.ui.main_window import Ui_main_window
 from striptease.biases import InstrumentBiases
 
+
 class WorkerSignals(QtCore.QObject):
     finished = QtCore.pyqtSignal()
     error = QtCore.pyqtSignal(str)
@@ -48,7 +49,7 @@ class Worker(QtCore.QRunnable):
             return False
         self.check_pause()
 
-        log.info(f'Command : {cmd}')
+        log.info(f"Command : {cmd}")
         self.signals.command.emit((url, cmd))
         time.sleep(self.delay_sec)
         if False:
@@ -94,9 +95,7 @@ class Worker(QtCore.QRunnable):
         self.signals.log.emit("Board has been set up")
 
         # 2
-        self.signals.log.emit(
-            f"Enabling electronics for {self.polarimeter}…"
-        )
+        self.signals.log.emit(f"Enabling electronics for {self.polarimeter}…")
         self.board_setup.enable_electronics(
             polarimeter=self.polarimeter, delay_sec=self.delay_sec
         )
@@ -175,10 +174,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.list_boards.setCurrentIndex(0)
         self.on_board_changed()
 
-        self.ui.log_widget.setHorizontalHeaderLabels([
-            "Time",
-            "Message",
-        ])
+        self.ui.log_widget.setHorizontalHeaderLabels(["Time", "Message"])
 
     def connect_actions(self):
         self.ui.start_button.pressed.connect(self.on_start_job)
@@ -193,7 +189,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         currow = self.ui.log_widget.rowCount()
         self.ui.log_widget.setRowCount(currow + 1)
-        self.ui.log_widget.setItem(currow, 0, QtWidgets.QTableWidgetItem(time.strftime("%Y-%m-%d %H:%M:%S")))
+        self.ui.log_widget.setItem(
+            currow, 0, QtWidgets.QTableWidgetItem(time.strftime("%Y-%m-%d %H:%M:%S"))
+        )
         self.ui.log_widget.setItem(currow, 1, QtWidgets.QTableWidgetItem(message))
         self.ui.log_widget.resizeColumnsToContents()
 
@@ -286,10 +284,7 @@ class MainWindow(QtWidgets.QMainWindow):
 if __name__ == "__main__":
     import sys
 
-    log.basicConfig(
-        level=log.INFO,
-        format="[%(asctime)s %(levelname)s] %(message)s",
-    )
+    log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
 
     app = QtWidgets.QApplication(sys.argv)
     mainwindow = MainWindow()
