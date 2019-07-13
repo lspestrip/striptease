@@ -1,5 +1,6 @@
 import logging as log
 import time
+import sys
 
 from config import Config
 from web.rest.base import Connection
@@ -130,12 +131,16 @@ class MainWindow(QtWidgets.QMainWindow):
         # We connect to the server immediately before showing the main window
         log.info("Trying to connect to the server…")
         self.conn = Connection()
-        if self.conn.has_login():
-            self.conn.login()
-        else:
-            dialog = LoginWidget()
-            dialog.exec_()
-            self.conn.login(dialog.user, dialog.password)
+        try:
+            if self.conn.has_login():
+                self.conn.login()
+            else:
+                dialog = LoginWidget()
+                dialog.exec_()
+                self.conn.login(dialog.user, dialog.password)
+        except Exception as e:
+            log.error(f"Unable to connect to the server: {e}")
+            sys.exit(1)
         log.info("Connection has been established")
 
         # We need to load the configuration from the server, as it includes
