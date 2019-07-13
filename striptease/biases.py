@@ -146,10 +146,9 @@ class InstrumentBiases:
             polarimeter_name = self.modules["Polarimeter"][module_name]
 
         if not (polarimeter_name in self.biases):
+            valid_names = ", ".join(['"{0}"'.format(x) for x in self.biases.keys()])
             raise ValueError(
-                "Unknown polarimeter '%s', valid values are %s",
-                polarimeter_name,
-                ", ".join(self.biases.keys()),
+                f"Unknown polarimeter '{polarimeter_name}', valid values are {valid_names}"
             )
 
         result = BiasConfiguration(
@@ -184,6 +183,7 @@ class InstrumentBiases:
         )
 
         return result
+
 
 class BoardCalibration:
     """InstrumentBiases

@@ -40,7 +40,7 @@ class Config(object):
         '''requests the instrument configuration from the server and populates the attributes boards, board_addr, addr_str, addr_int
 
            :param web.rest.base.Connection con: the backend http connection
-           :return str: 'OK' if the request went fine, "ERROR_XX" otherwise 
+           :return str: 'OK' if the request went fine, "ERROR_XX" otherwise
         '''
         res = con.get(self.get_rest_base()+'/config')
 
@@ -109,3 +109,8 @@ class Config(object):
 
     def get_wamp_realm(self):
         return self.conf['urls']['wamp_realm']
+
+    def get_board_bias_file(self, board_num):
+        "Return the name of the Excel file containing the biases for a board"
+
+        return self.conf["board_associations"][board_num]
