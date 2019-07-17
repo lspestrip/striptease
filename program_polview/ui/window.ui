@@ -103,6 +103,20 @@
             <property name="frameShadow">
              <enum>QFrame::Raised</enum>
             </property>
+            <layout class="QGridLayout" name="gridLayout">
+             <item row="0" column="1">
+              <widget class="BaseMplCanvas" name="ig" native="true"/>
+             </item>
+             <item row="0" column="0">
+              <widget class="BaseMplCanvas" name="id" native="true"/>
+             </item>
+             <item row="1" column="0">
+              <widget class="BaseMplCanvas" name="vd" native="true"/>
+             </item>
+             <item row="1" column="1">
+              <widget class="BaseMplCanvas" name="vg" native="true"/>
+             </item>
+            </layout>
            </widget>
           </item>
           <item>
@@ -118,44 +132,58 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout">
              <item>
-              <widget class="QCheckBox" name="checkBox">
+              <widget class="QCheckBox" name="hk0">
                <property name="text">
-                <string>HA1</string>
+                <string>HK0 (HA1)</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="checkBox_2">
+              <widget class="QCheckBox" name="hk1">
                <property name="text">
-                <string>HA2</string>
+                <string>HK1 (HA2)</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="checkBox_3">
+              <widget class="QCheckBox" name="hk2">
                <property name="text">
-                <string>HA3</string>
+                <string>HK2 (HA3)</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="checkBox_4">
+              <widget class="QCheckBox" name="hk5">
                <property name="text">
-                <string>HB1</string>
+                <string>HK5 (HB1)</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="checkBox_5">
+              <widget class="QCheckBox" name="hk4">
                <property name="text">
-                <string>HB2</string>
+                <string>HK4 (HB2)</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="checkBox_6">
+              <widget class="QCheckBox" name="hk3">
                <property name="text">
-                <string>HB2</string>
+                <string>HK3 (HB3)</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="hk4a">
+               <property name="text">
+                <string>HK4A</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="hk5a">
+               <property name="text">
+                <string>HK5A</string>
                </property>
               </widget>
              </item>

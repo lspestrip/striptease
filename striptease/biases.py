@@ -213,11 +213,12 @@ class BoardCalibration:
                 "You cannot provide both 'channel_no' and 'channel_name' to 'BoardCalibration.get_channel_calibration'"
             )
 
-        if channel_no is no None:
+        if channel_no is not None:
             if channel_no < 0 or channel_no > 7:
                 raise ValueError(
                     "'channel_no' must be a value from 0 to 7"
                     )
             channel = 'Pol'+str(channel_no+1)
         else:
-            if channel_name not in ['Pol1',]
+            pass
+#TODO            if channel_name not in ['Pol1']
