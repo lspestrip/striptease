@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 
+import json
 import pandas as pd
 from pathlib import Path
 import logging
@@ -146,10 +147,9 @@ class InstrumentBiases:
             polarimeter_name = self.modules["Polarimeter"][module_name]
 
         if not (polarimeter_name in self.biases):
+            valid_names = ", ".join(['"{0}"'.format(x) for x in self.biases.keys()])
             raise ValueError(
-                "Unknown polarimeter '%s', valid values are %s",
-                polarimeter_name,
-                ", ".join(self.biases.keys()),
+                f"Unknown polarimeter '{polarimeter_name}', valid values are {valid_names}"
             )
 
         result = BiasConfiguration(
@@ -184,6 +184,7 @@ class InstrumentBiases:
         )
 
         return result
+
 
 class BoardCalibration:
     """InstrumentBiases
@@ -220,5 +221,75 @@ class BoardCalibration:
                     )
             channel = 'Pol'+str(channel_no+1)
         else:
-            pass
-#TODO            if channel_name not in ['Pol1']
+            # if channel_name not in ['Pol1',]
+            raise Exception("Not implemented yet!")
+
+            
+RefBiasConfiguration = namedtuple(
+    "RefBiasConfiguration",
+    [
+        "vd0",
+        "vd1",
+        "vd2",
+        "vd3",
+        "vd4",
+        "vd5",
+        "vg0",
+        "vg1",
+        "vg2",
+        "vg3",
+        "vg4",
+        "vg5",
+        "id0",
+        "id1",
+        "id2",
+        "id3",
+        "id4",
+        "id5",
+        "output_q1",
+        "output_q2",
+        "output_u1",
+        "output_u2",
+    ],
+)
+
+
+class ReferenceBiases:
+    """ReferenceBiases
+
+    Load the reference biases acquired during the unit tests.
+
+    Once you have created an instance of `ReferenceBiases`, call
+    `get_biases` to return the biases of one polarimeter.
+
+    """
+
+    def __init__(self, filename=None):
+        if not filename:
+            filename = str(
+                Path(__file__).absolute().parent.parent
+                / "data"
+                / "cold_bias_table.json"
+            )
+
+        logging.info("Loading reference biases from file %s", filename)
+
+        with open(filename, "rt") as inpf:
+            self.data = json.load(inpf)
+
+    def get_biases(self, polarimeter_name):
+        """Return the reference biases for a polarimeter.
+
+        The return value is a dictionary containing all the metadata
+        related to the biases of the specified polarimeter (e.g.,
+        `STRIP05`).
+
+        """
+
+        if not (polarimeter_name in self.data):
+            values = ", ".join(self.data.keys())
+            raise ValueError(
+                f"Unknown polarimeter {polarimeter_name}, valid values are {values}"
+            )
+
+        return self.data[polarimeter_name]
