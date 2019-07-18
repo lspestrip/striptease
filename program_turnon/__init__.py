@@ -142,8 +142,8 @@ class SetupBoard(object):
         cmd["timeout"] = 500
 
         for (addr, datum) in [
-            ("POL_RCL", 23295),
-            ("CAL_RCL", 23295),
+            ("POL_RCL", [23295]),
+            ("CAL_RCL", [23295]),
         ]:
             cmd["base_addr"] = addr
             cmd["data"] = datum

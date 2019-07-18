@@ -366,7 +366,7 @@ class StripConnection(Connection):
             An array of dictionaries. Each dictionary contains the
             following field:
 
-                - `pol`: name of the polarimeter, e.g., "R0" 
+                - `pol`: name of the polarimeter, e.g., "R0"
 
                 - `time_stamp`: timestamp of the sample (in units of 0.01 s)
 
@@ -409,7 +409,7 @@ class StripConnection(Connection):
             An array of dictionaries. Each dictionary contains the
             following field:
 
-                - `pol`: name of the polarimeter, e.g., "R0" 
+                - `pol`: name of the polarimeter, e.g., "R0"
 
                 - `time_stamp`: timestamp of the sample (in units of 0.01 s)
 
@@ -458,7 +458,7 @@ class StripConnection(Connection):
 
         """
 
-        dic = {"type": "START", "name": name, "comment": comment}
+        dic = {"type": "START", "tag": name, "comment": comment}
         self.last_response = self.post("rest/tag", dic)
 
     def tag_stop(self, name, comment=""):
@@ -478,7 +478,7 @@ class StripConnection(Connection):
             Nothing
         """
 
-        dic = {"type": "STOP", "name": name, "comment": comment}
+        dic = {"type": "STOP", "tag": name, "comment": comment}
         self.last_response = self.post("rest/tag", dic)
 
 
@@ -504,7 +504,7 @@ class StripTag:
     ``stop_comment``.
 
     """
-    
+
     def __init__(self, conn, name, comment="", start_comment="", stop_comment="", dry_run=False):
         self.conn = conn
         self.name = name
@@ -519,7 +519,7 @@ class StripTag:
             self.stop_comment = stop_comment
 
         self.dry_run = dry_run
-    
+
     def __enter__(self):
         if not self.dry_run:
             self.conn.tag_start(name=self.name, comment=self.start_comment)
@@ -530,4 +530,3 @@ class StripTag:
 
         if not self.dry_run:
             self.conn.tag_stop(name=self.name, comment=self.stop_comment)
-        

@@ -82,6 +82,10 @@ class Connection(object):
         pkt = json.dumps(message)
         response = self.session.post(url, data=pkt)
         if response.status_code != 200:
+            try:
+                print(response.json())
+            except:
+                pass
             response.raise_for_status()
         else:
             return response.json()
@@ -96,6 +100,10 @@ class Connection(object):
         pkt = json.dumps(message)
         response = self.session.put(url, data=pkt)
         if response.status_code != 200:
+            try:
+                print(response.json())
+            except:
+                pass
             response.raise_for_status()
         else:
             return response.json()
@@ -109,6 +117,10 @@ class Connection(object):
         response = self.session.delete(url)
         if response.status_code != 200:
             response.raise_for_status()
+            try:
+                print(response.json())
+            except:
+                pass
         else:
             return response.json()
 
@@ -120,6 +132,10 @@ class Connection(object):
         """
         response = self.session.get(url)
         if response.status_code != 200:
+            try:
+                print(response.json())
+            except:
+                pass
             response.raise_for_status()
         else:
             return response.json()
