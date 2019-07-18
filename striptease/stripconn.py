@@ -505,7 +505,7 @@ class StripTag:
 
     """
     
-    def __init__(self, conn, name, comment="", start_comment="", stop_comment=""):
+    def __init__(self, conn, name, comment="", start_comment="", stop_comment="", dry_run=False):
         self.conn = conn
         self.name = name
 
@@ -517,13 +517,17 @@ class StripTag:
 
         if stop_comment != "":
             self.stop_comment = stop_comment
+
+        self.dry_run = dry_run
     
     def __enter__(self):
-        self.conn.tag_start(name=self.name, comment=self.start_comment)
+        if not self.dry_run:
+            self.conn.tag_start(name=self.name, comment=self.start_comment)
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type:
             return
 
-        self.conn.tag_stop(name=self.name, comment=self.stop_comment)
+        if not self.dry_run:
+            self.conn.tag_stop(name=self.name, comment=self.stop_comment)
         
