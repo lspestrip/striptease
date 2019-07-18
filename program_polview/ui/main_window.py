@@ -34,7 +34,7 @@ class Ui_MainWindow(object):
         self.tab.setObjectName("tab")
         self.gridLayout_2 = QtWidgets.QGridLayout(self.tab)
         self.gridLayout_2.setObjectName("gridLayout_2")
-        self.pwr_q1 = BaseMplCanvas(self.tab)
+        self.pwr_q1 = CustomWidget(self.tab)
         self.pwr_q1.setObjectName("pwr_q1")
         self.gridLayout_2.addWidget(self.pwr_q1, 0, 0, 1, 1)
         self.pwr_q2 = BaseMplCanvas(self.tab)
@@ -51,16 +51,16 @@ class Ui_MainWindow(object):
         self.tab_2.setObjectName("tab_2")
         self.gridLayout_3 = QtWidgets.QGridLayout(self.tab_2)
         self.gridLayout_3.setObjectName("gridLayout_3")
-        self.dem_q1 = BaseMplCanvas(self.tab_2)
+        self.dem_q1 = CustomWidget(self.tab_2)
         self.dem_q1.setObjectName("dem_q1")
         self.gridLayout_3.addWidget(self.dem_q1, 0, 0, 1, 1)
-        self.dem_q2 = BaseMplCanvas(self.tab_2)
+        self.dem_q2 = CustomWidget(self.tab_2)
         self.dem_q2.setObjectName("dem_q2")
         self.gridLayout_3.addWidget(self.dem_q2, 0, 1, 1, 1)
-        self.dem_u1 = BaseMplCanvas(self.tab_2)
+        self.dem_u1 = CustomWidget(self.tab_2)
         self.dem_u1.setObjectName("dem_u1")
         self.gridLayout_3.addWidget(self.dem_u1, 1, 0, 1, 1)
-        self.dem_u2 = BaseMplCanvas(self.tab_2)
+        self.dem_u2 = CustomWidget(self.tab_2)
         self.dem_u2.setObjectName("dem_u2")
         self.gridLayout_3.addWidget(self.dem_u2, 1, 1, 1, 1)
         self.plotTabWidget.addTab(self.tab_2, "")
@@ -120,6 +120,11 @@ class Ui_MainWindow(object):
         self.plotTabWidget.addTab(self.tab_3, "")
         self.tab_4 = QtWidgets.QWidget()
         self.tab_4.setObjectName("tab_4")
+        self.gridLayout_4 = QtWidgets.QGridLayout(self.tab_4)
+        self.gridLayout_4.setObjectName("gridLayout_4")
+        self.widget = CustomWidget(self.tab_4)
+        self.widget.setObjectName("widget")
+        self.gridLayout_4.addWidget(self.widget, 0, 0, 1, 1)
         self.plotTabWidget.addTab(self.tab_4, "")
         self.verticalLayout_4.addWidget(self.plotTabWidget)
         self.groupBox_2 = QtWidgets.QGroupBox(self.centralwidget)
@@ -144,7 +149,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
-        self.plotTabWidget.setCurrentIndex(0)
+        self.plotTabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -168,6 +173,7 @@ class Ui_MainWindow(object):
         self.stats_tree.headerItem().setText(1, _translate("MainWindow", "average"))
 
 from widgets.plot.base import BaseMplCanvas
+from widgets.plot.pyqtgraph_plot import CustomWidget
 
 if __name__ == "__main__":
     import sys

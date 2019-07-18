@@ -20,8 +20,8 @@ import matplotlib
 
 
 
-def str_to_float(s, encoding="utf-8"):
-    return float(crc32(s.encode(encoding)) & 0xffffffff) / 2**32
+#def str_to_float(s, encoding="utf-8"):
+#    return float(crc32(s.encode(encoding)) & 0xffffffff) / 2**32
 
 class StatsAvg(object):
     def __init__(self,widget,span_sec=20):
@@ -163,28 +163,24 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.pwr_q2.title = "Q2"
         self.ui.pwr_q2.set_loop(loop)
 
-        loop = self.new_th_loop()
         self.ui.pwr_u1.title = "U1"
         self.ui.pwr_u1.set_loop(loop)
 
         self.ui.pwr_u2.title = "U2"
         self.ui.pwr_u2.set_loop(loop)
 
-        loop = self.new_th_loop()
         self.ui.dem_q1.title = "Q1"
         self.ui.dem_q1.set_loop(loop)
 
         self.ui.dem_q2.title = "Q2"
         self.ui.dem_q2.set_loop(loop)
 
-        loop = self.new_th_loop()
         self.ui.dem_u1.title = "U1"
         self.ui.dem_u1.set_loop(loop)
 
         self.ui.dem_u2.title = "U2"
         self.ui.dem_u2.set_loop(loop)
 
-        loop = self.new_th_loop()
         self.ui.id.title = "ID"
         self.ui.id.set_loop(loop)
 
@@ -326,8 +322,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     for hk in pkt['bias']:
                         if hk[-2:] == 'HK':
                             self.hk[pol][hk].add(pkt['mjd'],pkt['bias'][hk])
-        else:
-            print("WTF?!?:",pol)
 
     def new_th_loop(self):
         loop = asyncio.new_event_loop()

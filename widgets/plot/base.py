@@ -28,8 +28,6 @@ class BaseMplCanvas(MplCanvas):
     def __init__(self, *args, **kwargs):
         MplCanvas.__init__(self, *args, **kwargs)
         self.data={}
-        self.dict_add = {}
-        self.dict_del = {}
         self.wsec = 20
         self.rsec = 1.0
         self.loop = None
@@ -99,7 +97,7 @@ class BaseMplCanvas(MplCanvas):
 
         if t1 - self.t0 > self.rsec:
             self.t0 = t1
-            self.__set_data(mjd)
+            #self.__set_data(mjd)
 
 
     def __set_data(self,mjd):

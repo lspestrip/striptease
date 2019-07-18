@@ -50,7 +50,7 @@
       <item>
        <widget class="QTabWidget" name="plotTabWidget">
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tab">
          <attribute name="title">
@@ -58,7 +58,7 @@
          </attribute>
          <layout class="QGridLayout" name="gridLayout_2">
           <item row="0" column="0">
-           <widget class="BaseMplCanvas" name="pwr_q1" native="true"/>
+           <widget class="CustomWidget" name="pwr_q1" native="true"/>
           </item>
           <item row="0" column="1">
            <widget class="BaseMplCanvas" name="pwr_q2" native="true"/>
@@ -77,16 +77,16 @@
          </attribute>
          <layout class="QGridLayout" name="gridLayout_3">
           <item row="0" column="0">
-           <widget class="BaseMplCanvas" name="dem_q1" native="true"/>
+           <widget class="CustomWidget" name="dem_q1" native="true"/>
           </item>
           <item row="0" column="1">
-           <widget class="BaseMplCanvas" name="dem_q2" native="true"/>
+           <widget class="CustomWidget" name="dem_q2" native="true"/>
           </item>
           <item row="1" column="0">
-           <widget class="BaseMplCanvas" name="dem_u1" native="true"/>
+           <widget class="CustomWidget" name="dem_u1" native="true"/>
           </item>
           <item row="1" column="1">
-           <widget class="BaseMplCanvas" name="dem_u2" native="true"/>
+           <widget class="CustomWidget" name="dem_u2" native="true"/>
           </item>
          </layout>
         </widget>
@@ -196,6 +196,11 @@
          <attribute name="title">
           <string>Temperatures</string>
          </attribute>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="0">
+           <widget class="CustomWidget" name="widget" native="true"/>
+          </item>
+         </layout>
         </widget>
        </widget>
       </item>
@@ -252,6 +257,12 @@
    <class>BaseMplCanvas</class>
    <extends>QWidget</extends>
    <header location="global">widgets.plot.base.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CustomWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">widgets.plot.pyqtgraph_plot.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
