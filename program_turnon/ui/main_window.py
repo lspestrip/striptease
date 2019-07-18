@@ -2,9 +2,10 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.13.0
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -50,6 +51,9 @@ class Ui_main_window(object):
         self.list_boards.setSizePolicy(sizePolicy)
         self.list_boards.setObjectName("list_boards")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.list_boards)
+        self.channel_label = QtWidgets.QLabel(self.groupBox)
+        self.channel_label.setObjectName("channel_label")
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.channel_label)
         self.list_channels = QtWidgets.QComboBox(self.groupBox)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -58,9 +62,6 @@ class Ui_main_window(object):
         self.list_channels.setSizePolicy(sizePolicy)
         self.list_channels.setObjectName("list_channels")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.list_channels)
-        self.channel_label = QtWidgets.QLabel(self.groupBox)
-        self.channel_label.setObjectName("channel_label")
-        self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.channel_label)
         self.delay_label = QtWidgets.QLabel(self.groupBox)
         self.delay_label.setObjectName("delay_label")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.delay_label)
@@ -75,6 +76,9 @@ class Ui_main_window(object):
         self.verticalLayout_5.addWidget(self.groupBox)
         self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_6.setObjectName("horizontalLayout_6")
+        self.mock_run = QtWidgets.QCheckBox(self.centralwidget)
+        self.mock_run.setObjectName("mock_run")
+        self.horizontalLayout_6.addWidget(self.mock_run)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_6.addItem(spacerItem)
         self.start_button = QtWidgets.QPushButton(self.centralwidget)
@@ -93,29 +97,29 @@ class Ui_main_window(object):
         self.splitter = QtWidgets.QSplitter(self.centralwidget)
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName("splitter")
-        self.widget = QtWidgets.QWidget(self.splitter)
-        self.widget.setObjectName("widget")
-        self.verticalLayout = QtWidgets.QVBoxLayout(self.widget)
+        self.layoutWidget = QtWidgets.QWidget(self.splitter)
+        self.layoutWidget.setObjectName("layoutWidget")
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.layoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.log_label = QtWidgets.QLabel(self.widget)
+        self.log_label = QtWidgets.QLabel(self.layoutWidget)
         self.log_label.setObjectName("log_label")
         self.verticalLayout.addWidget(self.log_label)
-        self.log_widget = QtWidgets.QTableWidget(self.widget)
+        self.log_widget = QtWidgets.QTableWidget(self.layoutWidget)
         self.log_widget.setAlternatingRowColors(True)
         self.log_widget.setColumnCount(2)
         self.log_widget.setObjectName("log_widget")
         self.log_widget.setRowCount(0)
         self.verticalLayout.addWidget(self.log_widget)
-        self.widget1 = QtWidgets.QWidget(self.splitter)
-        self.widget1.setObjectName("widget1")
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.widget1)
+        self.layoutWidget1 = QtWidgets.QWidget(self.splitter)
+        self.layoutWidget1.setObjectName("layoutWidget1")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.layoutWidget1)
         self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.command_label = QtWidgets.QLabel(self.widget1)
+        self.command_label = QtWidgets.QLabel(self.layoutWidget1)
         self.command_label.setObjectName("command_label")
         self.verticalLayout_2.addWidget(self.command_label)
-        self.commands_widget = QtWidgets.QTextBrowser(self.widget1)
+        self.commands_widget = QtWidgets.QTextBrowser(self.layoutWidget1)
         self.commands_widget.setObjectName("commands_widget")
         self.verticalLayout_2.addWidget(self.commands_widget)
         self.verticalLayout_5.addWidget(self.splitter)
@@ -143,7 +147,7 @@ class Ui_main_window(object):
         self.verticalLayout_5.addWidget(self.groupBox_2)
         main_window.setCentralWidget(self.centralwidget)
         self.menu = QtWidgets.QMenuBar(main_window)
-        self.menu.setGeometry(QtCore.QRect(0, 0, 775, 22))
+        self.menu.setGeometry(QtCore.QRect(0, 0, 775, 21))
         self.menu.setObjectName("menu")
         self.menuFile = QtWidgets.QMenu(self.menu)
         self.menuFile.setObjectName("menuFile")
@@ -186,6 +190,8 @@ class Ui_main_window(object):
         self.list_boards.setToolTip(_translate("main_window", "<html><head/><body><p>Name of the board to turn on</p></body></html>"))
         self.channel_label.setText(_translate("main_window", "&Channel"))
         self.delay_label.setText(_translate("main_window", "&Delay between commands (sec)"))
+        self.mock_run.setStatusTip(_translate("main_window", "If checked, no command will be sent to the webserver"))
+        self.mock_run.setText(_translate("main_window", "Dry run"))
         self.start_button.setToolTip(_translate("main_window", "<html><head/><body><p>Start the turn-on procedure</p></body></html>"))
         self.start_button.setText(_translate("main_window", "&Start"))
         self.stop_button.setText(_translate("main_window", "S&top"))
@@ -199,5 +205,3 @@ class Ui_main_window(object):
         self.actionload_pol_calibration.setText(_translate("main_window", "Load &pol calibration…"))
         self.action_exit.setText(_translate("main_window", "&Exit"))
         self.action_exit.setShortcut(_translate("main_window", "Ctrl+Q"))
-
-
