@@ -5,6 +5,7 @@
 from config import Config
 import json
 import requests
+import time
 import web.rest.errors as err
 
 
@@ -72,15 +73,26 @@ class Connection(object):
         else:
             self.id = None
 
-    def post(self, url, message):
+    def post(self, url, message, retry_count=5, retry_delay_s=5.0):
         """encode the message in json format and send it using POST http method.
            :param str url: url to send the message.
            :param message: dictionary or list to send.
+           :param retry_count: number of times to retry the command if error 503 happens
+           :param retry_delay_s: time to wait before retrying to send the command
            :return: dictionary of the decoded json response.
            :raises HTTPError: any error that occours while communicating with the server.
         """
         pkt = json.dumps(message)
-        response = self.session.post(url, data=pkt)
+        count = 1
+        while True:
+            response = self.session.post(url, data=pkt)
+            if (response.status_code == 503) and (count <= retry_count):
+                print(f"Got error 503, retrying ({count}/{retry_count})")
+                time.sleep(retry_delay_s)
+                count += 1
+            else:
+                break
+
         if response.status_code != 200:
             try:
                 print(response.json())
