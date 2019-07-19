@@ -62,7 +62,7 @@ class Worker(QtCore.QRunnable):
             time.sleep(0.1)
 
         self.lock_count += 1
-        
+
         if self.must_stop:
             self.signals.finished.emit()
             self.must_stop = False
@@ -76,7 +76,7 @@ class Worker(QtCore.QRunnable):
             self.signals.command.emit((self.command_idx, url, cmd))
             self.command_idx += 1
             time.sleep(self.delay_sec)
-            
+
         if not self.mock_run:
             result = self.conn.post(url, cmd)
 
@@ -135,6 +135,7 @@ class Worker(QtCore.QRunnable):
             conn=self,
             name="BOARD_TURN_ON",
             comment=f"Turning on board for {self.polarimeter}",
+            dry_run=True,
         ):
             self.signals.log.emit("Going to set up the board…")
             self.board_setup.board_setup()
@@ -168,12 +169,15 @@ class Worker(QtCore.QRunnable):
             [biases.vpin0, biases.vpin1, biases.vpin2, biases.vpin3],
             [biases.ipin0, biases.ipin1, biases.ipin2, biases.ipin3],
         ):
-            with StripTag(
-                conn=self,
-                name="PHSW_BIAS",
-                comment=f"Setting biases for PH/SW {index} in {self.polarimeter}",
-            ):
-                self.board_setup.set_phsw_bias(self.polarimeter, index, vpin, ipin)
+            try:
+                with StripTag(
+                    conn=self,
+                    name="PHSW_BIAS",
+                    comment=f"Setting biases for PH/SW {index} in {self.polarimeter}",
+                ):
+                    self.board_setup.set_phsw_bias(self.polarimeter, index, vpin, ipin)
+            except:
+                log.warning(f"Unable to set bias for detector #{index}")
 
         # 5
         for idx in (0, 1, 2, 3):
@@ -196,7 +200,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
 
         self.command_history = []
-        
+
         # We connect to the server immediately before showing the main window
         log.info("Trying to connect to the server…")
         self.conn = StripConnection()
@@ -238,7 +242,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def init_controls(self):
         self.setWindowIcon(QIcon(os.path.join("program_turnon", "ui", "turnon_icon.svg")))
-        
+
         # Set the contents of the combo box listing the available boards
         for cur_board in self.conf.boards:
             self.ui.list_boards.addItem(cur_board["name"])
@@ -267,9 +271,9 @@ class MainWindow(QtWidgets.QMainWindow):
         s = ""
         for cmd in self.command_history:
             s += f"#{cmd.idx}: {cmd.command}\n"
-            
+
         self.ui.commands_widget.setPlainText(s)
-        
+
     def log_message(self, message):
         log.info(message)
 
@@ -343,7 +347,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def worker_on_log(self, message):
         assert self.worker
         self.log_message(message)
-        
+
     def worker_on_command(self, url_command):
         log.info(f"In worker_on_command: {url_command}")
         cmd_idx, url, command = url_command
@@ -371,7 +375,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_new_log_message(self):
         self.log_message(self.ui.log_message_edit.text())
-            
+
     def on_exit(self):
         self.close()
 
