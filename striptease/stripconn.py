@@ -525,8 +525,6 @@ class StripTag:
             self.conn.tag_start(name=self.name, comment=self.start_comment)
 
     def __exit__(self, exc_type, exc_value, traceback):
-        if exc_type:
-            return
-
+        # We must close the tag even if an exception has been raised
         if not self.dry_run:
             self.conn.tag_stop(name=self.name, comment=self.stop_comment)
