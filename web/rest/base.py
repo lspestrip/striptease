@@ -4,10 +4,20 @@
 
 from config import Config
 import json
+import random
 import requests
 import time
 import web.rest.errors as err
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 class Connection(object):
     """Class Handling login and session"""
@@ -73,7 +83,7 @@ class Connection(object):
         else:
             self.id = None
 
-    def post(self, url, message, retry_count=5, retry_delay_s=5.0):
+    def post(self, url, message, retry_count=5, retry_delay_s=None):
         """encode the message in json format and send it using POST http method.
            :param str url: url to send the message.
            :param message: dictionary or list to send.
@@ -85,10 +95,19 @@ class Connection(object):
         pkt = json.dumps(message)
         count = 1
         while True:
+            print(f"{url}: {pkt}")
             response = self.session.post(url, data=pkt)
             if (response.status_code == 503) and (count <= retry_count):
-                print(f"Got error 503, retrying ({count}/{retry_count})")
-                time.sleep(retry_delay_s)
+                print(
+                    bcolors.WARNING +
+                    bcolors.BOLD +
+                    f"Got error 503, response is {response.json()}, retrying ({count}/{retry_count})" +
+                    bcolors.ENDC)
+
+                if retry_delay_s:
+                    time.sleep(retry_delay_s)
+                else:
+                    time.sleep(random.uniform(2.0, 7.0))
                 count += 1
             else:
                 break
