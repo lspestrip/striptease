@@ -4,6 +4,7 @@ from config import Config
 from copy import deepcopy
 from collections import namedtuple
 import logging as log
+import re
 import time
 import csv
 import sys
@@ -24,6 +25,63 @@ def get_step(v, cal, step):
     if val < 0:
         val = 0
     return int(val)
+
+def get_polarimeter_index(pol_name):
+    "Return the progressive number of the polarimeter within the board (1…8)"
+
+    if pol_name[0] == "W":
+        return 8
+    else:
+        return int(pol_name[1]) + 1
+
+def get_lna_num(name):
+    """Return the number of an LNA, in the range 0…5
+
+    Valid values for `name` can be:
+    - The official name, e.g., HA1
+    - The UniMIB convention, e.g., H0
+    - The JPL convention, e.g., Q1
+    - An integer number, which will be returned identically
+    """
+
+    if type(name) is int:
+        # Assume that the index refers to the proper firmware register
+        return name
+    elif (len(name) == 3) and (name[0:2] in ["HA", "HB"]):
+        # Official names
+        d = {
+            "HA1": 0,
+            "HA2": 2,
+            "HA3": 4,
+            "HB1": 1,
+            "HB2": 3,
+            "HB3": 5,
+        }
+        return d[name]
+    elif (len(name) == 2) and (name[0] == "H"):
+        # UniMiB
+        d = {
+            "H0": 0,
+            "H1": 1,
+            "H2": 2,
+            "H3": 3,
+            "H4": 4,
+            "H5": 5,
+        }
+        return d[name]
+    elif (len(name) == 2) and (name[0] == "Q"):
+        # JPL
+        d = {
+            "Q1": 0,
+            "Q2": 1,
+            "Q3": 2,
+            "Q4": 3,
+            "Q5": 4,
+            "Q6": 5,
+        }
+        return d[name]
+    else:
+        raise ValueError(f"Invalid amplifier name '{name}'")
 
 
 def read_board_xlsx(path):
@@ -168,7 +226,8 @@ class SetupBoard(object):
             cmd["data"] = [c[1]]
 
             if not self.post_command(url, cmd):
-                return
+                print(f"WARNING: command {c[0]}={c[1]} gave an error")
+                break
 
             time.sleep(delay_sec)
 
@@ -261,74 +320,6 @@ class SetupBoard(object):
         if not self.post_command(url, cmd):
             return
 
-    def setup_VD(self, polarimeter, index, step=1):
-        url = self.conf.get_rest_base() + "/slo"
-
-        cmd = {}
-        cmd["board"] = self.board
-        cmd["type"] = "BIAS"
-        cmd["method"] = "SET"
-        cmd["timeout"] = 500
-
-        cmd["pol"] = polarimeter
-        data = []
-        bc = self.ib.get_biases(module_name=polarimeter)
-        calib = self.bc[f"Pol{index + 1}"]
-
-        data.append(get_step(bc.vd0, calib["DRAIN"]["SET VOLTAGE"][0], step))
-        data.append(get_step(bc.vd1, calib["DRAIN"]["SET VOLTAGE"][1], step))
-        data.append(get_step(bc.vd2, calib["DRAIN"]["SET VOLTAGE"][2], step))
-        data.append(get_step(bc.vd3, calib["DRAIN"]["SET VOLTAGE"][3], step))
-        data.append(get_step(bc.vd4, calib["DRAIN"]["SET VOLTAGE"][4], step))
-        data.append(get_step(bc.vd5, calib["DRAIN"]["SET VOLTAGE"][5], step))
-        cmd["base_addr"] = "VD0_SET"
-        cmd["data"] = data
-
-        if not self.post_command(url, cmd):
-            return
-
-    def setup_all_VDs(self, step=1):
-        for pol, idx in self.pols:
-            self.setup_VD(polarimeter=pol, index=idx, step=step)
-
-    def setup_ID(self, polarimeter, index, step=1):
-        url = self.conf.get_rest_base() + "/slo"
-
-        cmd = {}
-        cmd["board"] = self.board
-        cmd["type"] = "BIAS"
-        cmd["method"] = "SET"
-        cmd["timeout"] = 500
-
-        cmd["pol"] = polarimeter
-        data = []
-        bc = self.ib.get_biases(module_name=polarimeter)
-        calib = self.bc[f"Pol{index + 1}"]
-
-        data.append(get_step(bc.id0, calib["DRAIN"]["SET CURRENT"][0], step))
-        data.append(get_step(bc.id1, calib["DRAIN"]["SET CURRENT"][1], step))
-        data.append(get_step(bc.id2, calib["DRAIN"]["SET CURRENT"][2], step))
-        data.append(get_step(bc.id3, calib["DRAIN"]["SET CURRENT"][3], step))
-        data.append(get_step(bc.id4, calib["DRAIN"]["SET CURRENT"][4], step))
-        data.append(get_step(bc.id5, calib["DRAIN"]["SET CURRENT"][5], step))
-        cmd["base_addr"] = "ID0_SET"
-        cmd["data"] = data
-
-        if not self.post_command(url, cmd):
-            return
-
-    def setup_all_IDs(self, step=1):
-        for (pol, idx) in self.pols:
-            self.setup_ID(polarimeter=pol, index=idx, step=step)
-
-    def get_polarimeter_index(self, pol_name):
-        "Return the progressive number of the polarimeter within the board (1…8)"
-
-        if pol_name[0] == "W":
-            return 8
-        else:
-            return int(pol_name[1]) + 1
-
     def set_phsw_bias(self, polarimeter, index, vpin, ipin):
         url = self.conf.get_rest_base() + "/slo"
 
@@ -339,7 +330,7 @@ class SetupBoard(object):
         cmd["timeout"] = 500
 
         bc = self.ib.get_biases(module_name=polarimeter)
-        calib = self.bc[f"Pol{self.get_polarimeter_index(polarimeter)}"]
+        calib = self.bc[f"Pol{get_polarimeter_index(polarimeter)}"]
 
         cmd["pol"] = polarimeter
         cmd["base_addr"] = f"VPIN{index}_SET"
@@ -354,93 +345,112 @@ class SetupBoard(object):
         if not self.post_command(url, cmd):
             return
 
-    def setup_VG(self, polarimeter, index, step=1):
+    def setup_bias(self, polarimeter, index, bias_dict, param_name, excel_entry, step=1):
         url = self.conf.get_rest_base() + "/slo"
 
-        cmd = {}
-        cmd["board"] = self.board
-        cmd["type"] = "BIAS"
-        cmd["method"] = "SET"
-        cmd["timeout"] = 500
-
-        cmd["pol"] = polarimeter
-        data = []
+        pol_index = get_polarimeter_index(polarimeter)
         bc = self.ib.get_biases(module_name=polarimeter)
-        calib = self.bc[f"Pol{index + 1}"]
+        calib = self.bc[f"Pol{pol_index + 1}"]
+        title1, title2 = excel_entry
 
-        data.append(get_step(bc.vg0, calib["GATE"]["SET VOLTAGE"][0], step))
-        data.append(get_step(bc.vg1, calib["GATE"]["SET VOLTAGE"][1], step))
-        data.append(get_step(bc.vg2, calib["GATE"]["SET VOLTAGE"][2], step))
-        data.append(get_step(bc.vg3, calib["GATE"]["SET VOLTAGE"][3], step))
-        data.append(get_step(bc.vg4, calib["GATE"]["SET VOLTAGE"][4], step))
-        data.append(get_step(bc.vg5, calib["GATE"]["SET VOLTAGE"][5], step))
-        data.append(get_step(bc.vg4a, calib["GATE"]["SET VOLTAGE"]["4A"], step))
-        data.append(get_step(bc.vg5a, calib["GATE"]["SET VOLTAGE"]["5A"], step))
-        cmd["base_addr"] = "VG0_SET"
-        cmd["data"] = data
+        print(f"param_name = '{param_name}', attribute: '{bias_dict[index]}', entry = {excel_entry}")
+        cmd = {
+            "board": self.board,
+            "type": "BIAS",
+            "method": "SET",
+            "timeout": 500,
+            "pol": polarimeter,
+            "base_addr": f"{param_name}{index}_SET",
+            "data": [get_step(
+                bc.__getattribute__(bias_dict[index]),
+                calib[title1][title2][index],
+                step,
+            )],
+        }
 
         if not self.post_command(url, cmd):
             return
+
+    def setup_lna_bias(self, polarimeter, lna, bias_dict, param_name, excel_entry, step=1):
+        self.setup_bias(
+            polarimeter=polarimeter,
+            index=get_lna_num(lna),
+            bias_dict=bias_dict,
+            param_name=param_name,
+            excel_entry=excel_entry,
+            step=step,
+        )
+
+    def setup_VD(self, polarimeter, lna, step=1):
+        vd = {
+            0: "vd0",
+            1: "vd1",
+            2: "vd2",
+            3: "vd3",
+            4: "vd4",
+            5: "vd5",
+        }
+
+        self.setup_lna_bias(
+            polarimeter=polarimeter,
+            lna=lna,
+            bias_dict=vd,
+            param_name="VD",
+            excel_entry=("DRAIN", "SET VOLTAGE"),
+            step=step,
+        )
+
+    def setup_VG(self, polarimeter, lna, step=1):
+        vg = {
+            0: "vg0",
+            1: "vg1",
+            2: "vg2",
+            3: "vg3",
+            4: "vg4",
+            5: "vg5",
+            "4A": "vg4a",
+            "5A": "vg5a",
+        }
+
+        self.setup_lna_bias(
+            polarimeter=polarimeter,
+            lna=lna,
+            bias_dict=vg,
+            param_name="VG",
+            excel_entry=("GATE", "SET VOLTAGE"),
+            step=step,
+        )
+
+    def setup_ID(self, polarimeter, lna, step=1):
+        id = {
+            0: "id0",
+            1: "id1",
+            2: "id2",
+            3: "id3",
+            4: "id4",
+            5: "id5",
+        }
+
+        self.setup_lna_bias(
+            polarimeter=polarimeter,
+            lna=lna,
+            bias_dict=id,
+            param_name="ID",
+            excel_entry=("DRAIN", "SET CURRENT"),
+            step=step,
+        )
+
+    def setup_all_VDs(self, step=1):
+        for pol, _ in self.pols:
+            self.setup_VD(polarimeter=pol, step=step)
 
     def setup_all_VGs(self, step=1):
-        for (pol, idx) in self.pols:
-            self.setup_VG(polarimeter=pol, index=idx, step=step)
+        for pol, _ in self.pols:
+            self.setup_VG(polarimeter=pol, step=step)
 
-    def setup_VPIN(self, step=1):
-        url = self.conf.get_rest_base() + "/slo"
-
-        cmd = {}
-        cmd["board"] = self.board
-        cmd["type"] = "BIAS"
-        cmd["method"] = "SET"
-        cmd["timeout"] = 500
-
-        cmd["pol"] = polarimeter
-        data = []
-        bc = self.ib.get_biases(module_name=polarimeter)
-        calib = self.bc[f"Pol{index + 1}"]
-
-        data.append(get_step(bc.vpin0, calib["PIN DIODES"]["SET VOLTAGE"][0], step))
-        data.append(get_step(bc.vpin1, calib["PIN DIODES"]["SET VOLTAGE"][1], step))
-        data.append(get_step(bc.vpin2, calib["PIN DIODES"]["SET VOLTAGE"][2], step))
-        data.append(get_step(bc.vpin3, calib["PIN DIODES"]["SET VOLTAGE"][3], step))
-        cmd["base_addr"] = "VPIN0_SET"
-        cmd["data"] = data
-
-        if not self.post_command(url, cmd):
-            return
-
-    def setup_all_VPINs(self, step=1):
-        for (pol, idx) in self.pols:
-            self.setup_VPIN(polarimeter=pol, index=idx, step=step)
-
-    def setup_IPIN(self, step=1):
-        url = self.conf.get_rest_base() + "/slo"
-
-        cmd = {}
-        cmd["board"] = self.board
-        cmd["type"] = "BIAS"
-        cmd["method"] = "SET"
-        cmd["timeout"] = 500
-
-        cmd["pol"] = polarimeter
-        data = []
-        bc = self.ib.get_biases(module_name=polarimeter)
-        calib = self.bc[f"Pol{index + 1}"]
-
-        data.append(get_step(bc.ipin0, calib["PIN DIODES"]["SET CURRENT"][0], step))
-        data.append(get_step(bc.ipin1, calib["PIN DIODES"]["SET CURRENT"][1], step))
-        data.append(get_step(bc.ipin2, calib["PIN DIODES"]["SET CURRENT"][2], step))
-        data.append(get_step(bc.ipin3, calib["PIN DIODES"]["SET CURRENT"][3], step))
-        cmd["base_addr"] = "IPIN0_SET"
-        cmd["data"] = data
-
-        if not self.post_command(url, cmd):
-            return
-
-    def setup_all_IPINs(self, step=1):
-        for (pol, idx) in self.pols:
-            self.setup_IPIN(polarimeter=pol, index=idx, step=step)
+    def setup_all_IDs(self, step=1):
+        for pol, _ in self.pols:
+            self.setup_ID(polarimeter=pol, step=step)
 
     def change_file(self):
         url = self.conf.get_rest_base() + "/command"

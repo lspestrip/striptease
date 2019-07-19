@@ -68,6 +68,7 @@ class Worker(QtCore.QRunnable):
             self.must_stop = False
             self.paused = False
             self.lock_count -= 1
+            print("I must stop")
             return False
         self.check_pause()
 
@@ -82,8 +83,8 @@ class Worker(QtCore.QRunnable):
 
             if result["status"] != "OK":
                 self.signals.error.emit(f"Error executing {cmd}: {result}")
-            self.lock_count -= 1
-            return False
+                self.lock_count -= 1
+                return False
 
         self.lock_count -= 1
         return True
@@ -135,7 +136,6 @@ class Worker(QtCore.QRunnable):
             conn=self,
             name="BOARD_TURN_ON",
             comment=f"Turning on board for {self.polarimeter}",
-            dry_run=True,
         ):
             self.signals.log.emit("Going to set up the board…")
             self.board_setup.board_setup()
@@ -184,9 +184,28 @@ class Worker(QtCore.QRunnable):
             with StripTag(
                 conn=self,
                 name="PHSW_STATUS",
-                comment=f"Setting status for PH/SW {index} in {self.polarimeter}",
+                comment=f"Setting status for PH/SW {idx} in {self.polarimeter}",
             ):
                 self.board_setup.set_phsw_status(self.polarimeter, idx, status=7)
+
+        # 6
+        for lna in ("HA3", "HA2", "HA1", "HB3", "HB2", "HB1"):
+            print(f"Tuning amplifier {lna}")
+            for step_idx, cur_step in enumerate([0.0, 0.5, 1.0]):
+                print(f"Current step: {cur_step} (#{step_idx})")
+                with StripTag(
+                    conn=self,
+                    name="VD_SET",
+                    comment=f"Setting drain voltages for LNA {lna} in {self.polarimeter}",
+                ):
+                    self.board_setup.setup_VD(self.polarimeter, lna, step=cur_step)
+
+                    if step_idx == 0:
+                        self.board_setup.setup_VG(self.polarimeter, lna, step=1.0)
+
+                    if False and cur_step == 1.0:
+                        # In mode 5, the following command should be useless…
+                        self.board_setup.setup_ID(self.polarimeter, lna, step=1.0)
 
         self.signals.finished.emit()
 
@@ -349,7 +368,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.log_message(message)
 
     def worker_on_command(self, url_command):
-        log.info(f"In worker_on_command: {url_command}")
         cmd_idx, url, command = url_command
 
         self.command_history.append(

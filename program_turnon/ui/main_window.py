@@ -2,10 +2,9 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.0
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
-
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -147,7 +146,7 @@ class Ui_main_window(object):
         self.verticalLayout_5.addWidget(self.groupBox_2)
         main_window.setCentralWidget(self.centralwidget)
         self.menu = QtWidgets.QMenuBar(main_window)
-        self.menu.setGeometry(QtCore.QRect(0, 0, 775, 21))
+        self.menu.setGeometry(QtCore.QRect(0, 0, 775, 22))
         self.menu.setObjectName("menu")
         self.menuFile = QtWidgets.QMenu(self.menu)
         self.menuFile.setObjectName("menuFile")
@@ -174,7 +173,8 @@ class Ui_main_window(object):
         QtCore.QMetaObject.connectSlotsByName(main_window)
         main_window.setTabOrder(self.list_boards, self.list_channels)
         main_window.setTabOrder(self.list_channels, self.delay_spinbox)
-        main_window.setTabOrder(self.delay_spinbox, self.start_button)
+        main_window.setTabOrder(self.delay_spinbox, self.mock_run)
+        main_window.setTabOrder(self.mock_run, self.start_button)
         main_window.setTabOrder(self.start_button, self.stop_button)
         main_window.setTabOrder(self.stop_button, self.pause_button)
         main_window.setTabOrder(self.pause_button, self.log_widget)
@@ -205,3 +205,5 @@ class Ui_main_window(object):
         self.actionload_pol_calibration.setText(_translate("main_window", "Load &pol calibration…"))
         self.action_exit.setText(_translate("main_window", "&Exit"))
         self.action_exit.setShortcut(_translate("main_window", "Ctrl+Q"))
+
+

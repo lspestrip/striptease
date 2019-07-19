@@ -279,7 +279,7 @@
      <x>0</x>
      <y>0</y>
      <width>775</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -317,6 +317,7 @@
   <tabstop>list_boards</tabstop>
   <tabstop>list_channels</tabstop>
   <tabstop>delay_spinbox</tabstop>
+  <tabstop>mock_run</tabstop>
   <tabstop>start_button</tabstop>
   <tabstop>stop_button</tabstop>
   <tabstop>pause_button</tabstop>
