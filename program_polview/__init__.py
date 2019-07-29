@@ -226,8 +226,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.hk5a.stateChanged.connect(lna.callback)
         self.lna_callbacks.append(lna)
 
-    def pippo(self,val):
-        print("HK0: ",val)
 
     def check_pol_callback(self,item):
         print(self.subs)

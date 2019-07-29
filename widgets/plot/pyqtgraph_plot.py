@@ -13,22 +13,26 @@ obj = {
     'val' : 56.34
 }
 
-class CustomWidget(pg.GraphicsWindow):
+class CustomWidget(pg.widgets.RemoteGraphicsView.RemoteGraphicsView):
     pg.setConfigOption('background', 'w')
     pg.setConfigOption('foreground', 'k')
     '''QtWidget for data plot
     '''
     def __init__(self, parent=None, **kwargs):
-        pg.GraphicsWindow.__init__(self, **kwargs)
+        pg.widgets.RemoteGraphicsView.RemoteGraphicsView.__init__(self, **kwargs)
+        pg.setConfigOptions(antialias=True)  ## this will be expensive for the local plot
+        self.pg.setConfigOptions(antialias=True)  ## prettier plots at no cost to the main process!
         self.setParent(parent)
         self.data={}
         self.wsec = 20
-        self.rsec = 0.034
+        self.rsec = 0.5
         self.loop = None
         self.title = "PIPPO"
         self.t0 = time.time()
 
-        self.p = self.addPlot()
+        self.p = self.pg.PlotItem()
+        self.p._setProxyOptions(deferGetattr=True)
+        self.setCentralItem(self.p)
 
     def set_loop(self,loop):
         self.loop = loop
@@ -45,16 +49,19 @@ class CustomWidget(pg.GraphicsWindow):
         data['mjd'] = np.ndarray([0],dtype=np.float64)
         data['val'] = np.ndarray([0],dtype=np.float64)
         self.data[label] = data
-        self.loop.call_soon_threadsafe(self.__replot)
+        self.replot()
 
     def add_data(self,label,mjd,val):
-        self.loop.call_soon_threadsafe(self.__append,label,mjd,val)
+        self.__append(label,mjd,val)
+        #self.loop.call_soon_threadsafe(self.__append,label,mjd,val)
 
     def del_plot(self,label):
-        self.loop.call_soon_threadsafe(self.__del_plot,label)
+        self.__del_plot(label)
+        #self.loop.call_soon_threadsafe(self.__del_plot,label)
 
     def replot(self):
-        self.loop.call_soon_threadsafe(self.__replot)
+        self.__replot()
+        #self.loop.call_soon_threadsafe(self.__replot)
 
     def __append(self,label,mjd,val):
         t1 = time.time()
@@ -76,20 +83,22 @@ class CustomWidget(pg.GraphicsWindow):
             self.__set_data(mjd)
 
     def __set_data(self,mjd):
+        self.p.clear(_callSync='off')
         for l in self.data:
             d = self.data[l]
-            d['line'].setData((mjd - d['mjd'])*86400,d['val'])
+            c = (d['color'][0]*255,d['color'][1]*255,d['color'][2]*255)
+            self.p.plot((mjd - d['mjd'])*86400,d['val'],pen={'color':c,'width':2}, _callSync='off')
 
     def __del_plot(self,label):
         if self.data.get(label):
             del self.data[label]
-        self.replot()
+        self.__replot()
 
     def __replot(self):
-        self.p.clear()
+        self.p.setTitle(self.title)
+        #self.p.clear()
         for l in self.data:
             d = self.data[l]
             c =  (d['color'][0]*255,d['color'][1]*255,d['color'][2]*255)
             pen = pg.mkPen(pg.mkColor(c),width=2)
-            print(d['color'])
-            d['line'] = self.p.plot(d['mjd'],d['val'],pen=pen)
+            #self.p.plot(d['mjd'],d['val'],pen={'color':c})
