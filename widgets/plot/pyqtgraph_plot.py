@@ -13,29 +13,21 @@ obj = {
     'val' : 56.34
 }
 
-class CustomWidget(pg.widgets.RemoteGraphicsView.RemoteGraphicsView):
+class CustomWidget(pg.GraphicsWindow):
     pg.setConfigOption('background', 'w')
     pg.setConfigOption('foreground', 'k')
     '''QtWidget for data plot
     '''
     def __init__(self, parent=None, **kwargs):
-        pg.widgets.RemoteGraphicsView.RemoteGraphicsView.__init__(self, **kwargs)
-        pg.setConfigOptions(antialias=True)  ## this will be expensive for the local plot
-        self.pg.setConfigOptions(antialias=True)  ## prettier plots at no cost to the main process!
+        pg.GraphicsWindow.__init__(self, **kwargs)
         self.setParent(parent)
         self.data={}
         self.wsec = 20
-        self.rsec = 0.5
-        self.loop = None
-        self.title = "PIPPO"
+        self.rsec = 0.034
+        self.title = "None"
         self.t0 = time.time()
 
-        self.p = self.pg.PlotItem()
-        self.p._setProxyOptions(deferGetattr=True)
-        self.setCentralItem(self.p)
-
-    def set_loop(self,loop):
-        self.loop = loop
+        self.p = self.addPlot()
 
     def set_window_sec(self,sec):
         self.wsec = sec
@@ -51,54 +43,25 @@ class CustomWidget(pg.widgets.RemoteGraphicsView.RemoteGraphicsView):
         self.data[label] = data
         self.replot()
 
-    def add_data(self,label,mjd,val):
-        self.__append(label,mjd,val)
-        #self.loop.call_soon_threadsafe(self.__append,label,mjd,val)
+    def set_data(self,label,mjd,val):
+        self.data[label]['mjd'] = mjd
+        self.data[label]['val'] = val
 
-    def del_plot(self,label):
-        self.__del_plot(label)
-        #self.loop.call_soon_threadsafe(self.__del_plot,label)
-
-    def replot(self):
-        self.__replot()
-        #self.loop.call_soon_threadsafe(self.__replot)
-
-    def __append(self,label,mjd,val):
-        t1 = time.time()
-        d = self.data[label]
-
-        if d['mjd'].size == 0 or (mjd - d['mjd'][0])*86400 <= self.wsec:
-            d['mjd'] = np.append(d['mjd'],mjd)
-            d['val'] = np.append(d['val'],val)
-
-        else:
-            d['mjd'][0] = mjd
-            d['val'][0] = val
-
-            d['mjd'] = np.roll(d['mjd'],-1)
-            d['val'] = np.roll(d['val'],-1)
-
-        if t1 - self.t0 > self.rsec:
-            self.t0 = t1
-            self.__set_data(mjd)
-
-    def __set_data(self,mjd):
-        self.p.clear(_callSync='off')
+    def update(self):
         for l in self.data:
             d = self.data[l]
-            c = (d['color'][0]*255,d['color'][1]*255,d['color'][2]*255)
-            self.p.plot((mjd - d['mjd'])*86400,d['val'],pen={'color':c,'width':2}, _callSync='off')
+            d['line'].setData(d['mjd'],d['val'])
 
-    def __del_plot(self,label):
+    def del_plot(self,label):
         if self.data.get(label):
             del self.data[label]
-        self.__replot()
+        self.replot()
 
-    def __replot(self):
-        self.p.setTitle(self.title)
-        #self.p.clear()
+    def replot(self):
+        self.p.clear()
         for l in self.data:
             d = self.data[l]
             c =  (d['color'][0]*255,d['color'][1]*255,d['color'][2]*255)
             pen = pg.mkPen(pg.mkColor(c),width=2)
-            #self.p.plot(d['mjd'],d['val'],pen={'color':c})
+            print(d['color'])
+            d['line'] = self.p.plot(d['mjd'],d['val'],pen=pen)

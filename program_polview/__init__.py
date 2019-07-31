@@ -7,6 +7,7 @@ import time
 import astropy.time as at
 import datetime as dt
 from program_polview.ui.main_window import Ui_MainWindow
+from program_polview.engine import Engine
 from web.rest.base import Connection
 from web.wamp.base import WampBase
 from widgets.login import LoginWidget
@@ -113,7 +114,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.lna_callbacks = []
         self.lna  = set()
         self.pols = set()
-        self.subs = {}
 
         self.hk = {}
         self.tree_items = []
@@ -138,60 +138,27 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     h = QtWidgets.QTreeWidgetItem(sp)
                     h.setText(0,hk['name'])
                     h.setText(1,"NaN")
+                    h.setText(2,"NaN")
                     self.hk[pol][hk['name']] = StatsAvg(h,10)
 
 
 
         self.ui.polarimeter_tree.itemChanged.connect(self.check_pol_callback)
 
-        self.th = []
-        self.lp = []
+        self.engines = {}
 
-        self.wamp  = WampBase(self.conn)
-        self.wamp.connect(self.conf.get_wamp_url(),self.conf.get_wamp_realm())
-
-        s = time.time()
-        while not self.wamp.session.is_attached():
-            if time.time() - s > 5:
-                raise RuntimeError('Cannot attach to WAMP session')
-            time.sleep(0.1)
-
-        loop = self.new_th_loop()
         self.ui.pwr_q1.title = "Q1"
-        self.ui.pwr_q1.set_loop(loop)
-
         self.ui.pwr_q2.title = "Q2"
-        self.ui.pwr_q2.set_loop(loop)
-
         self.ui.pwr_u1.title = "U1"
-        self.ui.pwr_u1.set_loop(loop)
-
         self.ui.pwr_u2.title = "U2"
-        self.ui.pwr_u2.set_loop(loop)
-
         self.ui.dem_q1.title = "Q1"
-        self.ui.dem_q1.set_loop(loop)
-
         self.ui.dem_q2.title = "Q2"
-        self.ui.dem_q2.set_loop(loop)
-
         self.ui.dem_u1.title = "U1"
-        self.ui.dem_u1.set_loop(loop)
-
         self.ui.dem_u2.title = "U2"
-        self.ui.dem_u2.set_loop(loop)
-
         self.ui.id.title = "ID"
-        self.ui.id.set_loop(loop)
-
         self.ui.ig.title = "IG"
-        self.ui.ig.set_loop(loop)
-
         self.ui.vd.title = "VD"
-        self.ui.vd.set_loop(loop)
-
         self.ui.vg.title = "VG"
-        self.ui.vg.set_loop(loop)
 
 
         lna = LNAplot('hk0',self.lna,self.tree_items,self.ui)
@@ -228,13 +195,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
 
     def check_pol_callback(self,item):
-        print(self.subs)
         name = item.text(0)
         state = item.checkState(0)
         if state == 2:
             col = get_color()
             self.pols.add(name)
-            self.subs[name] = self.wamp.subscribe(self.recv,self.conf.get_wamp_pol(name))
+            e = Engine(self.conn,name,col,60.)
+            e.start()
+            self.engines[name] = e
             self.ui.pwr_q1.add_plot(name,col)
             self.ui.pwr_q2.add_plot(name,col)
             self.ui.pwr_u1.add_plot(name,col)
@@ -259,7 +227,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         elif state == 0:
             if name in self.pols:
                 self.pols.remove(name)
-                self.subs[name].result().unsubscribe()
+            if name in self.engines:
+                self.engines[name].stop()
+                del self.engines[name]
             self.ui.pwr_q1.del_plot(name)
             self.ui.pwr_q2.del_plot(name)
             self.ui.pwr_u1.del_plot(name)
@@ -284,11 +254,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
 
     def stop(self):
-        self.wamp.leave()
-        for loop in self.lp:
-            loop.stop()
-        for t in self.th:
-            t.join()
+        pass
 
     def recv(self,*args,**pkt):
         #names = [hk0','hk1','hk2','hk3','hk4','hk5','hk4a','hk5a']
@@ -321,14 +287,40 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         if hk[-2:] == 'HK':
                             self.hk[pol][hk].add(pkt['mjd'],pkt['bias'][hk])
 
-    def new_th_loop(self):
-        loop = asyncio.new_event_loop()
-        thread = Thread(target=self.__f,args=[loop])
-        thread.start()
-        self.th.append(thread)
-        self.lp.append(loop)
-        return loop
+    def update(self):
+        for pol in self.engines:
+            e = self.engines[pol]
+            data = e.get_data_plot()
+            self.ui.pwr_q1.set_data(pol,data['PWRQ1']['mjd'],data['PWRQ1']['val'])
+            self.ui.pwr_q2.set_data(pol,data['PWRQ2']['mjd'],data['PWRQ2']['val'])
+            self.ui.pwr_u1.set_data(pol,data['PWRU1']['mjd'],data['PWRU1']['val'])
+            self.ui.pwr_u2.set_data(pol,data['PWRU2']['mjd'],data['PWRU2']['val'])
 
-    def __f(self,loop):
-        #asyncio.set_event_loop(self.loop)
-        loop.run_forever()
+            self.ui.dem_q1.set_data(pol,data['DEMQ1']['mjd'],data['DEMQ1']['val'])
+            self.ui.dem_q2.set_data(pol,data['DEMQ2']['mjd'],data['DEMQ2']['val'])
+            self.ui.dem_u1.set_data(pol,data['DEMU1']['mjd'],data['DEMU1']['val'])
+            self.ui.dem_u2.set_data(pol,data['DEMU2']['mjd'],data['DEMU2']['val'])
+
+            for lna in ['0','1','2','3','4','5','4a','5a']:
+                if 'hk'+lna in self.lna:
+                    up = lna.upper()
+                    self.ui.vd.set_data(pol+"_hk"+up,data['VD'+up+'_HK']['mjd'],data['VD'+up+'_HK']['val'])
+                    self.ui.id.set_data(pol+"_hk"+up,data['ID'+up+'_HK']['mjd'],data['ID'+up+'_HK']['val'])
+                    self.ui.vg.set_data(pol+"_hk"+up,data['VG'+up+'_HK']['mjd'],data['VG'+up+'_HK']['val'])
+                    self.ui.ig.set_data(pol+"_hk"+up,data['IG'+up+'_HK']['mjd'],data['IG'+up+'_HK']['val'])
+
+
+            self.ui.pwr_q1.update()
+            self.ui.pwr_q2.update()
+            self.ui.pwr_u1.update()
+            self.ui.pwr_u2.update()
+
+            self.ui.dem_q1.update()
+            self.ui.dem_q2.update()
+            self.ui.dem_u1.update()
+            self.ui.dem_u2.update()
+
+            self.ui.vd.update()
+            self.ui.id.update()
+            self.ui.vg.update()
+            self.ui.ig.update()
