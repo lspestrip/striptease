@@ -149,7 +149,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
-        self.plotTabWidget.setCurrentIndex(2)
+        self.plotTabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -172,6 +172,7 @@ class Ui_MainWindow(object):
         self.groupBox_2.setTitle(_translate("MainWindow", "Statistics"))
         self.stats_tree.headerItem().setText(1, _translate("MainWindow", "average"))
 
+from widgets.plot.base import BaseMplCanvas
 from widgets.plot.pyqtgraph_plot import CustomWidget
 
 if __name__ == "__main__":
@@ -182,4 +183,3 @@ if __name__ == "__main__":
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
-

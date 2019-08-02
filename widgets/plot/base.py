@@ -31,7 +31,7 @@ class BaseMplCanvas(MplCanvas):
         self.wsec = 20
         self.rsec = 1.0
         self.loop = None
-        self.title = "PIPPO"
+        self.title = ""
         self.t0 = time.time()
         self.draw()
 
@@ -56,9 +56,11 @@ class BaseMplCanvas(MplCanvas):
     def del_plot(self,label):
         self.loop.call_soon_threadsafe(self.__del_plot,label)
 
-    def add_data(self,label,mjd,val):
-        self.loop.call_soon_threadsafe(self.__append,label,mjd,val)
+    def set_data(self,label,mjd,val):
+        self.loop.call_soon_threadsafe(self.__set_data,label,mjd,val)
 
+    def commit_plot(self):
+        self.loop.call_soon_threadsafe(self.__commit_plot)
 
     def replot(self):
         self.loop.call_soon_threadsafe(self.__replot)
@@ -78,30 +80,14 @@ class BaseMplCanvas(MplCanvas):
 
         self.axes.legend(loc='upper right')
         self.axes.set_xlim([0,self.wsec])
-        #self.date = self.axes.text(0.01,0.01,"",verticalalignment='bottom', horizontalalignment='left',transform=self.axes.transAxes)
-
-    def __append(self,label,mjd,val):
-        t1 = time.time()
-        d = self.data[label]
-
-        if d['mjd'].size == 0 or (mjd - d['mjd'][0])*86400 <= self.wsec:
-            d['mjd'] = np.append(d['mjd'],mjd)
-            d['val'] = np.append(d['val'],val)
-
-        else:
-            d['mjd'][0] = mjd
-            d['val'][0] = val
-
-            d['mjd'] = np.roll(d['mjd'],-1)
-            d['val'] = np.roll(d['val'],-1)
-
-        if t1 - self.t0 > self.rsec:
-            self.t0 = t1
-            #self.__set_data(mjd)
 
 
-    def __set_data(self,mjd):
-        #date_ts = at.Time(mjd, format='mjd').to_datetime()
+    def __set_data(self,label,mjd,val):
+        self.data[label]['mjd'] = mjd
+        self.data[label]['val'] = val
+
+
+    def __commit_plot(self):
         min = np.nan
         max = np.nan
 
@@ -109,7 +95,7 @@ class BaseMplCanvas(MplCanvas):
             d = self.data[l]
             if d['val'].size == 0:
                 continue
-            d['line'].set_xdata((mjd - d['mjd'])*86400)
+            d['line'].set_xdata(d['mjd'])
             d['line'].set_ydata(d['val'])
             min = np.nanmin([np.min(d['val']),min])
             max = np.nanmax([np.max(d['val']),max])
@@ -117,6 +103,5 @@ class BaseMplCanvas(MplCanvas):
         if not (np.isnan(min) or np.isnan(max)):
             exc = (max-min) / 100 * 2
             self.axes.set_ylim([min-exc,max+exc])
-            #self.date.set_text(date_ts.strftime("%H:%M:%S.%f"))
             self.flush_events()
             self.draw()

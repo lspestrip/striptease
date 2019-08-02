@@ -52,6 +52,7 @@ class Engine(object):
 
         self.request_queue = mp.Queue()
         self.response_queue = mp.Queue()
+        self.t0 = time.time()
 
     def start(self):
         self.p = mp.Process(target=self.__process_loop)
@@ -90,10 +91,8 @@ class Engine(object):
         self.wamp.subscribe(self.recv,self.conf.get_wamp_pol(self.pol))
         self.th_cmd = Thread(target=self.__req_loop)
         self.th_cmd.start()
+        self.th_cmd.join()
 
-        while True:
-            pkt = self.queue_data.get()
-            self.process_pkt(pkt)
 
 
     def __create_plot(self,key,color=None):
@@ -127,8 +126,8 @@ class Engine(object):
         data = self.response_queue.get()
         return data
 
-    def recv(self,*args,**pkt):
-        self.queue_data.put(pkt)
+#    def recv(self,*args,**pkt):
+#        self.queue_data.put(pkt)
 
     def process_cmd(self,cmd):
         if cmd[0] == 'get_ws':
@@ -136,8 +135,23 @@ class Engine(object):
         elif cmd[0] == 'set_ws':
             self.sync_ws = cmd[1]
         elif cmd[0] == 'sync_data_plot':
+            for i in self.key_sci:
+                if self.data_plot[i]['mjd'].size == 0:
+                    continue
+                mjd = self.data_plot[i]['mjd'][0]
+                self.sync_data_plot[i]['mjd'] = (self.data_plot[i]['mjd']-mjd)*86400
+                self.sync_data_plot[i]['val'] = self.data_plot[i]['val']
+            for hk in self.key_lna:
+                if self.data_plot[hk]['mjd'].size == 0:
+                    continue
+                mjd = self.data_plot[hk]['mjd'][0]
+                self.sync_data_plot[hk]['mjd'] = (self.data_plot[hk]['mjd']-mjd)*86400
+                self.sync_data_plot[hk]['val'] = self.data_plot[hk]['val']
             self.response_queue.put(self.sync_data_plot)
         elif cmd[0] == 'sync_data_stats':
+            if hk in self.key_hk:
+                self.sync_data_stats[hk]['avg'] = self.data_stats[hk]['val'].mean()
+                self.sync_data_stats[hk]['std'] = np.std(self.data_stats[hk]['val'])
             self.response_queue.put(self.sync_data_stats)
         elif cmd[0] == 'stop':
             self.wamp.leave()
@@ -146,7 +160,8 @@ class Engine(object):
         else:
             print('bad command:',cmd)
 
-    def process_pkt(self,pkt):
+#    def process_pkt(self,pkt):
+    def recv(self,*args,**pkt):
         wsec = self.sync_ws
         mjd = pkt['mjd']
         if pkt.get('PWRQ1'):
@@ -159,9 +174,6 @@ class Engine(object):
                 if hk in self.key_hk:
                     self.__add2stats(wsec,hk,mjd,pkt['bias'][hk])
 
-            for key in self.data_plot:
-                self.sync_data_plot[key]['mjd'] = (mjd - self.data_plot[key]['mjd'])*86400
-                self.sync_data_plot[key]['val'] = self.data_plot[key]['val']
 
     def __add(self,wsec,d,mjd,val):
         if d['mjd'].size == 0 or (mjd - d['mjd'][0])*86400 <= wsec:
@@ -177,8 +189,6 @@ class Engine(object):
 
     def __add2stats(self,wsec,label,mjd,val):
         self.__add(wsec,self.data_stats[label],mjd,val)
-        self.sync_data_stats[label]['avg'] = self.data_stats[label]['val'].mean()
-        self.sync_data_stats[label]['std'] = np.std(self.data_stats[label]['val'])
 
     def __add2plot(self,wsec,label,mjd,val):
         self.__add(wsec,self.data_plot[label],mjd,val)
@@ -187,7 +197,8 @@ class Engine(object):
     def __req_loop(self):
         while True:
             cmd = self.request_queue.get()
-            self.process_cmd(cmd)
+            self.wamp.loop.call_soon_threadsafe(self.process_cmd,cmd)
+            #self.process_cmd(cmd)
 
 
 

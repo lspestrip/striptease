@@ -20,10 +20,6 @@ import asyncio
 import matplotlib
 
 
-
-#def str_to_float(s, encoding="utf-8"):
-#    return float(crc32(s.encode(encoding)) & 0xffffffff) / 2**32
-
 class StatsAvg(object):
     def __init__(self,widget,span_sec=20):
         self.item = widget
@@ -145,21 +141,49 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.ui.polarimeter_tree.itemChanged.connect(self.check_pol_callback)
 
+        self.th = []
+        self.lp = []
+
         self.engines = {}
 
+        loop = self.new_th_loop()
         self.ui.pwr_q1.title = "Q1"
-        self.ui.pwr_q2.title = "Q2"
-        self.ui.pwr_u1.title = "U1"
-        self.ui.pwr_u2.title = "U2"
-        self.ui.dem_q1.title = "Q1"
-        self.ui.dem_q2.title = "Q2"
-        self.ui.dem_u1.title = "U1"
-        self.ui.dem_u2.title = "U2"
-        self.ui.id.title = "ID"
-        self.ui.ig.title = "IG"
-        self.ui.vd.title = "VD"
-        self.ui.vg.title = "VG"
+        self.ui.pwr_q1.set_loop(loop)
 
+        self.ui.pwr_q2.title = "Q2"
+        self.ui.pwr_q2.set_loop(loop)
+
+        self.ui.pwr_u1.title = "U1"
+        self.ui.pwr_u1.set_loop(loop)
+
+        self.ui.pwr_u2.title = "U2"
+        self.ui.pwr_u2.set_loop(loop)
+
+        loop = self.new_th_loop()
+        self.ui.dem_q1.title = "Q1"
+        self.ui.dem_q1.set_loop(loop)
+
+        self.ui.dem_q2.title = "Q2"
+        self.ui.dem_q2.set_loop(loop)
+
+        self.ui.dem_u1.title = "U1"
+        self.ui.dem_u1.set_loop(loop)
+
+        self.ui.dem_u2.title = "U2"
+        self.ui.dem_u2.set_loop(loop)
+
+        loop = self.new_th_loop()
+        self.ui.id.title = "ID"
+        self.ui.id.set_loop(loop)
+
+        self.ui.ig.title = "IG"
+        self.ui.ig.set_loop(loop)
+
+        self.ui.vd.title = "VD"
+        self.ui.vd.set_loop(loop)
+
+        self.ui.vg.title = "VG"
+        self.ui.vg.set_loop(loop)
 
         lna = LNAplot('hk0',self.lna,self.tree_items,self.ui)
         self.ui.hk0.stateChanged.connect(lna.callback)
@@ -196,7 +220,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
 
         self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.update)
+        self.timer.timeout.connect(self.pippo)
         self.timer.start(1000)
 
     def check_pol_callback(self,item):
@@ -292,12 +316,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         if hk[-2:] == 'HK':
                             self.hk[pol][hk].add(pkt['mjd'],pkt['bias'][hk])
 
-    def update(self):
+    def pippo(self):
         for pol in self.engines:
             e = self.engines[pol]
-            #t0 = time.time()
             data = e.get_data_plot()
-            #t1 = time.time()
+            s = data['PWRQ1']['val'].size
+            if s > 0:
+                #print(data['PWRQ1']['val'][s-1])
+                print(data['PWRQ1']['val'].size)
             self.ui.pwr_q1.set_data(pol,data['PWRQ1']['mjd'],data['PWRQ1']['val'])
             self.ui.pwr_q2.set_data(pol,data['PWRQ2']['mjd'],data['PWRQ2']['val'])
             self.ui.pwr_u1.set_data(pol,data['PWRU1']['mjd'],data['PWRU1']['val'])
@@ -316,12 +342,32 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     self.ui.vg.set_data(pol+"_hk"+up,data['VG'+up+'_HK']['mjd'],data['VG'+up+'_HK']['val'])
                     self.ui.ig.set_data(pol+"_hk"+up,data['IG'+up+'_HK']['mjd'],data['IG'+up+'_HK']['val'])
 
-            #t2 = time.time()
-            #print('get data:',(t1-t0)*1000,"plot:",(t2-t1)*1000)
+        self.ui.pwr_q1.commit_plot()
+        self.ui.pwr_q2.commit_plot()
+        self.ui.pwr_u1.commit_plot()
+        self.ui.pwr_u2.commit_plot()
+        self.ui.dem_q1.commit_plot()
+        self.ui.dem_q2.commit_plot()
+        self.ui.dem_u1.commit_plot()
+        self.ui.dem_u2.commit_plot()
+        self.ui.id.commit_plot()
+        self.ui.ig.commit_plot()
+        self.ui.vd.commit_plot()
+        self.ui.vg.commit_plot()
 
 
+    def new_th_loop(self):
+        loop = asyncio.new_event_loop()
+        thread = Thread(target=self.__th_lp,args=[loop])
+        thread.start()
+        self.th.append(thread)
+        self.lp.append(loop)
+        return loop
 
 
+    def __th_lp(self,loop):
+        #asyncio.set_event_loop(self.loop)
+        loop.run_forever()
 
     def __f(self):
         while True:
