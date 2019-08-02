@@ -6,13 +6,6 @@ import numpy as np
 import time
 
 
-
-obj = {
-    'label' : 'legend label',
-    'mjd' : 580000,
-    'val' : 56.34
-}
-
 class CustomWidget(pg.GraphicsWindow):
     pg.setConfigOption('background', 'w')
     pg.setConfigOption('foreground', 'k')
@@ -22,12 +15,9 @@ class CustomWidget(pg.GraphicsWindow):
         pg.GraphicsWindow.__init__(self, **kwargs)
         self.setParent(parent)
         self.data={}
-        self.wsec = 20
-        self.rsec = 0.034
         self.title = "None"
-        self.t0 = time.time()
-
         self.p = self.addPlot()
+        self.p.setDownsampling(auto=True,mode='peak')
 
     def set_window_sec(self,sec):
         self.wsec = sec
@@ -44,13 +34,16 @@ class CustomWidget(pg.GraphicsWindow):
         self.replot()
 
     def set_data(self,label,mjd,val):
-        self.data[label]['mjd'] = mjd
-        self.data[label]['val'] = val
-
-    def update(self):
-        for l in self.data:
-            d = self.data[l]
-            d['line'].setData(d['mjd'],d['val'])
+        d = self.data[label]
+        d['mjd'] = mjd
+        d['val'] = val
+        if d.get('line'):
+            d['line'].setData(mjd,val)
+        elif d['mjd'].size >= 1:
+            c =  (d['color'][0]*255,d['color'][1]*255,d['color'][2]*255)
+            pen = pg.mkPen(pg.mkColor(c),width=2)
+            #print(d['color'])
+            d['line'] = self.p.plot(d['mjd'],d['val'],pen=pen)
 
     def del_plot(self,label):
         if self.data.get(label):
@@ -61,7 +54,8 @@ class CustomWidget(pg.GraphicsWindow):
         self.p.clear()
         for l in self.data:
             d = self.data[l]
-            c =  (d['color'][0]*255,d['color'][1]*255,d['color'][2]*255)
-            pen = pg.mkPen(pg.mkColor(c),width=2)
-            print(d['color'])
-            d['line'] = self.p.plot(d['mjd'],d['val'],pen=pen)
+            if d['mjd'].size >= 1:
+                c =  (d['color'][0]*255,d['color'][1]*255,d['color'][2]*255)
+                pen = pg.mkPen(pg.mkColor(c),width=2)
+                #print(d['color'])
+                d['line'] = self.p.plot(d['mjd'],d['val'],pen=pen)

@@ -37,13 +37,13 @@ class Ui_MainWindow(object):
         self.pwr_q1 = CustomWidget(self.tab)
         self.pwr_q1.setObjectName("pwr_q1")
         self.gridLayout_2.addWidget(self.pwr_q1, 0, 0, 1, 1)
-        self.pwr_q2 = BaseMplCanvas(self.tab)
+        self.pwr_q2 = CustomWidget(self.tab)
         self.pwr_q2.setObjectName("pwr_q2")
         self.gridLayout_2.addWidget(self.pwr_q2, 0, 1, 1, 1)
-        self.pwr_u1 = BaseMplCanvas(self.tab)
+        self.pwr_u1 = CustomWidget(self.tab)
         self.pwr_u1.setObjectName("pwr_u1")
         self.gridLayout_2.addWidget(self.pwr_u1, 1, 0, 1, 1)
-        self.pwr_u2 = BaseMplCanvas(self.tab)
+        self.pwr_u2 = CustomWidget(self.tab)
         self.pwr_u2.setObjectName("pwr_u2")
         self.gridLayout_2.addWidget(self.pwr_u2, 1, 1, 1, 1)
         self.plotTabWidget.addTab(self.tab, "")
@@ -74,16 +74,16 @@ class Ui_MainWindow(object):
         self.frame.setObjectName("frame")
         self.gridLayout = QtWidgets.QGridLayout(self.frame)
         self.gridLayout.setObjectName("gridLayout")
-        self.ig = BaseMplCanvas(self.frame)
+        self.ig = CustomWidget(self.frame)
         self.ig.setObjectName("ig")
         self.gridLayout.addWidget(self.ig, 0, 1, 1, 1)
-        self.id = BaseMplCanvas(self.frame)
+        self.id = CustomWidget(self.frame)
         self.id.setObjectName("id")
         self.gridLayout.addWidget(self.id, 0, 0, 1, 1)
-        self.vd = BaseMplCanvas(self.frame)
+        self.vd = CustomWidget(self.frame)
         self.vd.setObjectName("vd")
         self.gridLayout.addWidget(self.vd, 1, 0, 1, 1)
-        self.vg = BaseMplCanvas(self.frame)
+        self.vg = CustomWidget(self.frame)
         self.vg.setObjectName("vg")
         self.gridLayout.addWidget(self.vg, 1, 1, 1, 1)
         self.horizontalLayout.addWidget(self.frame)
@@ -149,7 +149,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
-        self.plotTabWidget.setCurrentIndex(1)
+        self.plotTabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -172,7 +172,6 @@ class Ui_MainWindow(object):
         self.groupBox_2.setTitle(_translate("MainWindow", "Statistics"))
         self.stats_tree.headerItem().setText(1, _translate("MainWindow", "average"))
 
-from widgets.plot.base import BaseMplCanvas
 from widgets.plot.pyqtgraph_plot import CustomWidget
 
 if __name__ == "__main__":

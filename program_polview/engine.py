@@ -7,6 +7,10 @@ import numpy as np
 import time
 import queue
 from copy import deepcopy
+import sys
+from threading import Thread
+
+
 #colorscale
 import matplotlib.cm
 
@@ -54,9 +58,7 @@ class Engine(object):
         self.p.start()
 
     def stop(self):
-        self.wamp.leave()
-        self.wamp.stop()
-        self.p.kill()
+        self.request_queue.put(['stop'])
 
     def __process_loop(self):
         self.wamp = WampBase(self.conn)
@@ -86,18 +88,12 @@ class Engine(object):
 
 
         self.wamp.subscribe(self.recv,self.conf.get_wamp_pol(self.pol))
+        self.th_cmd = Thread(target=self.__req_loop)
+        self.th_cmd.start()
 
         while True:
-            try:
-                pkt = self.queue_data.get(timeout=0.1)
-                self.process_pkt(pkt)
-            except queue.Empty:
-                pass
-            try:
-                cmd = self.request_queue.get(block=False)
-                self.process_cmd(cmd)
-            except queue.Empty:
-                pass
+            pkt = self.queue_data.get()
+            self.process_pkt(pkt)
 
 
     def __create_plot(self,key,color=None):
@@ -143,6 +139,10 @@ class Engine(object):
             self.response_queue.put(self.sync_data_plot)
         elif cmd[0] == 'sync_data_stats':
             self.response_queue.put(self.sync_data_stats)
+        elif cmd[0] == 'stop':
+            self.wamp.leave()
+            self.wamp.stop()
+            sys.exit(0)
         else:
             print('bad command:',cmd)
 
@@ -159,9 +159,9 @@ class Engine(object):
                 if hk in self.key_hk:
                     self.__add2stats(wsec,hk,mjd,pkt['bias'][hk])
 
-        for key in self.data_plot:
-            self.sync_data_plot[key]['mjd'] = (mjd - self.data_plot[key]['mjd'])*86400
-            self.sync_data_plot[key]['val'] = self.data_plot[key]['val']
+            for key in self.data_plot:
+                self.sync_data_plot[key]['mjd'] = (mjd - self.data_plot[key]['mjd'])*86400
+                self.sync_data_plot[key]['val'] = self.data_plot[key]['val']
 
     def __add(self,wsec,d,mjd,val):
         if d['mjd'].size == 0 or (mjd - d['mjd'][0])*86400 <= wsec:
@@ -182,6 +182,14 @@ class Engine(object):
 
     def __add2plot(self,wsec,label,mjd,val):
         self.__add(wsec,self.data_plot[label],mjd,val)
+
+
+    def __req_loop(self):
+        while True:
+            cmd = self.request_queue.get()
+            self.process_cmd(cmd)
+
+
 
 if __name__ == '__main__':
     con = Connection()

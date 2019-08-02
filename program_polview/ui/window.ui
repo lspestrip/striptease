@@ -50,7 +50,7 @@
       <item>
        <widget class="QTabWidget" name="plotTabWidget">
         <property name="currentIndex">
-         <number>1</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="tab">
          <attribute name="title">
@@ -61,13 +61,13 @@
            <widget class="CustomWidget" name="pwr_q1" native="true"/>
           </item>
           <item row="0" column="1">
-           <widget class="BaseMplCanvas" name="pwr_q2" native="true"/>
+           <widget class="CustomWidget" name="pwr_q2" native="true"/>
           </item>
           <item row="1" column="0">
-           <widget class="BaseMplCanvas" name="pwr_u1" native="true"/>
+           <widget class="CustomWidget" name="pwr_u1" native="true"/>
           </item>
           <item row="1" column="1">
-           <widget class="BaseMplCanvas" name="pwr_u2" native="true"/>
+           <widget class="CustomWidget" name="pwr_u2" native="true"/>
           </item>
          </layout>
         </widget>
@@ -105,16 +105,16 @@
             </property>
             <layout class="QGridLayout" name="gridLayout">
              <item row="0" column="1">
-              <widget class="BaseMplCanvas" name="ig" native="true"/>
+              <widget class="CustomWidget" name="ig" native="true"/>
              </item>
              <item row="0" column="0">
-              <widget class="BaseMplCanvas" name="id" native="true"/>
+              <widget class="CustomWidget" name="id" native="true"/>
              </item>
              <item row="1" column="0">
-              <widget class="BaseMplCanvas" name="vd" native="true"/>
+              <widget class="CustomWidget" name="vd" native="true"/>
              </item>
              <item row="1" column="1">
-              <widget class="BaseMplCanvas" name="vg" native="true"/>
+              <widget class="CustomWidget" name="vg" native="true"/>
              </item>
             </layout>
            </widget>
@@ -253,12 +253,6 @@
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>BaseMplCanvas</class>
-   <extends>QWidget</extends>
-   <header location="global">widgets.plot.base.h</header>
-   <container>1</container>
-  </customwidget>
   <customwidget>
    <class>CustomWidget</class>
    <extends>QWidget</extends>

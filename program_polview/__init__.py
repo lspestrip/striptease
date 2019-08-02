@@ -58,14 +58,14 @@ class LNAplot(object):
         self.ui = ui
 
     def callback(self,val):
-        print(self.lna,val)
+        #print(self.lna,val)
         if val == 0:
             if self.lna in self.data:
                 self.data.remove(self.lna)
             for item in self.tree:
                 if item.checkState(0) == 2:
                     pol = item.text(0)
-                    print(pol, self.lna)
+                    #print(pol, self.lna)
                     col = get_color()
                     self.ui.id.del_plot(pol+"_"+self.lna)
                     self.ui.ig.del_plot(pol+"_"+self.lna)
@@ -76,7 +76,7 @@ class LNAplot(object):
             for item in self.tree:
                 if item.checkState(0) == 2:
                     pol = item.text(0)
-                    print(pol, self.lna)
+                    #print(pol, self.lna)
                     col = get_color()
                     self.ui.id.add_plot(pol+"_"+self.lna,col)
                     self.ui.ig.add_plot(pol+"_"+self.lna,col)
@@ -194,13 +194,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.lna_callbacks.append(lna)
 
 
+
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.update)
+        self.timer.start(1000)
+
     def check_pol_callback(self,item):
         name = item.text(0)
         state = item.checkState(0)
         if state == 2:
             col = get_color()
             self.pols.add(name)
-            e = Engine(self.conn,name,col,60.)
+            e = Engine(self.conn,name,col,20.)
             e.start()
             self.engines[name] = e
             self.ui.pwr_q1.add_plot(name,col)
@@ -215,7 +220,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
             for h in ['hk0','hk1','hk2','hk3','hk4','hk5','hk4a','hk5a']:
                 if h in self.lna:
-                    print("ADD",h)
+                    #print("ADD",h)
                     col = get_color()
                     self.ui.id.add_plot(name+"_"+h,col)
                     self.ui.ig.add_plot(name+"_"+h,col)
@@ -242,7 +247,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
             for h in ['hk0','hk1','hk2','hk3','hk4','hk5','hk4a','hk5a']:
                 if h in self.lna:
-                    print("REMOVE",h)
+                    #print("REMOVE",h)
                     col = get_color()
                     self.ui.id.del_plot(name+"_"+h)
                     self.ui.ig.del_plot(name+"_"+h)
@@ -290,7 +295,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def update(self):
         for pol in self.engines:
             e = self.engines[pol]
+            #t0 = time.time()
             data = e.get_data_plot()
+            #t1 = time.time()
             self.ui.pwr_q1.set_data(pol,data['PWRQ1']['mjd'],data['PWRQ1']['val'])
             self.ui.pwr_q2.set_data(pol,data['PWRQ2']['mjd'],data['PWRQ2']['val'])
             self.ui.pwr_u1.set_data(pol,data['PWRU1']['mjd'],data['PWRU1']['val'])
@@ -309,18 +316,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     self.ui.vg.set_data(pol+"_hk"+up,data['VG'+up+'_HK']['mjd'],data['VG'+up+'_HK']['val'])
                     self.ui.ig.set_data(pol+"_hk"+up,data['IG'+up+'_HK']['mjd'],data['IG'+up+'_HK']['val'])
 
+            #t2 = time.time()
+            #print('get data:',(t1-t0)*1000,"plot:",(t2-t1)*1000)
 
-            self.ui.pwr_q1.update()
-            self.ui.pwr_q2.update()
-            self.ui.pwr_u1.update()
-            self.ui.pwr_u2.update()
 
-            self.ui.dem_q1.update()
-            self.ui.dem_q2.update()
-            self.ui.dem_u1.update()
-            self.ui.dem_u2.update()
 
-            self.ui.vd.update()
-            self.ui.id.update()
-            self.ui.vg.update()
-            self.ui.ig.update()
+
+
+    def __f(self):
+        while True:
+            self.update()
+            time.sleep(1)
