@@ -19,6 +19,9 @@ struct Command {
     QVariantMap parameters;
 };
 
+QString commandTypeToStr(CommandType type);
+QString commandToStr(const Command & cmd);
+
 class CommandList : public QAbstractTableModel
 {
     Q_OBJECT
