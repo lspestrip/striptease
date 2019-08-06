@@ -7,9 +7,6 @@ the STRIP system level tests. It uses Python 3.6.x and Qt 5.
 
 ## Installation
 
-The code is under developement. In order to install it, you must have
-[Filt](https://pypi.org/project/flit/) installed.
-
 You have two choices to install this program:
 
 1. Install and use it as any other Python package; good if you are not
@@ -33,6 +30,15 @@ git clone git@github.com:lspestrip/striptease.git
 python -m pip install -e .
 ```
 
+Striptease includes a C++ program used to send long sequence of
+commands to the Strip electronics. This program is written in C++ and
+requires a separate compilation step:
+
+```bash
+cd TestRunner
+qmake TestRunner.pro && make
+```
+
 ## How to use the code
 
 Once you have configured the library using the
@@ -45,3 +51,18 @@ from striptease import Connection
 c = Connection()
 c.login()
 ```
+
+## Running long scripts
+
+Programs like `program_turnon.py` generate JSON files that can be fed
+to `TestRunner`. To generate a JSON file that turns on board `G`, run
+the following from the command line:
+
+```bash
+python program_turnon.py -o turnon.json G
+```
+
+Now start `TestRunner/TestRunner` and load file `turnon.json`, then
+press the `Run` command to start the execution.
+
+![demo](testrunner-demo.gif)
