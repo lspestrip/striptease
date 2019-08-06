@@ -10,6 +10,7 @@ enum class CommandType {
     Command,
     Log,
     Tag,
+    Wait,
 };
 
 struct Command {

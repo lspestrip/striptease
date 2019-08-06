@@ -138,22 +138,45 @@ void MainWindow::on_command_timer_triggered()
     }
 
     int curIdx{0};
+    QDateTime now = QDateTime::currentDateTime();
 
     // Look for the first command that has not been executed yet
     for (auto & curCommand : commandList->command_list) {
-        if (curCommand.time.isNull()) {
-            currentCommandIdx = curIdx;
-            // This is the first command whose date has not been set yet: run it!
-            logMessage(QString("Running command: %1")
-                       .arg(commandToStr(curCommand)));
+        if (curCommand.type == CommandType::Wait) {
+            qint64 waittime = curCommand.parameters["wait_time_s"].toInt();
 
-            if (! ui->dryRunCheckBox->isChecked()) {
-                connection->send(curCommand.path, curCommand.parameters);
-            } else {
-                on_command_success();
+            if (curCommand.time.isNull()) {
+                // This wait command has not been started yet
+                curCommand.time = now;
+                logMessage(QString("Waiting for %1 s").arg(waittime));
+
+                // Nothing else to do for the moment
+                return;
             }
 
-            return;
+            // This wait has already started, let's check if it is done
+            qint64 seconds = curCommand.time.secsTo(now);
+            if (seconds < waittime) {
+                // We still have to wait, so nothing else to do
+                return;
+            }
+        } else {
+            // Do this if the command is not a "wait"
+            if (curCommand.time.isNull()) {
+                currentCommandIdx = curIdx;
+                // This is the first command whose date has not been set yet: run it!
+                logMessage(QString("Running command: %1")
+                           .arg(commandToStr(curCommand)));
+
+                if (! ui->dryRunCheckBox->isChecked() &&
+                        curCommand.type != CommandType::Wait) {
+                    connection->send(curCommand.path, curCommand.parameters);
+                } else {
+                    on_command_success();
+                }
+
+                return;
+            }
         }
 
         ++curIdx;

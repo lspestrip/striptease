@@ -15,6 +15,8 @@ QString commandTypeToStr(CommandType type)
         return QString("Log");
     case CommandType::Tag:
         return QString("Tag");
+    case CommandType::Wait:
+        return QString("Wait");
     default:
         return QString("Invalid");
     }
@@ -43,6 +45,8 @@ QString commandToStr(const Command & cmd)
         return tagName;
     } else if (parameters.contains("message")) {
         return parameters["message"].toString();
+    } else if (parameters.contains("wait_time_s")) {
+        return QString("Wait for %1 s").arg(parameters["wait_time_s"].toDouble());
     } else {
         return QString("");
     }
@@ -96,6 +100,11 @@ void CommandList::loadFromJson(const QString & s)
 
         QJsonObject curObject = elem.toObject();
         CommandType curType;
+        QString curPath;
+
+        if (curObject.contains("path")) {
+            curPath = curObject["path"].toString();
+        }
 
         if (! curObject.contains("kind")) {
             curType = CommandType::None;
@@ -107,18 +116,22 @@ void CommandList::loadFromJson(const QString & s)
                 curType = CommandType::Log;
             } else if (kindString == "tag") {
                 curType = CommandType::Tag;
+            } else if (kindString == "wait") {
+                curType = CommandType::Wait;
             } else {
                 curType = CommandType::None;
             }
         }
 
-        if (! curObject.contains("path") || ! curObject.contains("command"))
-            continue;
+        if (curType != CommandType::Wait) {
+            if (! curObject.contains("path") || ! curObject.contains("command"))
+                continue;
+        }
 
         Command cmd{
             QDateTime(),
             curType,
-            curObject["path"].toString(),
+            curPath,
             curObject["command"].toObject().toVariantMap(),
         };
         command_list.append(cmd);
