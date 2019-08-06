@@ -1,0 +1,6 @@
+TestRunner
+ui_*.h*
+.qmake.stash
+moc_*
+Makefile
+*.o
