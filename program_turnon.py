@@ -2,6 +2,7 @@
 # -*- encoding: utf-8 -*-
 
 from collections import namedtuple
+from urllib.parse import urlparse
 import logging as log
 import os.path
 import sys
@@ -30,7 +31,11 @@ class JSONCommandEmitter:
         else:
             kind = "command"
 
-        new_command = {"url": url, "kind": kind, "command": cmd}
+        url_components = urlparse(url)
+        new_command = {
+            "path": url_components.path,
+            "kind": kind,
+            "command": cmd}
         self.command_list.append(new_command)
         return
 
