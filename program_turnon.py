@@ -48,6 +48,8 @@ class TurnOnProcedure(StripProcedure):
             board_setup.enable_electronics(polarimeter=self.polarimeter)
             board_setup.log("The electronics has been enabled")
 
+        self.wait(seconds=6)
+        
         # 3
         for idx in (0, 1, 2, 3):
             with StripTag(

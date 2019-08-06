@@ -170,13 +170,23 @@ class StripConnection(Connection):
         if self.post_command:
             result = self.post_command(abs_url, message)
         else:
-            result = super(StripConnection, self).post(
-                url=abs_url, message=message
-            )
-            assert result["status"] == "OK", "Error in POST ({0}): '{1}'".format(
-                result["status"]
-            )
+            # abs_url is null only for "wait" messages, which are only used in
+            # JSON scripts: in those cases, self.post_command is always set,
+            # and this "if" has no effect.
+            if abs_url != "":
+                result = super(StripConnection, self).post(
+                    url=abs_url, message=message
+                )
+                assert result["status"] == "OK", "Error in POST ({0}): '{1}'".format(
+                    result["status"]
+                )
+            else:
+                return True
+            
         return result
+
+    def wait(self, seconds):
+        self.post("", { "wait_time_s": seconds })
 
     @staticmethod
     def __normalize_board_and_pol(board, pol, allow_board):

@@ -20,16 +20,26 @@ class JSONCommandEmitter:
             kind = "tag"
         elif "message" in cmd.keys():
             kind = "log"
+        elif "wait_time_s" in cmd.keys():
+            kind = "wait"
         else:
             kind = "command"
 
-        url_components = urlparse(url)
+        if url != "":
+            url_components = urlparse(url)
+            path = url_components.path
+        else:
+            path = ""
+            
         new_command = {
-            "path": url_components.path,
+            "path": path,
             "kind": kind,
-            "command": cmd}
+            "command": cmd,
+        }
         self.command_list.append(new_command)
-        return
+
+    def wait(self, seconds):
+        self.post_command("", { "wait_time_s": seconds })
 
     def tag_start(self, name, comment=""):
         # Making this command share the same name and parameters as
@@ -61,6 +71,9 @@ class StripProcedure:
             self.command_emitter = JSONCommandEmitter(conn)
             conn.post_command = self.command_emitter
 
+    def wait(self, seconds):
+        self.command_emitter.wait(seconds)
+        
     def run(self):
         pass
 
