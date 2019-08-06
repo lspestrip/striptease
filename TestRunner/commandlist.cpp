@@ -62,6 +62,17 @@ CommandList::CommandList(QObject *parent)
 {
 }
 
+void CommandList::resetTimes()
+{
+    emit beginResetModel();
+
+    for(auto & curCommand : command_list) {
+        curCommand.time = QDateTime();
+    }
+
+    emit endResetModel();
+}
+
 void CommandList::loadFromJson(const QString & s)
 {
     QJsonDocument data = QJsonDocument::fromJson(s.toLocal8Bit());
@@ -101,13 +112,13 @@ void CommandList::loadFromJson(const QString & s)
             }
         }
 
-        if (! curObject.contains("url") || ! curObject.contains("command"))
+        if (! curObject.contains("path") || ! curObject.contains("command"))
             continue;
 
         Command cmd{
             QDateTime(),
             curType,
-            curObject["url"].toString(),
+            curObject["path"].toString(),
             curObject["command"].toObject().toVariantMap(),
         };
         command_list.append(cmd);
@@ -192,4 +203,14 @@ QVariant CommandList::data(const QModelIndex &index, int role) const
     }
 
     return QVariant();
+}
+
+void CommandList::setCommandTime(int index, const QDateTime &datetime)
+{
+    command_list[index].time = datetime;
+
+    emit dataChanged(
+        createIndex(index, 0),
+        createIndex(index, columnCount())
+    );
 }

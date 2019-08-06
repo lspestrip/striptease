@@ -4,21 +4,37 @@
 #include <QDebug>
 #include <QFile>
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QMessageBox>
 #include <QThread>
+#include <QVariantMap>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     commandList(new CommandList(this)),
     commandTimer(new QTimer(this)),
-    delay_msec(1500),
+    delay_msec(250),
     connection(new StripConnection(this)),
-    currentCommand(nullptr)
+    currentCommandIdx(-1)
 {
     ui->setupUi(this);
     ui->commandView->setModel(commandList);
 
+    setupConnection();
+
+    logMessage("Ready");
+}
+
+MainWindow::~MainWindow()
+{
+    delete commandList;
+    delete commandTimer;
+    delete ui;
+}
+
+void MainWindow::setupConnection()
+{
     connect(
         commandTimer, &QTimer::timeout,
         this, QOverload<>::of(&MainWindow::on_command_timer_triggered)
@@ -33,15 +49,6 @@ MainWindow::MainWindow(QWidget *parent) :
         connection, SIGNAL(success()),
         this, SLOT(on_command_success())
     );
-
-    logMessage("Ready");
-}
-
-MainWindow::~MainWindow()
-{
-    delete commandList;
-    delete commandTimer;
-    delete ui;
 }
 
 void MainWindow::loadJsonFile(const QString & fileName)
@@ -101,7 +108,7 @@ void MainWindow::on_command_timer_triggered()
     Q_ASSERT(connection != nullptr);
 
     // If we're still waiting for an answer from the server, stop immediately
-    if(currentCommand != nullptr)
+    if(currentCommandIdx != -1)
         return;
 
     if (! connection->loggedIn) {
@@ -135,13 +142,13 @@ void MainWindow::on_command_timer_triggered()
     // Look for the first command that has not been executed yet
     for (auto & curCommand : commandList->command_list) {
         if (curCommand.time.isNull()) {
-            currentCommand = &curCommand;
+            currentCommandIdx = curIdx;
             // This is the first command whose date has not been set yet: run it!
             logMessage(QString("Running command: %1")
                        .arg(commandToStr(curCommand)));
 
             if (! ui->dryRunCheckBox->isChecked()) {
-                connection->send(curCommand.url, curCommand.parameters);
+                connection->send(curCommand.path, curCommand.parameters);
             } else {
                 on_command_success();
             }
@@ -151,13 +158,17 @@ void MainWindow::on_command_timer_triggered()
 
         ++curIdx;
     }
+
+    // If we reached this point, no other command must be executed
+    logMessage("Script completed");
+    stopTimer();
 }
 
 void MainWindow::on_command_success()
 {
-    if(currentCommand != nullptr) {
-        currentCommand->time = QDateTime::currentDateTime();
-        currentCommand = nullptr;
+    if(currentCommandIdx != -1) {
+        commandList->setCommandTime(currentCommandIdx, QDateTime::currentDateTime());
+        currentCommandIdx = -1;
 
         updateProgressBar();
     }
@@ -168,21 +179,33 @@ void MainWindow::on_connection_error(const QString & msg)
     logMessage(msg);
 }
 
+void MainWindow::startTimer()
+{
+    ui->runNextButton->setEnabled(false);
+    ui->addLogMessageButton->setEnabled(false);
+    ui->runButton->setText(tr("&Stop"));
+
+    commandTimer->start(delay_msec);
+}
+
+void MainWindow::stopTimer()
+{
+    commandTimer->stop();
+
+    ui->runButton->setText(tr("&Run"));
+
+    ui->runNextButton->setEnabled(true);
+    ui->addLogMessageButton->setEnabled(true);
+}
+
 void MainWindow::on_runButton_clicked()
 {
     if (commandTimer->isActive()) {
-        commandTimer->stop();
-
-        ui->runButton->setText(tr("&Run"));
-
-        ui->runNextButton->setEnabled(true);
+        stopTimer();
         logMessage("Command sequence paused");
     } else {
-        ui->runNextButton->setEnabled(false);
-        ui->runButton->setText(tr("&Stop"));
-
-        commandTimer->start(delay_msec);
-        logMessage("Command sequence started");
+        startTimer();
+        logMessage("Command sequence (re)started");
     }
 }
 
@@ -202,4 +225,60 @@ void MainWindow::updateProgressBar()
         }
     }
     ui->progressBar->setValue(numOfCompletedCommands);
+}
+
+void MainWindow::on_action_set_delay_triggered()
+{
+    bool ok;
+    int newValue = QInputDialog::getInt(
+        this,
+        "Delay between commands",
+        "Enter the delay (in msec)",
+        250,
+        50,
+        5000,
+        50,
+        &ok
+    );
+
+    if(ok) {
+        this->delay_msec = newValue;
+    }
+}
+
+void MainWindow::on_addLogMessageButton_clicked()
+{
+    Q_ASSERT(connection != nullptr);
+
+    // If we're still waiting for an answer from the server, stop immediately
+    if(currentCommandIdx != -1) {
+        logMessage("Failed to send log message, still waiting for the server "
+                   "to acknowledge an old command");
+        return;
+    }
+
+    QString message(ui->logMessageEdit->text());
+
+    QVariantMap logMessageData;
+    logMessageData["level"] = QString("INFO");
+    logMessageData["message"] = message;
+    connection->send("/rest/log", logMessageData);
+    logMessage(QString("Log message sent to server: %1")
+               .arg(message));
+}
+
+void MainWindow::on_action_reset_connection_triggered()
+{
+    if(connection != nullptr) {
+        delete connection;
+        connection = new StripConnection(this);
+        setupConnection();
+    }
+
+    if(commandList != nullptr) {
+        commandList->resetTimes();
+        updateProgressBar();
+    }
+
+    currentCommandIdx = -1;
 }

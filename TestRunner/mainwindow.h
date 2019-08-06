@@ -30,6 +30,12 @@ private slots:
     void on_runButton_clicked();
     void on_runNextButton_clicked();
 
+    void on_action_set_delay_triggered();
+
+    void on_addLogMessageButton_clicked();
+
+    void on_action_reset_connection_triggered();
+
 private:
     // Do *not* use std::unique_ptr here, as it confuses Qt Creator!
     Ui::MainWindow *ui;
@@ -40,9 +46,13 @@ private:
     StripConnection * connection;
 
     /* This points to an element in "commandList" when a POST request is sent
-     * to the server, but before receiving the server's answer. */
-    Command * currentCommand;
+     * to the server, but before receiving the server's answer. Otherwise,
+     * it is set to -1. */
+    int currentCommandIdx;
 
+    void setupConnection();
+    void startTimer();
+    void stopTimer();
     void updateProgressBar();
 };
 

@@ -152,7 +152,6 @@ void StripConnection::send(const QString & path, const QVariantMap & params)
     Q_ASSERT(manager != nullptr);
 
     QJsonDocument data(QJsonObject::fromVariantMap(params));
-    qDebug() << "Going to post this:" << data;
     post(path, data.toJson());
 }
 
