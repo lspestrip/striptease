@@ -140,7 +140,7 @@ class SetupBoard(object):
         self.board = board_name
         self.pols = pol_list
 
-        if board_calibration is not None:
+        if board_calibration:
             self.bc = board_calibration
         else:
             self.bc = None
@@ -226,10 +226,8 @@ class SetupBoard(object):
             cmd["data"] = [c[1]]
 
             if not self.post_command(url, cmd):
-                print(f"WARNING: command {c[0]}={c[1]} gave an error")
+                print(f"WARNING: command {c[0]}={c[1]} gave an error", file=sys.stderr, flush=True)
                 break
-
-            time.sleep(delay_sec)
 
         cmd["base_addr"] = "PRE_EN"
         cmd["type"] = "PREAMP"
@@ -267,8 +265,6 @@ class SetupBoard(object):
 
             if not self.post_command(url, cmd):
                 return
-
-            time.sleep(delay_sec)
 
     def disable_all_electronics(self):
         for (p, _) in self.pols:
@@ -353,7 +349,6 @@ class SetupBoard(object):
         calib = self.bc[f"Pol{pol_index + 1}"]
         title1, title2 = excel_entry
 
-        print(f"param_name = '{param_name}', attribute: '{bias_dict[index]}', entry = {excel_entry}")
         cmd = {
             "board": self.board,
             "type": "BIAS",
@@ -460,8 +455,6 @@ class SetupBoard(object):
         if not self.post_command(url, cmd):
             return
 
-        time.sleep(0.5)
-
     def log(self, msg, level="INFO"):
         url = self.conf.get_rest_base() + "/log"
         cmd = {"level": level, "message": str(msg)}
@@ -480,7 +473,6 @@ if __name__ == "__main__":
 
     con = Connection()
     con.login()
-    time.sleep(0.5)
 
     sb = SetupBoard(con, board_calibration)
 
