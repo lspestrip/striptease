@@ -48,49 +48,49 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_4">
       <item>
-       <widget class="QTabWidget" name="plotTabWidget">
+       <widget class="QTabWidget" name="tab_group">
         <property name="currentIndex">
-         <number>0</number>
+         <number>3</number>
         </property>
-        <widget class="QWidget" name="tab">
+        <widget class="QWidget" name="tab_pwr">
          <attribute name="title">
           <string>Total power</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_2">
           <item row="0" column="0">
-           <widget class="BaseMplCanvas" name="pwr_q1" native="true"/>
+           <widget class="CustomWidget" name="pwr_q1" native="true"/>
           </item>
           <item row="0" column="1">
-           <widget class="BaseMplCanvas" name="pwr_q2" native="true"/>
+           <widget class="CustomWidget" name="pwr_q2" native="true"/>
           </item>
           <item row="1" column="0">
-           <widget class="BaseMplCanvas" name="pwr_u1" native="true"/>
+           <widget class="CustomWidget" name="pwr_u1" native="true"/>
           </item>
           <item row="1" column="1">
-           <widget class="BaseMplCanvas" name="pwr_u2" native="true"/>
+           <widget class="CustomWidget" name="pwr_u2" native="true"/>
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="tab_2">
+        <widget class="QWidget" name="tab_dem">
          <attribute name="title">
           <string>Demodulated</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_3">
           <item row="0" column="0">
-           <widget class="BaseMplCanvas" name="dem_q1" native="true"/>
+           <widget class="CustomWidget" name="dem_q1" native="true"/>
           </item>
           <item row="0" column="1">
-           <widget class="BaseMplCanvas" name="dem_q2" native="true"/>
+           <widget class="CustomWidget" name="dem_q2" native="true"/>
           </item>
           <item row="1" column="0">
-           <widget class="BaseMplCanvas" name="dem_u1" native="true"/>
+           <widget class="CustomWidget" name="dem_u1" native="true"/>
           </item>
           <item row="1" column="1">
-           <widget class="BaseMplCanvas" name="dem_u2" native="true"/>
+           <widget class="CustomWidget" name="dem_u2" native="true"/>
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="tab_3">
+        <widget class="QWidget" name="tab_lna">
          <attribute name="title">
           <string>LNA biases</string>
          </attribute>
@@ -105,16 +105,16 @@
             </property>
             <layout class="QGridLayout" name="gridLayout">
              <item row="0" column="1">
-              <widget class="BaseMplCanvas" name="ig" native="true"/>
+              <widget class="CustomWidget" name="ig" native="true"/>
              </item>
              <item row="0" column="0">
-              <widget class="BaseMplCanvas" name="id" native="true"/>
+              <widget class="CustomWidget" name="id" native="true"/>
              </item>
              <item row="1" column="0">
-              <widget class="BaseMplCanvas" name="vd" native="true"/>
+              <widget class="CustomWidget" name="vd" native="true"/>
              </item>
              <item row="1" column="1">
-              <widget class="BaseMplCanvas" name="vg" native="true"/>
+              <widget class="CustomWidget" name="vg" native="true"/>
              </item>
             </layout>
            </widget>
@@ -192,13 +192,13 @@
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="tab_4">
+        <widget class="QWidget" name="tab_temp">
          <attribute name="title">
           <string>Temperatures</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_4">
           <item row="0" column="0">
-           <widget class="CustomWidget" name="widget" native="true"/>
+           <widget class="QuadPlotWidget" name="widget" native="true"/>
           </item>
          </layout>
         </widget>
@@ -254,13 +254,13 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>BaseMplCanvas</class>
+   <class>CustomWidget</class>
    <extends>QWidget</extends>
-   <header location="global">widgets.plot.base.h</header>
+   <header location="global">widgets.plot.pyqtgraph_plot.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>CustomWidget</class>
+   <class>QuadPlotWidget</class>
    <extends>QWidget</extends>
    <header location="global">widgets.plot.pyqtgraph_plot.h</header>
    <container>1</container>

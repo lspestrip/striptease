@@ -54,14 +54,12 @@ class LNAplot(object):
         self.ui = ui
 
     def callback(self,val):
-        #print(self.lna,val)
         if val == 0:
             if self.lna in self.data:
                 self.data.remove(self.lna)
             for item in self.tree:
                 if item.checkState(0) == 2:
                     pol = item.text(0)
-                    #print(pol, self.lna)
                     col = get_color()
                     self.ui.id.del_plot(pol+"_"+self.lna)
                     self.ui.ig.del_plot(pol+"_"+self.lna)
@@ -72,7 +70,6 @@ class LNAplot(object):
             for item in self.tree:
                 if item.checkState(0) == 2:
                     pol = item.text(0)
-                    #print(pol, self.lna)
                     col = get_color()
                     self.ui.id.add_plot(pol+"_"+self.lna,col)
                     self.ui.ig.add_plot(pol+"_"+self.lna,col)
@@ -244,7 +241,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
             for h in ['hk0','hk1','hk2','hk3','hk4','hk5','hk4a','hk5a']:
                 if h in self.lna:
-                    #print("ADD",h)
                     col = get_color()
                     self.ui.id.add_plot(name+"_"+h,col)
                     self.ui.ig.add_plot(name+"_"+h,col)
@@ -271,7 +267,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
             for h in ['hk0','hk1','hk2','hk3','hk4','hk5','hk4a','hk5a']:
                 if h in self.lna:
-                    #print("REMOVE",h)
                     col = get_color()
                     self.ui.id.del_plot(name+"_"+h)
                     self.ui.ig.del_plot(name+"_"+h)
@@ -286,7 +281,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         pass
 
     def recv(self,*args,**pkt):
-        #names = [hk0','hk1','hk2','hk3','hk4','hk5','hk4a','hk5a']
         pol = pkt['pol']
         if pol in self.pols:
             if pkt.get('PWRQ1'):
@@ -317,43 +311,51 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                             self.hk[pol][hk].add(pkt['mjd'],pkt['bias'][hk])
 
     def pippo(self):
+        tab = self.ui.tab_group.currentWidget().objectName()
         for pol in self.engines:
             e = self.engines[pol]
             data = e.get_data_plot()
-            s = data['PWRQ1']['val'].size
-            if s > 0:
-                #print(data['PWRQ1']['val'][s-1])
-                print(data['PWRQ1']['val'].size)
-            self.ui.pwr_q1.set_data(pol,data['PWRQ1']['mjd'],data['PWRQ1']['val'])
-            self.ui.pwr_q2.set_data(pol,data['PWRQ2']['mjd'],data['PWRQ2']['val'])
-            self.ui.pwr_u1.set_data(pol,data['PWRU1']['mjd'],data['PWRU1']['val'])
-            self.ui.pwr_u2.set_data(pol,data['PWRU2']['mjd'],data['PWRU2']['val'])
+            if tab == 'tab_pwr':
+                self.ui.pwr_q1.set_data(pol,data['PWRQ1']['mjd'],data['PWRQ1']['val'])
+                self.ui.pwr_q2.set_data(pol,data['PWRQ2']['mjd'],data['PWRQ2']['val'])
+                self.ui.pwr_u1.set_data(pol,data['PWRU1']['mjd'],data['PWRU1']['val'])
+                self.ui.pwr_u2.set_data(pol,data['PWRU2']['mjd'],data['PWRU2']['val'])
 
-            self.ui.dem_q1.set_data(pol,data['DEMQ1']['mjd'],data['DEMQ1']['val'])
-            self.ui.dem_q2.set_data(pol,data['DEMQ2']['mjd'],data['DEMQ2']['val'])
-            self.ui.dem_u1.set_data(pol,data['DEMU1']['mjd'],data['DEMU1']['val'])
-            self.ui.dem_u2.set_data(pol,data['DEMU2']['mjd'],data['DEMU2']['val'])
+            elif tab == 'tab_dem':
+                self.ui.dem_q1.set_data(pol,data['DEMQ1']['mjd'],data['DEMQ1']['val'])
+                self.ui.dem_q2.set_data(pol,data['DEMQ2']['mjd'],data['DEMQ2']['val'])
+                self.ui.dem_u1.set_data(pol,data['DEMU1']['mjd'],data['DEMU1']['val'])
+                self.ui.dem_u2.set_data(pol,data['DEMU2']['mjd'],data['DEMU2']['val'])
 
-            for lna in ['0','1','2','3','4','5','4a','5a']:
-                if 'hk'+lna in self.lna:
-                    up = lna.upper()
-                    self.ui.vd.set_data(pol+"_hk"+up,data['VD'+up+'_HK']['mjd'],data['VD'+up+'_HK']['val'])
-                    self.ui.id.set_data(pol+"_hk"+up,data['ID'+up+'_HK']['mjd'],data['ID'+up+'_HK']['val'])
-                    self.ui.vg.set_data(pol+"_hk"+up,data['VG'+up+'_HK']['mjd'],data['VG'+up+'_HK']['val'])
-                    self.ui.ig.set_data(pol+"_hk"+up,data['IG'+up+'_HK']['mjd'],data['IG'+up+'_HK']['val'])
+            elif tab == 'tab_lna':
+                for lna in ['0','1','2','3','4','5','4a','5a']:
+                    if 'hk'+lna in self.lna:
+                        up = lna.upper()
+                        self.ui.vd.set_data(pol+"_hk"+up,data['VD'+up+'_HK']['mjd'],data['VD'+up+'_HK']['val'])
+                        self.ui.id.set_data(pol+"_hk"+up,data['ID'+up+'_HK']['mjd'],data['ID'+up+'_HK']['val'])
+                        self.ui.vg.set_data(pol+"_hk"+up,data['VG'+up+'_HK']['mjd'],data['VG'+up+'_HK']['val'])
+                        self.ui.ig.set_data(pol+"_hk"+up,data['IG'+up+'_HK']['mjd'],data['IG'+up+'_HK']['val'])
 
-        self.ui.pwr_q1.commit_plot()
-        self.ui.pwr_q2.commit_plot()
-        self.ui.pwr_u1.commit_plot()
-        self.ui.pwr_u2.commit_plot()
-        self.ui.dem_q1.commit_plot()
-        self.ui.dem_q2.commit_plot()
-        self.ui.dem_u1.commit_plot()
-        self.ui.dem_u2.commit_plot()
-        self.ui.id.commit_plot()
-        self.ui.ig.commit_plot()
-        self.ui.vd.commit_plot()
-        self.ui.vg.commit_plot()
+
+        if tab == 'tab_pwr':
+            self.ui.pwr_q1.commit_plot()
+            self.ui.pwr_q2.commit_plot()
+            self.ui.pwr_u1.commit_plot()
+            self.ui.pwr_u2.commit_plot()
+            
+        elif tab == 'tab_dem':
+            self.ui.dem_q1.commit_plot()
+            self.ui.dem_q2.commit_plot()
+            self.ui.dem_u1.commit_plot()
+            self.ui.dem_u2.commit_plot()
+
+        elif tab == 'tab_lna':
+            self.ui.id.commit_plot()
+            self.ui.ig.commit_plot()
+            self.ui.vd.commit_plot()
+            self.ui.vg.commit_plot()
+
+
 
 
     def new_th_loop(self):
