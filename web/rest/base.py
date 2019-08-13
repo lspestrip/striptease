@@ -95,7 +95,6 @@ class Connection(object):
         pkt = json.dumps(message)
         count = 1
         while True:
-            print(f"{url}: {pkt}")
             response = self.session.post(url, data=pkt)
             if (response.status_code == 503) and (count <= retry_count):
                 print(
@@ -112,14 +111,13 @@ class Connection(object):
             else:
                 break
 
-        if response.status_code != 200:
-            try:
-                print(response.json())
-            except:
-                pass
-            response.raise_for_status()
+        if not (response is None):
+            if (response.status_code != 200):
+                response.raise_for_status()
+            else:
+                return response.json()
         else:
-            return response.json()
+            return {}
 
     def put(self, url, message):
         """encode the message in json format and send it using PUT http method.

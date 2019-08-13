@@ -37,6 +37,13 @@ class StripConnection(Connection):
 
     - `schema` (None or str): either "http" or "https"
 
+    - `post_command` (None or function): if it is not none, the
+      function will be called every time a command must be sent to the
+      electronics. This can be used to capture a list of commands
+      instead of directly commanding the board. The function must
+      accept two parameters: the URL and a dictionary describing the
+      command (in this order).
+
     The following code shows how to connect to a machine. It
     assumes that the user has properly configured the library
     following the documentation
@@ -83,12 +90,13 @@ class StripConnection(Connection):
 
     """
 
-    def __init__(self, user=None, password=None, addr=None, schema=None):
+    def __init__(self, user=None, password=None, addr=None, schema=None, post_command=None):
         super(StripConnection, self).__init__()
 
         self.__user = user
         self.__password = password
-
+        self.post_command = post_command
+        
         if addr:
             self.conf.conf["urls"]["base"] = addr
 
@@ -158,13 +166,27 @@ class StripConnection(Connection):
             A dictionary indicating the status of the operation.
 
         """
-        result = super(StripConnection, self).post(
-            url=self.__rel2abs_url(rel_url), message=message
-        )
-        assert result["status"] == "OK", "Error in POST ({0}): '{1}'".format(
-            result["status"]
-        )
+        abs_url = self.__rel2abs_url(rel_url)
+        if self.post_command:
+            result = self.post_command(abs_url, message)
+        else:
+            # abs_url is null only for "wait" messages, which are only used in
+            # JSON scripts: in those cases, self.post_command is always set,
+            # and this "if" has no effect.
+            if abs_url != "":
+                result = super(StripConnection, self).post(
+                    url=abs_url, message=message
+                )
+                assert result["status"] == "OK", "Error in POST ({0}): '{1}'".format(
+                    result["status"]
+                )
+            else:
+                return True
+            
         return result
+
+    def wait(self, seconds):
+        self.post("", { "wait_time_s": seconds })
 
     @staticmethod
     def __normalize_board_and_pol(board, pol, allow_board):
