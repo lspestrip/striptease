@@ -4,9 +4,20 @@
 
 from config import Config
 import json
+import random
 import requests
+import time
 import web.rest.errors as err
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 class Connection(object):
     """Class Handling login and session"""
@@ -72,16 +83,40 @@ class Connection(object):
         else:
             self.id = None
 
-    def post(self, url, message):
+    def post(self, url, message, retry_count=5, retry_delay_s=None):
         """encode the message in json format and send it using POST http method.
            :param str url: url to send the message.
            :param message: dictionary or list to send.
+           :param retry_count: number of times to retry the command if error 503 happens
+           :param retry_delay_s: time to wait before retrying to send the command
            :return: dictionary of the decoded json response.
            :raises HTTPError: any error that occours while communicating with the server.
         """
         pkt = json.dumps(message)
-        response = self.session.post(url, data=pkt)
+        count = 1
+        while True:
+            print(f"{url}: {pkt}")
+            response = self.session.post(url, data=pkt)
+            if (response.status_code == 503) and (count <= retry_count):
+                print(
+                    bcolors.WARNING +
+                    bcolors.BOLD +
+                    f"Got error 503, response is {response.json()}, retrying ({count}/{retry_count})" +
+                    bcolors.ENDC)
+
+                if retry_delay_s:
+                    time.sleep(retry_delay_s)
+                else:
+                    time.sleep(random.uniform(2.0, 7.0))
+                count += 1
+            else:
+                break
+
         if response.status_code != 200:
+            try:
+                print(response.json())
+            except:
+                pass
             response.raise_for_status()
         else:
             return response.json()
@@ -96,6 +131,10 @@ class Connection(object):
         pkt = json.dumps(message)
         response = self.session.put(url, data=pkt)
         if response.status_code != 200:
+            try:
+                print(response.json())
+            except:
+                pass
             response.raise_for_status()
         else:
             return response.json()
@@ -109,6 +148,10 @@ class Connection(object):
         response = self.session.delete(url)
         if response.status_code != 200:
             response.raise_for_status()
+            try:
+                print(response.json())
+            except:
+                pass
         else:
             return response.json()
 
@@ -120,6 +163,10 @@ class Connection(object):
         """
         response = self.session.get(url)
         if response.status_code != 200:
+            try:
+                print(response.json())
+            except:
+                pass
             response.raise_for_status()
         else:
             return response.json()

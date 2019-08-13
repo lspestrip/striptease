@@ -366,7 +366,7 @@ class StripConnection(Connection):
             An array of dictionaries. Each dictionary contains the
             following field:
 
-                - `pol`: name of the polarimeter, e.g., "R0" 
+                - `pol`: name of the polarimeter, e.g., "R0"
 
                 - `time_stamp`: timestamp of the sample (in units of 0.01 s)
 
@@ -409,7 +409,7 @@ class StripConnection(Connection):
             An array of dictionaries. Each dictionary contains the
             following field:
 
-                - `pol`: name of the polarimeter, e.g., "R0" 
+                - `pol`: name of the polarimeter, e.g., "R0"
 
                 - `time_stamp`: timestamp of the sample (in units of 0.01 s)
 
@@ -458,7 +458,7 @@ class StripConnection(Connection):
 
         """
 
-        dic = {"type": "START", "name": name, "comment": comment}
+        dic = {"type": "START", "tag": name, "comment": comment}
         self.last_response = self.post("rest/tag", dic)
 
     def tag_stop(self, name, comment=""):
@@ -478,5 +478,53 @@ class StripConnection(Connection):
             Nothing
         """
 
-        dic = {"type": "STOP", "name": name, "comment": comment}
+        dic = {"type": "STOP", "tag": name, "comment": comment}
         self.last_response = self.post("rest/tag", dic)
+
+
+class StripTag:
+    """Context manager for tags.
+
+    When you are running a test and want to record tag start/stop, you
+    can use this to easily match tag names between the ``START`` and
+    ``STOP`` commands::
+
+        conn = StripConnection(...)
+        with StripTag(
+            conn,
+            name="BIAS_TUNING",
+            comment="Bias tuning for G0",
+        ):
+            conn.post_command(...)
+            # etc.
+
+    You can either provide a comment using the keyword ``comment`` (in
+    this case, it will be reused for the ``START`` and ``STOP`` tags),
+    or you can pass two separate comments using ``start_comment`` and
+    ``stop_comment``.
+
+    """
+
+    def __init__(self, conn, name, comment="", start_comment="", stop_comment="", dry_run=False):
+        self.conn = conn
+        self.name = name
+
+        self.start_comment = comment
+        self.stop_comment = comment
+
+        if start_comment != "":
+            self.start_comment = start_comment
+
+        if stop_comment != "":
+            self.stop_comment = stop_comment
+
+        self.dry_run = dry_run
+
+    def __enter__(self):
+        if not self.dry_run:
+            self.conn.tag_start(name=self.name, comment=self.start_comment)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        # We must close the tag even if an exception has been raised
+        if not self.dry_run:
+            self.conn.tag_stop(name=self.name, comment=self.stop_comment)

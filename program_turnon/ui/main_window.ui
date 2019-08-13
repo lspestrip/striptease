@@ -71,16 +71,6 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
-          <widget class="QComboBox" name="list_channels">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="0">
           <widget class="QLabel" name="channel_label">
            <property name="text">
@@ -88,6 +78,16 @@
            </property>
            <property name="buddy">
             <cstring>list_channels</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="list_channels">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
            </property>
           </widget>
          </item>
@@ -124,6 +124,16 @@
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_6">
+      <item>
+       <widget class="QCheckBox" name="mock_run">
+        <property name="statusTip">
+         <string>If checked, no command will be sent to the webserver</string>
+        </property>
+        <property name="text">
+         <string>Dry run</string>
+        </property>
+       </widget>
+      </item>
       <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
@@ -177,7 +187,7 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
          <widget class="QLabel" name="log_label">
@@ -200,7 +210,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="QLabel" name="command_label">
@@ -307,6 +317,7 @@
   <tabstop>list_boards</tabstop>
   <tabstop>list_channels</tabstop>
   <tabstop>delay_spinbox</tabstop>
+  <tabstop>mock_run</tabstop>
   <tabstop>start_button</tabstop>
   <tabstop>stop_button</tabstop>
   <tabstop>pause_button</tabstop>
