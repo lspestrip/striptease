@@ -58,16 +58,16 @@
          </attribute>
          <layout class="QGridLayout" name="gridLayout_2">
           <item row="0" column="0">
-           <widget class="CustomWidget" name="pwr_q1" native="true"/>
+           <widget class="QWidget" name="pwr_q1" native="true"/>
           </item>
           <item row="0" column="1">
-           <widget class="CustomWidget" name="pwr_q2" native="true"/>
+           <widget class="QWidget" name="pwr_q2" native="true"/>
           </item>
           <item row="1" column="0">
-           <widget class="CustomWidget" name="pwr_u1" native="true"/>
+           <widget class="QWidget" name="pwr_u1" native="true"/>
           </item>
           <item row="1" column="1">
-           <widget class="CustomWidget" name="pwr_u2" native="true"/>
+           <widget class="QWidget" name="pwr_u2" native="true"/>
           </item>
          </layout>
         </widget>
@@ -77,16 +77,16 @@
          </attribute>
          <layout class="QGridLayout" name="gridLayout_3">
           <item row="0" column="0">
-           <widget class="CustomWidget" name="dem_q1" native="true"/>
+           <widget class="QWidget" name="dem_q1" native="true"/>
           </item>
           <item row="0" column="1">
-           <widget class="CustomWidget" name="dem_q2" native="true"/>
+           <widget class="QWidget" name="dem_q2" native="true"/>
           </item>
           <item row="1" column="0">
-           <widget class="CustomWidget" name="dem_u1" native="true"/>
+           <widget class="QWidget" name="dem_u1" native="true"/>
           </item>
           <item row="1" column="1">
-           <widget class="CustomWidget" name="dem_u2" native="true"/>
+           <widget class="QWidget" name="dem_u2" native="true"/>
           </item>
          </layout>
         </widget>
@@ -105,16 +105,16 @@
             </property>
             <layout class="QGridLayout" name="gridLayout">
              <item row="0" column="1">
-              <widget class="CustomWidget" name="ig" native="true"/>
+              <widget class="QWidget" name="ig" native="true"/>
              </item>
              <item row="0" column="0">
-              <widget class="CustomWidget" name="id" native="true"/>
+              <widget class="QWidget" name="id" native="true"/>
              </item>
              <item row="1" column="0">
-              <widget class="CustomWidget" name="vd" native="true"/>
+              <widget class="QWidget" name="vd" native="true"/>
              </item>
              <item row="1" column="1">
-              <widget class="CustomWidget" name="vg" native="true"/>
+              <widget class="QWidget" name="vg" native="true"/>
              </item>
             </layout>
            </widget>
@@ -198,7 +198,7 @@
          </attribute>
          <layout class="QGridLayout" name="gridLayout_4">
           <item row="0" column="0">
-           <widget class="QuadPlotWidget" name="widget" native="true"/>
+           <widget class="QtCharts::QChartView" name="temp"/>
           </item>
          </layout>
         </widget>
@@ -219,7 +219,7 @@
          <item>
           <widget class="QTreeWidget" name="stats_tree">
            <property name="columnCount">
-            <number>2</number>
+            <number>3</number>
            </property>
            <column>
             <property name="text">
@@ -229,6 +229,11 @@
            <column>
             <property name="text">
              <string>average</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>std deviation</string>
             </property>
            </column>
           </widget>
@@ -254,16 +259,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>CustomWidget</class>
-   <extends>QWidget</extends>
-   <header location="global">widgets.plot.pyqtgraph_plot.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>QuadPlotWidget</class>
-   <extends>QWidget</extends>
-   <header location="global">widgets.plot.pyqtgraph_plot.h</header>
-   <container>1</container>
+   <class>QtCharts::QChartView</class>
+   <extends>QGraphicsView</extends>
+   <header location="global">QtCharts/QChartView</header>
   </customwidget>
  </customwidgets>
  <resources/>
