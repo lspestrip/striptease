@@ -28,19 +28,47 @@
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_4">
        <item>
-        <widget class="QTreeWidget" name="polarimeter_tree">
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <column>
-          <property name="text">
-           <string notr="true"/>
-          </property>
-         </column>
-        </widget>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0,0">
+           <item>
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>window seconds</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="ws_spinbox">
+             <property name="maximum">
+              <number>1000</number>
+             </property>
+             <property name="singleStep">
+              <number>10</number>
+             </property>
+             <property name="value">
+              <number>60</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QTreeWidget" name="polarimeter_tree">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <column>
+            <property name="text">
+             <string notr="true"/>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>
@@ -50,7 +78,7 @@
       <item>
        <widget class="QTabWidget" name="tab_group">
         <property name="currentIndex">
-         <number>3</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tab_pwr">
          <attribute name="title">
@@ -58,16 +86,44 @@
          </attribute>
          <layout class="QGridLayout" name="gridLayout_2">
           <item row="0" column="0">
-           <widget class="QWidget" name="pwr_q1" native="true"/>
+           <widget class="QtCharts::QChartView" name="pwr_q1">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QWidget" name="pwr_q2" native="true"/>
+           <widget class="QtCharts::QChartView" name="pwr_q2">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
           <item row="1" column="0">
-           <widget class="QWidget" name="pwr_u1" native="true"/>
+           <widget class="QtCharts::QChartView" name="pwr_u1">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QWidget" name="pwr_u2" native="true"/>
+           <widget class="QtCharts::QChartView" name="pwr_u2">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -77,16 +133,44 @@
          </attribute>
          <layout class="QGridLayout" name="gridLayout_3">
           <item row="0" column="0">
-           <widget class="QWidget" name="dem_q1" native="true"/>
+           <widget class="QtCharts::QChartView" name="dem_q1">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QWidget" name="dem_q2" native="true"/>
+           <widget class="QtCharts::QChartView" name="dem_q2">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
           <item row="1" column="0">
-           <widget class="QWidget" name="dem_u1" native="true"/>
+           <widget class="QtCharts::QChartView" name="dem_u1">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QWidget" name="dem_u2" native="true"/>
+           <widget class="QtCharts::QChartView" name="dem_u2">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -104,17 +188,45 @@
              <enum>QFrame::Raised</enum>
             </property>
             <layout class="QGridLayout" name="gridLayout">
-             <item row="0" column="1">
-              <widget class="QWidget" name="ig" native="true"/>
-             </item>
              <item row="0" column="0">
-              <widget class="QWidget" name="id" native="true"/>
+              <widget class="QtCharts::QChartView" name="id">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QtCharts::QChartView" name="ig">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+              </widget>
              </item>
              <item row="1" column="0">
-              <widget class="QWidget" name="vd" native="true"/>
+              <widget class="QtCharts::QChartView" name="vd">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+              </widget>
              </item>
              <item row="1" column="1">
-              <widget class="QWidget" name="vg" native="true"/>
+              <widget class="QtCharts::QChartView" name="vg">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
