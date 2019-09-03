@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
 {
     std::map<QString,std::unique_ptr<data_stream>> d_stream;
     std::set<std::string> lna;
+    std::set<QString> pols;
 
     command_stream cs;
     cs.start();
@@ -49,20 +50,22 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
     MainWindow w;
 
-    data_chart pwrQ1("Q1");
-    data_chart pwrU1("U1");
-    data_chart pwrQ2("Q2");
-    data_chart pwrU2("U2");
+    int ws = w.ui->ws_spinbox->value();
 
-    data_chart demQ1("Q1");
-    data_chart demU1("U1");
-    data_chart demQ2("Q2");
-    data_chart demU2("U2");
+    data_chart pwrQ1("Q1",ws);
+    data_chart pwrU1("U1",ws);
+    data_chart pwrQ2("Q2",ws);
+    data_chart pwrU2("U2",ws);
 
-    data_chart id("ID");
-    data_chart ig("IG");
-    data_chart vd("VD");
-    data_chart vg("VG");
+    data_chart demQ1("Q1",ws);
+    data_chart demU1("U1",ws);
+    data_chart demQ2("Q2",ws);
+    data_chart demU2("U2",ws);
+
+    data_chart id("ID",ws);
+    data_chart ig("IG",ws);
+    data_chart vd("VD",ws);
+    data_chart vg("VG",ws);
 
     w.ui->pwr_q1->setChart(pwrQ1.chart);
     w.ui->pwr_q2->setChart(pwrQ2.chart);
@@ -110,7 +113,9 @@ int main(int argc, char *argv[])
             board_item->addChild(pol_item);
         }
     }
+
     /* LAMBDAS BEGIN*/
+
     auto l_get_key=[](const QString& pol,const std::string& name)->std::string{
         std::string key = pol.toStdString();
         key += "_HK";
@@ -118,10 +123,30 @@ int main(int argc, char *argv[])
         return  key;
     };
 
+    auto l_ws = [&](int val){
+        for(auto& pol : pols){
+            d_stream.at(pol)->w_sec(val);
+        }
+        pwrQ1.w_sec(val);
+        pwrQ2.w_sec(val);
+        pwrU1.w_sec(val);
+        pwrU2.w_sec(val);
+
+        demQ1.w_sec(val);
+        demQ2.w_sec(val);
+        demU1.w_sec(val);
+        demU2.w_sec(val);
+        id.w_sec(val);
+        vd.w_sec(val);
+        ig.w_sec(val);
+        vg.w_sec(val);
+    };
+
     auto l_item_check = [&](QTreeWidgetItem* item,int){
         Qt::CheckState state= item->checkState(0);
         QString pol = item->text(0);
         if(state == Qt::Checked){
+            pols.insert(pol);
             std::string path = cs.add_pol(pol);
             data_stream* d = new data_stream(path);
             d_stream[pol].reset(d);
@@ -147,6 +172,7 @@ int main(int argc, char *argv[])
                 vg.line_add(qkey,"VG"+name,Qt::red,d);
             }
         }else if(state == Qt::Unchecked){
+            pols.erase(pol);
             pwrQ1.line_remove(pol);
             pwrQ2.line_remove(pol);
             pwrU1.line_remove(pol);
@@ -196,16 +222,16 @@ int main(int argc, char *argv[])
 
 
     auto l_lna = [&](int i,const std::string& name){
-        for(auto& ds : d_stream){
-            std::string key = l_get_key(ds.first,name);
+        for(auto& pol : pols){
+            std::string key = l_get_key(pol,name);
             QString qkey = key.c_str();
             if(i==2){
                 if(name[1]=='_'){
-                    id.line_add(qkey,"ID"+name,Qt::red,ds.second.get());
-                    vd.line_add(qkey,"VD"+name,Qt::red,ds.second.get());
+                    id.line_add(qkey,"ID"+name,Qt::red,d_stream.at(pol).get());
+                    vd.line_add(qkey,"VD"+name,Qt::red,d_stream.at(pol).get());
                 }
-                ig.line_add(qkey,"IG"+name,Qt::red,ds.second.get());
-                vg.line_add(qkey,"VG"+name,Qt::red,ds.second.get());
+                ig.line_add(qkey,"IG"+name,Qt::red,d_stream.at(pol).get());
+                vg.line_add(qkey,"VG"+name,Qt::red,d_stream.at(pol).get());
             }else if(i==0){
                 if(name[1]=='_'){
                     id.line_remove(qkey);
@@ -236,6 +262,9 @@ int main(int argc, char *argv[])
     QObject::connect(w.ui->hk5,&QCheckBox::stateChanged,std::bind(l_lna,_1,"5_HK"));
     QObject::connect(w.ui->hk4a,&QCheckBox::stateChanged,std::bind(l_lna,_1,"4A_HK"));
     QObject::connect(w.ui->hk5a,&QCheckBox::stateChanged,std::bind(l_lna,_1,"5A_HK"));
+
+    void (QSpinBox::*fptr)(int) = &QSpinBox::valueChanged;
+    QObject::connect(w.ui->ws_spinbox,fptr,l_ws);
 
     w.show();
 

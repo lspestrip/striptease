@@ -4,7 +4,7 @@
 
 using namespace  QtCharts;
 
-data_chart::data_chart(const QString& name)
+data_chart::data_chart(const QString& name, int ws)
     : chart(new QChart()),
       _axisX(new QValueAxis()),
       _axisY(new QValueAxis())
@@ -14,9 +14,13 @@ data_chart::data_chart(const QString& name)
     chart->addAxis(_axisX,Qt::AlignBottom);
     chart->addAxis(_axisY,Qt::AlignLeft);
 
-    _axisX->setRange(0, 300);//FIXME
+    _axisX->setRange(0, ws);
     _axisY->setLabelFormat("%.2e");
 }
+void data_chart::w_sec(double ws){
+    _axisX->setRange(0, ws);
+}
+
 void data_chart::line_add  (const QString& name,const std::string& key,const QColor& color,data_stream* stream){
     chart_item item;
     item.key    = key;

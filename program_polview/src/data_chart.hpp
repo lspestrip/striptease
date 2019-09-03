@@ -19,7 +19,8 @@ class data_chart: public QObject{
     Q_OBJECT
 public:
     QtCharts::QChart* chart;
-    data_chart(const QString& name);
+    data_chart(const QString& name,int ws=300);
+    void w_sec(double ws);
     void line_add  (const QString& name,const std::string& key,const QColor& color,data_stream* stream);
     void line_color(const QString& name,const QColor& color);
     void line_remove(const QString& name);
