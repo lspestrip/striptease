@@ -38,7 +38,7 @@ HEADERS += \
         src/data_chart.hpp \
         src/data_stream.hpp \
         src/simpleplot.h \
-        ui\mainwindow.h
+        ui/mainwindow.h
 
 FORMS += \
         ui/mainwindow.ui

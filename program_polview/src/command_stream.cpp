@@ -12,6 +12,7 @@
 #include <iostream>
 #include <string>
 #include <stdlib.h>
+#include <functional>   // std::bind
 
 std::string randomString()
 {
