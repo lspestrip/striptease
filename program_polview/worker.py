@@ -36,22 +36,29 @@ class Worker(object):
 
         self.pol = pol
         self.path = path
-        self.conn = conn
-        self.conf = Config()
-        self.conf.load(self.conn)
-        #t = pipes.Template()
-        #self.pipe = t.open(path, 'w')
+        self.usr = conn.user
+        self.pwd = conn.password
 
     def start(self):
-        #self.p = mp.Process(target=self.__process_loop)
-        #self.p.start()
-        self.__process_loop()
+        print('start worker')
+        self.p = mp.Process(target=self.__process_loop)
+        self.p.start()
+        #self.__process_loop()
 
     def stop(self):
         self.p.terminate()
 
     def __process_loop(self):
         print('process loop')
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        self.conn = Connection()
+        self.conn.login(self.usr,self.pwd)
+
+        self.conf = Config()
+        self.conf.load(self.conn)
+
         self.wamp = WampBase(self.conn)
         self.wamp.connect(self.conf.get_wamp_url(),self.conf.get_wamp_realm())
 

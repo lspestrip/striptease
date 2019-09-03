@@ -11,27 +11,6 @@
 #include "rapidjson/istreamwrapper.h"
 #include <iostream>
 #include <fstream>      // std::ifstream
-
-std::set<std::string> data_stream::sci = {"DEMQ1","DEMU1","DEMU2","DEMQ2","PWRQ1","PWRU1","PWRU2","PWRQ2"};
-std::set<std::string> data_stream::hk  = {"VD0_HK","VD1_HK","VD2_HK","VD3_HK","VD4_HK","VD5_HK",
-                                          "ID0_HK","ID1_HK","ID2_HK","ID3_HK","ID4_HK","ID5_HK",
-                                          "VG0_HK","VG1_HK","VG2_HK","VG3_HK","VG4_HK","VG5_HK","VG4A_HK","VG5A_HK",
-                                          "IG0_HK","IG1_HK","IG2_HK","IG3_HK","IG4_HK","IG5_HK","IG4A_HK","IG5A_HK"};
-
-data_stream::data_stream()
-    : _ws(300),
-      _last_mjd(0){
-
-    for(auto& h : sci)
-        _data[h];
-
-    for(auto& h : hk)
-        _data[h];
-}
-void data_stream::start(){
-    _th = std::thread(std::thread(std::bind(&data_stream::proceed, this)));
-}
-
 #include <ostream>
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/stream.hpp>
@@ -56,22 +35,56 @@ using namespace std;
 namespace io = boost::iostreams;
 using namespace std::chrono;
 
+std::set<std::string> data_stream::sci = {"DEMQ1","DEMU1","DEMU2","DEMQ2","PWRQ1","PWRU1","PWRU2","PWRQ2"};
+std::set<std::string> data_stream::hk  = {"VD0_HK","VD1_HK","VD2_HK","VD3_HK","VD4_HK","VD5_HK",
+                                          "ID0_HK","ID1_HK","ID2_HK","ID3_HK","ID4_HK","ID5_HK",
+                                          "VG0_HK","VG1_HK","VG2_HK","VG3_HK","VG4_HK","VG5_HK","VG4A_HK","VG5A_HK",
+                                          "IG0_HK","IG1_HK","IG2_HK","IG3_HK","IG4_HK","IG5_HK","IG4A_HK","IG5A_HK"};
+
+data_stream::data_stream(const string &path)
+    : _go(true),
+      _path(path),
+      _ws(300),
+      _last_mjd(0){
+
+    for(auto& h : sci)
+        _data[h];
+
+    for(auto& h : hk)
+        _data[h];
+}
+
+data_stream::~data_stream(){
+    stop();
+    _th.join();
+}
+
+void data_stream::start(){
+    _th = std::thread(std::thread(std::bind(&data_stream::proceed, this)));
+}
+
+
 void data_stream::proceed(){
 
-    ifstream ifs("/tmp/strip.pol.G0", std::ifstream::in);
+    ifstream ifs(_path, std::ifstream::in);
+    std::cerr << "opened " << _path << std::endl;
 
     IStreamWrapper isw(ifs);
 
     double mjd = 0;
-    while(true){
+    while(_go){
         Document d;
         d.ParseStream<kParseStopWhenDoneFlag>(isw);
 
         if(d.HasParseError())
-            std::cout << "parse error, skipping" << std::endl;
+            std::cerr << "parse error, skipping" << std::endl;
         else
             decode(d);
     }
+    std::cerr << "EXITING" << std::endl;
+    ifs.close();
+    remove(_path.c_str());
+    std::cerr << "removed" << std::endl;
 }
 
 void data_stream::decode(rapidjson::Document &d){
@@ -124,10 +137,14 @@ QVector<QPointF> data_stream::get(const std::string& key){
     QVector<QPointF> data;
     auto& src = _data[key];
     size_t size = src.first.size();
+    if(size == 0){
+        //std::cerr << "DATA EMPTY" << std::endl;
+        return data;
+    }
     data.reserve(size);
     for (size_t i=0; i<size; i++) {
         data.push_back(QPointF((_last_mjd - src.first[i])*86400.,src.second[i]));
     }
-    //std::cout << data.size() << " " << data.first().rx() <<" " << data.last().rx()<<std::endl;
+    //std::cerr << data.size() << " " << data.first().rx() <<" " << data.last().rx()<<std::endl;
     return data;
 }

@@ -27,26 +27,23 @@ LIBS += -lssl -lcrypto -lboost_system -lboost_thread
 
 SOURCES += \
         main.cpp \
+        src/command_stream.cpp \
         src/data_chart.cpp \
         src/data_stream.cpp \
         src/simpleplot.cpp \
-        src/stripconnection.cpp \
-        src/loginwindow.cpp \
         ui/mainwindow.cpp
 
 HEADERS += \
+        src/command_stream.hpp \
         src/data_chart.hpp \
         src/data_stream.hpp \
         src/simpleplot.h \
-        src/loginwindow.hpp \
-        src/stripconnection.hpp \
         ui\mainwindow.h
 
 FORMS += \
-        ui/login.ui \
         ui/mainwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
+else: unix:!android: target.path = ./bin
 !isEmpty(target.path): INSTALLS += target

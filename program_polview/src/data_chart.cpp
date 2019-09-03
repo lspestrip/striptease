@@ -43,6 +43,7 @@ void data_chart::line_color(const QString& name,const QColor& color){
 
 void data_chart::line_remove(const QString& name){
     chart->removeSeries(_items.at(name).series.get());
+    _items.erase(name);
 }
 
 void data_chart::update(){
@@ -57,10 +58,14 @@ void data_chart::update(){
     };
     for(auto& item : _items){
         QVector<QPointF> data =item.second.stream->get(item.second.key);
+        if (data.empty())
+            continue;
         mm(data);
         //std::cout << data.size() << " " << min << " " << max << std::endl ;
         item.second.series->replace(data);
     }
-    double delta = (max - min)*0.05;
-   _axisY->setRange(min-delta,max+delta);
+    if(!std::isnan(min) && !std::isnan(max)){
+        double delta = (max - min)*0.05;
+        _axisY->setRange(min-delta,max+delta);
+    }
 }

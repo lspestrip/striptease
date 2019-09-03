@@ -17,13 +17,17 @@ public:
 
     double w_sec();
     void w_sec(double ws);
-    data_stream();
+    data_stream(const std::string& path);
+    ~data_stream();
     void start();
+    void stop(){_go = false;}
     void join(){_th.join();}
 
     QVector<QPointF> get(const std::string& key);
 
 private:
+    bool _go;
+    std::string _path;
     std::mutex _m;
     double _ws;
     double _last_mjd;
