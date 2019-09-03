@@ -175,20 +175,22 @@ int main(int argc, char *argv[])
     };
 
     auto l_update = [&](){
-        pwrQ1.update();
-        pwrQ2.update();
-        pwrU1.update();
-        pwrU2.update();
-
-        demQ1.update();
-        demQ2.update();
-        demU1.update();
-        demU2.update();
-
-        id.update();
-        ig.update();
-        vd.update();
-        vg.update();
+        if(!w.ui->tab_pwr->isHidden()){
+            pwrQ1.update();
+            pwrQ2.update();
+            pwrU1.update();
+            pwrU2.update();
+        }else if(!w.ui->tab_dem->isHidden()){
+            demQ1.update();
+            demQ2.update();
+            demU1.update();
+            demU2.update();
+        }else if(!w.ui->tab_lna->isHidden()){
+            id.update();
+            ig.update();
+            vd.update();
+            vg.update();
+        }
     };
 
 
@@ -239,7 +241,7 @@ int main(int argc, char *argv[])
 
     QTimer timer;
     timer.callOnTimeout(l_update);
-    timer.start(500);
+    timer.start(100);
 
     //std::cout << "{\"user\":\""<<parser.value("user").toStdString() << "\",\"password\":\"" << parser.value("password").toStdString() << "\"}"<<std::endl;
     app.exec();
