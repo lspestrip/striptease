@@ -42,7 +42,8 @@ void data_chart::line_add  (const QString& name,const std::string& key,const QCo
 void data_chart::line_color(const QString& name,const QColor& color){
     QPen pen(color);
     pen.setWidth(2);
-    _items.at(name).series->setPen(pen);
+    if(_items.find(name) != _items.end())
+        _items.at(name).series->setPen(pen);
 }
 
 void data_chart::line_remove(const QString& name){
@@ -69,6 +70,10 @@ void data_chart::update(){
         item.second.series->replace(data);
     }
     if(!std::isnan(min) && !std::isnan(max)){
+        if(min == max){
+            min -= 50;
+            max += 50;
+        }
         double delta = (max - min)*0.05;
         _axisY->setRange(min-delta,max+delta);
     }

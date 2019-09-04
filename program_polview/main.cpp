@@ -34,6 +34,8 @@ QT_CHARTS_END_NAMESPACE
 #include <iostream>
 #include <set>
 #include <QCommandLineParser>
+#include <QColorDialog>
+#include <QLegendMarker>
 #include "src/data_chart.hpp"
 #include "src/command_stream.hpp"
 
@@ -82,7 +84,10 @@ int main(int argc, char *argv[])
     w.ui->vd->setChart(vd.chart);
     w.ui->vg->setChart(vg.chart);
 
-
+    std::vector<data_chart*> charts = {
+        &pwrQ1,&pwrQ2,&pwrU1,&pwrU2,
+        &demQ1,&demQ2,&demU1,&demU2,
+        &id,&ig,&vd,&vg};
 
     /* ARGV MANAGEMENT BEGIN    */
     QCommandLineParser parser;
@@ -115,6 +120,23 @@ int main(int argc, char *argv[])
     }
 
     /* LAMBDAS BEGIN*/
+    auto l_marker_clicked = [&](QLegendMarker* m){
+        QColor color = QColorDialog::getColor();
+        for(auto c : charts){
+            c->line_color(m->label(),color);
+        }
+    };
+
+    auto l_legend_connect = [&](){
+        for(auto c : charts){
+            const auto markers = c->chart->legend()->markers();
+            for (QLegendMarker *marker : markers) {
+                marker->disconnect();
+                QObject::connect(marker, &QLegendMarker::clicked,std::bind(l_marker_clicked,marker));
+            }
+        }
+
+    };
 
     auto l_get_key=[](const QString& pol,const std::string& name)->std::string{
         std::string key = pol.toStdString();
@@ -171,6 +193,7 @@ int main(int argc, char *argv[])
                 ig.line_add(qkey,"IG"+name,Qt::red,d);
                 vg.line_add(qkey,"VG"+name,Qt::red,d);
             }
+            l_legend_connect();
         }else if(state == Qt::Unchecked){
             pols.erase(pol);
             pwrQ1.line_remove(pol);
@@ -247,7 +270,7 @@ int main(int argc, char *argv[])
         }else if(i==0){
             lna.erase(name);
         }
-
+        l_legend_connect();
     };
 
     /* LAMBDAS END*/
