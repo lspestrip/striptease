@@ -92,7 +92,7 @@ if __name__ == "__main__":
     conf = Config()
     conf.load(conn)
 
-    gui = sp.Popen(["program_polview/bin/program_polview","-u",conn.user,"-p",conn.password],stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
+    gui = sp.Popen(["program_polview/bin/program_polview","-u",conn.user,"-p",conn.password],stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT)
     coro = loop.connect_read_pipe(UnixProtocolR, gui.stdout)
     fut = asyncio.run_coroutine_threadsafe(coro,loop)
     (_,inpipe) = fut.result()

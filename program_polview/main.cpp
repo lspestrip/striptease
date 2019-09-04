@@ -39,6 +39,15 @@ QT_CHARTS_END_NAMESPACE
 #include "src/data_chart.hpp"
 #include "src/command_stream.hpp"
 
+static std::vector<QString> hk_names = {
+    "VD0_HK","VD1_HK","VD2_HK","VD3_HK","VD4_HK","VD5_HK",
+    "ID0_HK","ID1_HK","ID2_HK","ID3_HK","ID4_HK","ID5_HK",
+    "VG0_HK","VG1_HK","VG2_HK","VG3_HK","VG4_HK","VG5_HK","VG4A_HK","VG5A_HK",
+    "IG0_HK","IG1_HK","IG2_HK","IG3_HK","IG4_HK","IG5_HK","IG4A_HK","IG5A_HK",
+    "VPIN0_HK","VPIN1_HK","VPIN2_HK","VPIN3_HK",
+    "IPIN0_HK","IPIN1_HK","IPIN2_HK","IPIN3_HK"
+};
+
 using namespace std::placeholders;
 int main(int argc, char *argv[])
 {
@@ -105,6 +114,7 @@ int main(int argc, char *argv[])
         std::cout << "PARSE ERROR" << std::endl;
         return 1;
     }
+
     for(auto& board : conf.GetArray()){
         QString name = board["name"].GetString();
         QTreeWidgetItem* board_item = new QTreeWidgetItem(w.ui->polarimeter_tree);
@@ -119,7 +129,53 @@ int main(int argc, char *argv[])
         }
     }
 
+    std::map<QString,std::map<QString,QTreeWidgetItem*>> m_stats;
+
+    for(auto& board : conf.GetArray()){
+        QString b_name = board["name"].GetString();
+        QTreeWidgetItem* board_item = new QTreeWidgetItem(w.ui->stats_tree);
+        board_item->setText(0,b_name);
+        w.ui->stats_tree->itemBelow(board_item);
+        for(auto& pol : board["pols"].GetArray()){
+            QTreeWidgetItem* pol_item = new QTreeWidgetItem(board_item);
+            QString p_name = pol.GetString();
+            pol_item->setText(0,p_name);
+            board_item->addChild(pol_item);
+            for(const auto& hk : hk_names){
+                QTreeWidgetItem* hk_item = new QTreeWidgetItem(pol_item);
+                hk_item->setText(0,hk);
+                hk_item->setText(1,"NaN");
+                hk_item->setText(2,"NaN");
+                pol_item->addChild(hk_item);
+                m_stats[p_name][hk]=hk_item;
+            }
+        }
+    }
+
+
     /* LAMBDAS BEGIN*/
+    auto l_update_stats = [&](){
+        for( auto& pol : m_stats){
+            for(auto& hk : pol.second){
+                hk.second->setText(1,"NaN");
+                hk.second->setText(2,"NaN");
+            }
+        }
+        for(auto& p : pols){
+            auto m = d_stream.at(p)->get_stats();
+            for(auto& s : m){
+                QString mean;
+                QString stdev;
+                mean.sprintf("%.2e", s.second.first);
+                stdev.sprintf("%.2e", s.second.second);
+                m_stats.at(p).at(s.first)->setText(1,mean);
+                m_stats.at(p).at(s.first)->setText(2,stdev);
+
+            }
+        }
+
+    };
+
     auto l_marker_clicked = [&](QLegendMarker* m){
         QColor color = QColorDialog::getColor();
         for(auto c : charts){
@@ -174,24 +230,24 @@ int main(int argc, char *argv[])
             d_stream[pol].reset(d);
             d_stream[pol]->start();
 
-            pwrQ1.line_add(pol,"PWRQ1",Qt::red,d);
-            pwrQ2.line_add(pol,"PWRQ2",Qt::red,d);
-            pwrU1.line_add(pol,"PWRU1",Qt::red,d);
-            pwrU2.line_add(pol,"PWRU2",Qt::red,d);
+            pwrQ1.line_add(pol,"PWRQ1",Qt::gray,d);
+            pwrQ2.line_add(pol,"PWRQ2",Qt::gray,d);
+            pwrU1.line_add(pol,"PWRU1",Qt::gray,d);
+            pwrU2.line_add(pol,"PWRU2",Qt::gray,d);
 
-            demQ1.line_add(pol,"DEMQ1",Qt::red,d);
-            demQ2.line_add(pol,"DEMQ2",Qt::red,d);
-            demU1.line_add(pol,"DEMU1",Qt::red,d);
-            demU2.line_add(pol,"DEMU2",Qt::red,d);
+            demQ1.line_add(pol,"DEMQ1",Qt::gray,d);
+            demQ2.line_add(pol,"DEMQ2",Qt::gray,d);
+            demU1.line_add(pol,"DEMU1",Qt::gray,d);
+            demU2.line_add(pol,"DEMU2",Qt::gray,d);
             for(auto& name : lna){
                 std::string key = l_get_key(pol,name);
                 QString qkey = key.c_str();
                 if(name[1]=='_'){
-                    id.line_add(qkey,"ID"+name,Qt::red,d);
-                    vd.line_add(qkey,"VD"+name,Qt::red,d);
+                    id.line_add(qkey,"ID"+name,Qt::gray,d);
+                    vd.line_add(qkey,"VD"+name,Qt::gray,d);
                 }
-                ig.line_add(qkey,"IG"+name,Qt::red,d);
-                vg.line_add(qkey,"VG"+name,Qt::red,d);
+                ig.line_add(qkey,"IG"+name,Qt::gray,d);
+                vg.line_add(qkey,"VG"+name,Qt::gray,d);
             }
             l_legend_connect();
         }else if(state == Qt::Unchecked){
@@ -240,6 +296,7 @@ int main(int argc, char *argv[])
             vd.update();
             vg.update();
         }
+        l_update_stats();
     };
 
 
@@ -250,11 +307,11 @@ int main(int argc, char *argv[])
             QString qkey = key.c_str();
             if(i==2){
                 if(name[1]=='_'){
-                    id.line_add(qkey,"ID"+name,Qt::red,d_stream.at(pol).get());
-                    vd.line_add(qkey,"VD"+name,Qt::red,d_stream.at(pol).get());
+                    id.line_add(qkey,"ID"+name,Qt::gray,d_stream.at(pol).get());
+                    vd.line_add(qkey,"VD"+name,Qt::gray,d_stream.at(pol).get());
                 }
-                ig.line_add(qkey,"IG"+name,Qt::red,d_stream.at(pol).get());
-                vg.line_add(qkey,"VG"+name,Qt::red,d_stream.at(pol).get());
+                ig.line_add(qkey,"IG"+name,Qt::gray,d_stream.at(pol).get());
+                vg.line_add(qkey,"VG"+name,Qt::gray,d_stream.at(pol).get());
             }else if(i==0){
                 if(name[1]=='_'){
                     id.line_remove(qkey);
@@ -274,9 +331,8 @@ int main(int argc, char *argv[])
     };
 
     /* LAMBDAS END*/
-
-
     QObject::connect(w.ui->polarimeter_tree,&QTreeWidget::itemChanged,l_item_check);
+    QObject::connect(w.ui->tab_group,&QTabWidget::currentChanged,[&](int){l_update();});
     QObject::connect(w.ui->hk0,&QCheckBox::stateChanged,std::bind(l_lna,_1,"0_HK"));
     QObject::connect(w.ui->hk1,&QCheckBox::stateChanged,std::bind(l_lna,_1,"1_HK"));
     QObject::connect(w.ui->hk2,&QCheckBox::stateChanged,std::bind(l_lna,_1,"2_HK"));
@@ -293,15 +349,12 @@ int main(int argc, char *argv[])
 
     QTimer timer;
     timer.callOnTimeout(l_update);
-    timer.start(100);
+    timer.start(1000);
 
-    //std::cout << "{\"user\":\""<<parser.value("user").toStdString() << "\",\"password\":\"" << parser.value("password").toStdString() << "\"}"<<std::endl;
     app.exec();
 
     for(auto& ds : d_stream){
         ds.second.reset();
         cs.del_pol(ds.first);
     }
-
-    //    qDebug() <<"status:"<< reply->error();
 }

@@ -36,10 +36,14 @@ namespace io = boost::iostreams;
 using namespace std::chrono;
 
 std::set<std::string> data_stream::sci = {"DEMQ1","DEMU1","DEMU2","DEMQ2","PWRQ1","PWRU1","PWRU2","PWRQ2"};
-std::set<std::string> data_stream::hk  = {"VD0_HK","VD1_HK","VD2_HK","VD3_HK","VD4_HK","VD5_HK",
-                                          "ID0_HK","ID1_HK","ID2_HK","ID3_HK","ID4_HK","ID5_HK",
-                                          "VG0_HK","VG1_HK","VG2_HK","VG3_HK","VG4_HK","VG5_HK","VG4A_HK","VG5A_HK",
-                                          "IG0_HK","IG1_HK","IG2_HK","IG3_HK","IG4_HK","IG5_HK","IG4A_HK","IG5A_HK"};
+std::set<std::string> data_stream::hk  = {
+    "VD0_HK","VD1_HK","VD2_HK","VD3_HK","VD4_HK","VD5_HK",
+    "ID0_HK","ID1_HK","ID2_HK","ID3_HK","ID4_HK","ID5_HK",
+    "VG0_HK","VG1_HK","VG2_HK","VG3_HK","VG4_HK","VG5_HK","VG4A_HK","VG5A_HK",
+    "IG0_HK","IG1_HK","IG2_HK","IG3_HK","IG4_HK","IG5_HK","IG4A_HK","IG5A_HK",
+    "VPIN0_HK","VPIN1_HK","VPIN2_HK","VPIN3_HK",
+    "IPIN0_HK","IPIN1_HK","IPIN2_HK","IPIN3_HK"
+};
 
 data_stream::data_stream(const string &path)
     : _go(true),
@@ -71,7 +75,6 @@ void data_stream::proceed(){
 
     IStreamWrapper isw(ifs);
 
-    double mjd = 0;
     while(_go){
         Document d;
         d.ParseStream<kParseStopWhenDoneFlag>(isw);
@@ -85,6 +88,31 @@ void data_stream::proceed(){
     ifs.close();
     remove(_path.c_str());
     std::cerr << "removed" << std::endl;
+}
+
+data_stream::stats_t data_stream::get_stats(){
+    std::unique_lock lock(_m);
+    stats_t map;
+
+    for(auto& h : _data){
+        if(h.second.second.empty())
+            continue;
+        if(sci.find(h.first) != sci.end())
+            continue; // no SCI data on stats
+
+        QString key = h.first.c_str();
+        auto& v = h.second.second;
+        double sum = std::accumulate(v.begin(), v.end(), 0.0);
+        double mean = sum / v.size();
+
+        std::vector<double> diff(v.size());
+        std::transform(v.begin(), v.end(), diff.begin(), [mean](double x) { return x - mean; });
+        double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+        double stdev = std::sqrt(sq_sum / v.size());
+        map[key].first  = mean;
+        map[key].second = stdev;
+    }
+    return map;
 }
 
 void data_stream::decode(rapidjson::Document &d){

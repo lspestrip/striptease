@@ -14,6 +14,7 @@ class data_stream
 public:
     typedef std::deque<double> buffer_t;
     typedef std::pair<buffer_t,buffer_t> data_t;
+    typedef std::map<QString,std::pair<double,double>> stats_t;
 
     double w_sec();
     void w_sec(double ws);
@@ -24,6 +25,7 @@ public:
     void join(){_th.join();}
 
     QVector<QPointF> get(const std::string& key);
+    stats_t get_stats();
 
 private:
     bool _go;
