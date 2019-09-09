@@ -335,13 +335,18 @@ PINCON_0       = 6
 
 
 if __name__ == '__main__':
-    pol_chan = 'W6'# channel of the electronics (from G0:G6 and W6)
-    pol_chan_conf = 'Pol8'#Board ADC calibration (from 1:8)
-    pol_name = 'STRIP76'
+    if len(sys.argv) != 6:
+        print(f'''Usage: python {sys.argv[0]} BOARD_CAL COMMAND CHANNEL CONF POL_NAME
 
-    if len(sys.argv) != 2:
-        print('usage: python ',sys.argv[0],'<BOARD_cal.xlsx>')
+BOARD_CAL: name of the Excel file containing the Biases
+COMMAND: either "turn_on" or "turn_off"
+CHANNEL: name of the channel (e.g., "G0")
+CONF: channel configuration (e.g., "Pol1")
+POL_NAME: name of the polarimeter (e.g., "STRIP15")
+''')
         sys.exit(-1)
+
+    command, pol_chan, pol_chan_conf, pol_name = sys.argv[2:]
 
     d = read_board_xlsx(sys.argv[1])
     calib = d[pol_chan_conf]
@@ -356,13 +361,13 @@ if __name__ == '__main__':
     conf.load(con)
     time.sleep(0.5)
 
+    if command == "turnon":
+        turn_on_board(con,conf)
+        turn_on(con,conf,pol_chan)
 
-    turn_on_board(con,conf)
-    turn_on(con,conf,pol_chan)
-
-    #setup_VD(con,conf,bc,calib,pol_chan,1.)
-    #setup_VG(con,conf,bc,calib,pol_chan,1.)
-    #setup_VPIN(con,conf,bc,calib,pol_chan,1.)
-    #setup_IPIN(con,conf,bc,calib,pol_chan,1.)
-
-    #turn_off(con,conf,pol_chan)
+        setup_VD(con,conf,bc,calib,pol_chan,1.)
+        setup_VG(con,conf,bc,calib,pol_chan,1.)
+        setup_VPIN(con,conf,bc,calib,pol_chan,1.)
+        setup_IPIN(con,conf,bc,calib,pol_chan,1.)
+    elif command == "turnoff":
+        turn_off(con,conf,pol_chan)

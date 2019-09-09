@@ -37,6 +37,13 @@ class StripConnection(Connection):
 
     - `schema` (None or str): either "http" or "https"
 
+    - `post_command` (None or function): if it is not none, the
+      function will be called every time a command must be sent to the
+      electronics. This can be used to capture a list of commands
+      instead of directly commanding the board. The function must
+      accept two parameters: the URL and a dictionary describing the
+      command (in this order).
+
     The following code shows how to connect to a machine. It
     assumes that the user has properly configured the library
     following the documentation
@@ -83,12 +90,13 @@ class StripConnection(Connection):
 
     """
 
-    def __init__(self, user=None, password=None, addr=None, schema=None):
+    def __init__(self, user=None, password=None, addr=None, schema=None, post_command=None):
         super(StripConnection, self).__init__()
 
         self.__user = user
         self.__password = password
-
+        self.post_command = post_command
+        
         if addr:
             self.conf.conf["urls"]["base"] = addr
 
@@ -158,13 +166,27 @@ class StripConnection(Connection):
             A dictionary indicating the status of the operation.
 
         """
-        result = super(StripConnection, self).post(
-            url=self.__rel2abs_url(rel_url), message=message
-        )
-        assert result["status"] == "OK", "Error in POST ({0}): '{1}'".format(
-            result["status"]
-        )
+        abs_url = self.__rel2abs_url(rel_url)
+        if self.post_command:
+            result = self.post_command(abs_url, message)
+        else:
+            # abs_url is null only for "wait" messages, which are only used in
+            # JSON scripts: in those cases, self.post_command is always set,
+            # and this "if" has no effect.
+            if abs_url != "":
+                result = super(StripConnection, self).post(
+                    url=abs_url, message=message
+                )
+                assert result["status"] == "OK", "Error in POST ({0}): '{1}'".format(
+                    result["status"]
+                )
+            else:
+                return True
+            
         return result
+
+    def wait(self, seconds):
+        self.post("", { "wait_time_s": seconds })
 
     @staticmethod
     def __normalize_board_and_pol(board, pol, allow_board):
@@ -366,7 +388,7 @@ class StripConnection(Connection):
             An array of dictionaries. Each dictionary contains the
             following field:
 
-                - `pol`: name of the polarimeter, e.g., "R0" 
+                - `pol`: name of the polarimeter, e.g., "R0"
 
                 - `time_stamp`: timestamp of the sample (in units of 0.01 s)
 
@@ -409,7 +431,7 @@ class StripConnection(Connection):
             An array of dictionaries. Each dictionary contains the
             following field:
 
-                - `pol`: name of the polarimeter, e.g., "R0" 
+                - `pol`: name of the polarimeter, e.g., "R0"
 
                 - `time_stamp`: timestamp of the sample (in units of 0.01 s)
 
@@ -458,7 +480,7 @@ class StripConnection(Connection):
 
         """
 
-        dic = {"type": "START", "name": name, "comment": comment}
+        dic = {"type": "START", "tag": name, "comment": comment}
         self.last_response = self.post("rest/tag", dic)
 
     def tag_stop(self, name, comment=""):
@@ -478,5 +500,53 @@ class StripConnection(Connection):
             Nothing
         """
 
-        dic = {"type": "STOP", "name": name, "comment": comment}
+        dic = {"type": "STOP", "tag": name, "comment": comment}
         self.last_response = self.post("rest/tag", dic)
+
+
+class StripTag:
+    """Context manager for tags.
+
+    When you are running a test and want to record tag start/stop, you
+    can use this to easily match tag names between the ``START`` and
+    ``STOP`` commands::
+
+        conn = StripConnection(...)
+        with StripTag(
+            conn,
+            name="BIAS_TUNING",
+            comment="Bias tuning for G0",
+        ):
+            conn.post_command(...)
+            # etc.
+
+    You can either provide a comment using the keyword ``comment`` (in
+    this case, it will be reused for the ``START`` and ``STOP`` tags),
+    or you can pass two separate comments using ``start_comment`` and
+    ``stop_comment``.
+
+    """
+
+    def __init__(self, conn, name, comment="", start_comment="", stop_comment="", dry_run=False):
+        self.conn = conn
+        self.name = name
+
+        self.start_comment = comment
+        self.stop_comment = comment
+
+        if start_comment != "":
+            self.start_comment = start_comment
+
+        if stop_comment != "":
+            self.stop_comment = stop_comment
+
+        self.dry_run = dry_run
+
+    def __enter__(self):
+        if not self.dry_run:
+            self.conn.tag_start(name=self.name, comment=self.start_comment)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        # We must close the tag even if an exception has been raised
+        if not self.dry_run:
+            self.conn.tag_stop(name=self.name, comment=self.stop_comment)
