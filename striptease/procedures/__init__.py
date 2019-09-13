@@ -37,22 +37,23 @@ class JSONCommandEmitter:
             "command": cmd,
         }
         self.command_list.append(new_command)
+        return True
 
     def wait(self, seconds):
-        self.post_command("", { "wait_time_s": seconds })
+        return self.post_command("", { "wait_time_s": seconds })
 
     def tag_start(self, name, comment=""):
         # Making this command share the same name and parameters as
         # StripConnection allows us to use StripTag on a Worker class
         # instead of a StripConnection object!
-        self.conn.tag_start(name, comment)
+        return self.conn.tag_start(name, comment)
 
     def tag_stop(self, name, comment=""):
         # See the comment for tag_stop
-        self.conn.tag_stop(name, comment)
+        return self.conn.tag_stop(name, comment)
 
     def __call__(self, url, cmd):
-        self.post_command(url, cmd)
+        return self.post_command(url, cmd)
 
 
 class StripProcedure:
@@ -72,7 +73,7 @@ class StripProcedure:
             conn.post_command = self.command_emitter
 
     def wait(self, seconds):
-        self.command_emitter.wait(seconds)
+        return self.command_emitter.wait(seconds)
         
     def run(self):
         pass
