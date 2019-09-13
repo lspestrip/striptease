@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 
+from copy import deepcopy
 from urllib.parse import urlparse
 
 from config import Config
@@ -36,7 +37,7 @@ class JSONCommandEmitter:
             "kind": kind,
             "command": cmd,
         }
-        self.command_list.append(new_command)
+        self.command_list.append(deepcopy(new_command))
         return True
 
     def wait(self, seconds):
@@ -47,6 +48,7 @@ class JSONCommandEmitter:
         # StripConnection allows us to use StripTag on a Worker class
         # instead of a StripConnection object!
         return self.conn.tag_start(name, comment)
+        return True
 
     def tag_stop(self, name, comment=""):
         # See the comment for tag_stop
