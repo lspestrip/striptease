@@ -12,11 +12,14 @@ from program_turnon import SetupBoard
 
 from striptease.procedures import StripProcedure
 
+DEFAULT_WAITTIME_S = 5.0
+
 class TurnOnProcedure(StripProcedure):
-    def __init__(self):
+    def __init__(self, waittime_s=5):
         super(TurnOnProcedure, self).__init__()
         self.board = None
         self.polarimeter = None
+        self.waittime_s = waittime_s
 
     def set_board_and_polarimeter(self, new_board, new_pol):
         self.board = new_board
@@ -48,8 +51,6 @@ class TurnOnProcedure(StripProcedure):
             board_setup.enable_electronics(polarimeter=self.polarimeter)
             board_setup.log("The electronics has been enabled")
 
-        self.wait(seconds=6)
-        
         # 3
         for idx in (0, 1, 2, 3):
             with StripTag(
@@ -102,6 +103,9 @@ class TurnOnProcedure(StripProcedure):
                         # In mode 5, the following command should be useless…
                         board_setup.setup_ID(self.polarimeter, lna, step=1.0)
 
+                if self.waittime_s > 0:
+                    self.wait(seconds=self.waittime_s)
+        
 
 def unroll_polarimeters(pol_list):
     for cur_pol in pol_list:
@@ -148,11 +152,21 @@ if __name__ == "__main__":
         "If not provided, the output will be sent to stdout.",
     )
     parser.add_argument("--bias-steps", dest="bias_steps", action="append")
+    parser.add_argument(
+        "--wait-time-sec",
+        metavar="VALUE",
+        type=float,
+        dest="waittime_s",
+        default=DEFAULT_WAITTIME_S,
+        help=f"Time to wait after having altered the bias level for each amplifier "
+        "(default: {DEFAULT_WAITTIME_S}, set to 0 to disable)",
+    )
+    
     args = parser.parse_args()
 
     log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
 
-    proc = TurnOnProcedure()
+    proc = TurnOnProcedure(waittime_s=args.waittime_s)
     for cur_polarimeter in unroll_polarimeters(args.polarimeters):
         proc.set_board_and_polarimeter(args.board, cur_polarimeter)
         proc.run()
