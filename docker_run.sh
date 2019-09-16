@@ -4,4 +4,5 @@ docker run -ti -e DISPLAY\
        -v $PWD:/striptease:rw\
        -w /striptease\
        -u user\
+       --privileged\
        --net=host strip/striptease bash
