@@ -160,6 +160,11 @@ void data_stream::w_sec(double ws){
     _ws = ws;
 }
 
+data_stream::data_t data_stream::get(){
+    std::unique_lock lock(_m);
+    return _data;
+}
+
 QVector<QPointF> data_stream::get(const std::string& key){
     std::unique_lock lock(_m);
     QVector<QPointF> data;

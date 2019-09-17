@@ -54,6 +54,13 @@
           </layout>
          </item>
          <item>
+          <widget class="QPushButton" name="bt_save">
+           <property name="text">
+            <string>Save Snapshot</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QTreeWidget" name="polarimeter_tree">
            <property name="maximumSize">
             <size>
@@ -366,6 +373,12 @@
      <height>20</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+   </widget>
+   <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>

@@ -23,7 +23,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += c++17
 
-LIBS += -lssl -lcrypto -lboost_system -lboost_thread
+LIBS += -lssl -lcrypto -lboost_system -lboost_thread -lstdc++fs
 
 SOURCES += \
         main.cpp \

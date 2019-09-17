@@ -13,7 +13,8 @@ class data_stream
 {
 public:
     typedef std::deque<double> buffer_t;
-    typedef std::pair<buffer_t,buffer_t> data_t;
+    typedef std::pair<buffer_t,buffer_t> buffer_pair_t;
+    typedef std::map<std::string,buffer_pair_t> data_t;
     typedef std::map<QString,std::pair<double,double>> stats_t;
 
     double w_sec();
@@ -26,6 +27,7 @@ public:
 
     QVector<QPointF> get(const std::string& key);
     stats_t get_stats();
+    data_t get();
 
 private:
     bool _go;
@@ -36,7 +38,7 @@ private:
     void proceed();
     void decode(rapidjson::Document& d);
 
-    std::map<std::string,data_t> _data;
+    std::map<std::string,buffer_pair_t> _data;
     static std::set<std::string> sci;
     static std::set<std::string> hk;
 

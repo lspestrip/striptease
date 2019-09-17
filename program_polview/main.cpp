@@ -36,8 +36,16 @@ QT_CHARTS_END_NAMESPACE
 #include <QCommandLineParser>
 #include <QColorDialog>
 #include <QLegendMarker>
+#include <QFileDialog>
 #include "src/data_chart.hpp"
 #include "src/command_stream.hpp"
+#include <fstream>
+#include <iomanip>
+#include <QDateTime>
+#include <QPixmap>
+
+#include <filesystem>
+namespace fs = std::filesystem;
 
 static std::vector<QString> hk_names = {
     "VD0_HK","VD1_HK","VD2_HK","VD3_HK","VD4_HK","VD5_HK",
@@ -49,11 +57,30 @@ static std::vector<QString> hk_names = {
 };
 
 using namespace std::placeholders;
+
+void write_csv(const QString& path, data_stream* s){
+    std::ofstream f;
+    std::cout << "opening:" << path.toStdString() << std::endl;
+    f.open(path.toStdString());
+    std::cout << "...ok" << std::endl;
+
+    f << "name,mjd,value" << std::endl;
+    data_stream::data_t d = s->get();
+    for(auto& item : d){
+        std::string name = item.first;
+        for(size_t i=0; i<item.second.first.size(); i++){
+            f<<name << "," << std::setprecision(15) << item.second.first[i] << "," << item.second.second[i] << std::endl;
+        }
+    }
+    f.close();
+}
+
 int main(int argc, char *argv[])
 {
     std::map<QString,std::unique_ptr<data_stream>> d_stream;
     std::set<std::string> lna;
     std::set<QString> pols;
+    QString save_path;
 
     command_stream cs;
     cs.start();
@@ -87,11 +114,12 @@ int main(int argc, char *argv[])
     w.ui->dem_q2->setChart(demQ2.chart);
     w.ui->dem_u1->setChart(demU1.chart);
     w.ui->dem_u2->setChart(demU2.chart);
-
     w.ui->id->setChart(id.chart);
     w.ui->ig->setChart(ig.chart);
     w.ui->vd->setChart(vd.chart);
     w.ui->vg->setChart(vg.chart);
+
+    QAction* ac_save_as = w.ui->menuFile->addAction("Save Directory");
 
     std::vector<data_chart*> charts = {
         &pwrQ1,&pwrQ2,&pwrU1,&pwrU2,
@@ -330,7 +358,108 @@ int main(int argc, char *argv[])
         l_legend_connect();
     };
 
+    auto l_save_as = [&](bool){
+        QFileDialog dialog(&w);
+        dialog.setWindowModality(Qt::WindowModal);
+        dialog.setFileMode(QFileDialog::Directory);
+        dialog.setOption(QFileDialog::ShowDirsOnly);
+        dialog.setAcceptMode(QFileDialog::AcceptOpen);
+        if(dialog.exec() == QDialog::Accepted){
+            save_path = dialog.selectedFiles().first();
+        }
+    };
+
+    auto l_save = [&](bool){
+        if(save_path.isEmpty())
+            l_save_as(true);
+        if(save_path.isEmpty()){
+            std::cout << "path not specified, no file will be saved!" << std::endl;
+            return;
+        }
+
+        QString dt = QDateTime::currentDateTime().toString("yyyy_MM_dd_hh:mm:ss.zzz");
+        QString path = save_path + "/" + dt;
+        if(!fs::create_directories(path.toStdString())){
+            std::cout << "CANNOT CREATE DIRECTORY: " << path.toStdString() << std::endl;
+            return;
+        }
+        path += "/";
+        for(const QString& p : pols){
+            write_csv(path+p+".csv",d_stream.at(p).get());
+        }
+        pwrQ1.update();
+        pwrQ2.update();
+        pwrU1.update();
+        pwrU2.update();
+
+        demQ1.update();
+        demQ2.update();
+        demU1.update();
+        demU2.update();
+
+        id.update();
+        ig.update();
+        vd.update();
+        vg.update();
+
+        {
+            QImage img(w.ui->pwr_q1->size(),QImage::Format_RGB32);
+            img.fill(qRgba(0,0,0,0));
+            QPainter paint(&img);
+
+            w.ui->pwr_q1->render(&paint);
+            img.save(path+"pwr_q1.png");
+
+            w.ui->pwr_q2->render(&paint);
+            img.save(path+"pwr_q2.png");
+
+            w.ui->pwr_u1->render(&paint);
+            img.save(path+"pwr_u1.png");
+
+            w.ui->pwr_u2->render(&paint);
+            img.save(path+"pwr_u2.png");
+        }
+
+        {
+            QImage img(w.ui->dem_q1->size(),QImage::Format_RGB32);
+            img.fill(qRgba(0,0,0,0));
+            QPainter paint(&img);
+
+            w.ui->dem_q1->render(&paint);
+            img.save(path+"dem_q1.png");
+
+            w.ui->dem_q2->render(&paint);
+            img.save(path+"dem_q2.png");
+
+            w.ui->dem_u1->render(&paint);
+            img.save(path+"dem_u1.png");
+
+            w.ui->dem_u2->render(&paint);
+            img.save(path+"dem_u2.png");
+        }
+        {
+            QImage img(w.ui->id->size(),QImage::Format_RGB32);
+            img.fill(qRgba(0,0,0,0));
+            QPainter paint(&img);
+
+            w.ui->id->render(&paint);
+            img.save(path+"id.png");
+
+            w.ui->ig->render(&paint);
+            img.save(path+"ig.png");
+
+            w.ui->vd->render(&paint);
+            img.save(path+"vd.png");
+
+            w.ui->vg->render(&paint);
+            img.save(path+"vg.png");
+        }
+    };
     /* LAMBDAS END*/
+
+    /* SIGNALS BEGIN */
+    QObject::connect(ac_save_as,&QAction::triggered,l_save_as);
+    QObject::connect(w.ui->bt_save,&QPushButton::clicked,l_save);
     QObject::connect(w.ui->polarimeter_tree,&QTreeWidget::itemChanged,l_item_check);
     QObject::connect(w.ui->tab_group,&QTabWidget::currentChanged,[&](int){l_update();});
     QObject::connect(w.ui->hk0,&QCheckBox::stateChanged,std::bind(l_lna,_1,"0_HK"));
@@ -341,6 +470,7 @@ int main(int argc, char *argv[])
     QObject::connect(w.ui->hk5,&QCheckBox::stateChanged,std::bind(l_lna,_1,"5_HK"));
     QObject::connect(w.ui->hk4a,&QCheckBox::stateChanged,std::bind(l_lna,_1,"4A_HK"));
     QObject::connect(w.ui->hk5a,&QCheckBox::stateChanged,std::bind(l_lna,_1,"5A_HK"));
+    /* SIGNALS END */
 
     void (QSpinBox::*fptr)(int) = &QSpinBox::valueChanged;
     QObject::connect(w.ui->ws_spinbox,fptr,l_ws);
