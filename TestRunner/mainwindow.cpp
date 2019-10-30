@@ -118,7 +118,8 @@ void MainWindow::on_command_timer_triggered()
 
             int retryCount{5};
             while (connection->commandRunning() && retryCount > 0) {
-                QThread::msleep(100);
+                logMessage("Command failed, retrying…");
+                QThread::msleep(1000);
                 --retryCount;
             }
 
