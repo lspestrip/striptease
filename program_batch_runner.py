@@ -226,7 +226,9 @@ if __name__ == "__main__":
     parser = ArgumentParser(
         description="Run a STRIP test procedure.",
         epilog="""
-You can pause the execution with the keys SPACE or "p". Pressing "q" will halt the execution.
+You can pause the execution with the keys SPACE or "p".
+Pressing "l" allows the user to enter a log message.
+Pressing "q" will halt the execution.
 """,
     )
     parser.add_argument(
@@ -234,7 +236,10 @@ You can pause the execution with the keys SPACE or "p". Pressing "q" will halt t
         metavar="SECONDS",
         type=float,
         default=DEFAULT_WAIT_TIME_S,
-        help=f"Specify the amount of time to wait before running the next command. Default is {DEFAULT_WAIT_TIME_S}",
+        help=f"""
+Specify the amount of time to wait before running the
+next command. Default is {DEFAULT_WAIT_TIME_S}
+""",
     )
     parser.add_argument(
         "--waitcmd-time",

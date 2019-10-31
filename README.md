@@ -72,6 +72,7 @@ Now you can either use a command-line utility or the GUI program
 While the program is running, you can use the following keys:
 
 - `SPACE` or `p` pauses the execution (press any key to resume);
+- `l` enters a log message;
 - `q` prompt the users if it is necessary to quit the script.
 
 If you prefer to use the GUI, start `TestRunner/TestRunner` and load
