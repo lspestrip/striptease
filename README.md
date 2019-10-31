@@ -55,14 +55,27 @@ c.login()
 ## Running long scripts
 
 Programs like `program_turnon.py` generate JSON files that can be fed
-to `TestRunner`. To generate a JSON file that turns on board `G`, run
-the following from the command line:
+either to `program_batch_runner.py` or TestRunner`. To generate a JSON
+file that turns on board `G`, run the following from the command line:
 
 ```bash
 python program_turnon.py -o turnon.json G
 ```
 
-Now start `TestRunner/TestRunner` and load file `turnon.json`, then
-press the `Run` command to start the execution.
+Now you can either use a command-line utility or the GUI program
+`TestRunner` to run it. In the first case, run the following command:
+
+```bash
+./program_batch_runner.py turnon.json
+```
+
+While the program is running, you can use the following keys:
+
+- `SPACE` or `p` pauses the execution (press any key to resume);
+- `q` prompt the users if it is necessary to quit the script.
+
+If you prefer to use the GUI, start `TestRunner/TestRunner` and load
+file `turnon.json`, then press the `Run` command to start the
+execution.
 
 ![demo](testrunner-demo.gif)
