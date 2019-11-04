@@ -51,7 +51,7 @@ def readkey(stdscr):
 
 
 def close_tags(stdscr, conn):
-    tags = conn.tag_query()
+    tags = [x for x in conn.tag_query() if x['stop'] < 0.0]
 
     if not tags:
         return
