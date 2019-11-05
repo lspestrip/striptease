@@ -74,11 +74,18 @@ void StripConnection::commandCompleted()
     if(answer.isObject())
     {
         QJsonObject answerObj(answer.object());
-        if(!answerObj.contains("status") ||
-                answerObj["status"].toString().toUpper() != "OK")
-        {
+        if(!answerObj.contains("status")) {
             errorCondition = true;
-            emit error(QString("No status code in the JSON returned by the server"));
+            emit error(QString("Invalid JSON returned by the server: \"%1\""));
+        }
+
+        QString status{answerObj["status"].toString()};
+        if(status.toUpper() != "OK")
+        {
+            QJsonDocument doc(answerObj);
+            QString strJson(doc.toJson(QJsonDocument::Compact));
+            errorCondition = true;
+            emit error(QString("The server returned an error status: \"%1\"").arg(strJson));
         } else {
             emit success();
         }

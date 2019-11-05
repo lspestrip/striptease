@@ -409,7 +409,7 @@ class StripConnection(Connection):
         self.last_response = self.post("rest/data", dic)
         return self.last_response["data"]
 
-    def tag_query(self, tag=None, tag_id=None, start_mjd=None, end_mjd=None):
+    def tag_query(self, tag=None, tag_id=None, start_mjd=None, end_mjd=None, id=None):
         """Query a list of tags
 
         The function can filter the tags
@@ -431,17 +431,17 @@ class StripConnection(Connection):
             An array of dictionaries. Each dictionary contains the
             following field:
 
-                - `pol`: name of the polarimeter, e.g., "R0"
+                - `id`: unique ID of the tag (integer number)
 
-                - `time_stamp`: timestamp of the sample (in units of 0.01 s)
+                - `tag`: name of the tag (string)
 
-                - `mjd`: Modified Julian Date of the sample
+                - `start`: MJD timestamp for the start of the tag (float)
 
-                - `dem`, `tpw`: demodulated and total-power data, in
-                  ADU (only for scientific data)
+                - `stop`: MJD timestamp for the end of the tag (float)
 
-                - `hk`: dictionary associating the name of a
-                  housekeeping parameter with its value
+                - `start_comment`: comment associated with the start of the tag (string)
+
+                - `stop_comment`: comment associated with the end of the tag (string)
 
         """
 

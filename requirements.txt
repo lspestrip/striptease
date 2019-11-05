@@ -9,3 +9,4 @@ autobahn    ~= 19.2
 pyserial    ~= 3.4
 xlrd        ~= 1.2.0
 pandas      ~= 0.24.2
+pyqtgraph   ~= 0.10

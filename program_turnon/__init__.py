@@ -207,6 +207,7 @@ class SetupBoard(object):
             cmd["data"] = datum
 
             if not self.post_command(url, cmd):
+                log.warning(f'Unable to post command {addr}')
                 return
 
 

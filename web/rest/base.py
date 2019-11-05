@@ -70,6 +70,8 @@ class Connection(object):
         if response.status_code != 200:
             response.raise_for_status()
         else:
+            self.user = user
+            self.password = password
             self.id = self.session.cookies.get("sessionid")
 
     def logout(self):
