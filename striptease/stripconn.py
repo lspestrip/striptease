@@ -83,6 +83,8 @@ class StripConnection(Connection):
 
     - `tag_stop`
 
+    - `log`
+
     Attributes:
 
         last_response (dictionary): The last response received from the
@@ -503,8 +505,34 @@ class StripConnection(Connection):
         dic = {"type": "STOP", "tag": name, "comment": comment}
         self.last_response = self.post("rest/tag", dic)
 
+    def log(self, message, level="INFO"):
+        """Save a log message
+
+        This method allows the user to save a log message, represented
+        by a textual string and a message level. The latter is useful
+        when you want to filter log messages saved in a HDF5 file, for
+        instance because you are looking for errors.
+
+        Args:
+
+            message (str): the message to save
+
+            level (str, optional): either "ERROR", "WARNING", "INFO"
+                                   (the default), "DEBUG"
+
+        Returns:
+
+            Nothing
+        """
+
+        level_toupper = level.upper()
+        assert level_toupper in ["ERROR", "WARNING", "INFO", "DEFAULT"]
+        dic = { "message": message, "level": level_toupper }
+        self.last_response = self.post("rest/log", dic)
+
 
 class StripTag:
+
     """Context manager for tags.
 
     When you are running a test and want to record tag start/stop, you
