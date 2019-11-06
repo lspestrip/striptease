@@ -56,7 +56,8 @@ c.login()
 
 Programs like `program_turnon.py` generate JSON files that can be fed
 either to `program_batch_runner.py` or TestRunner`. To generate a JSON
-file that turns on board `G`, run the following from the command line:
+file that turns on all the polarimeters in board `G`, run the
+following from the command line:
 
 ```bash
 python program_turnon.py -o turnon.json G
@@ -80,3 +81,34 @@ file `turnon.json`, then press the `Run` command to start the
 execution.
 
 ![demo](testrunner-demo.gif)
+
+## Description of the available programs
+
+### Turn-on procedure
+
+To produce a JSON file that contains the turn-on procedure for one or
+more radiometers, run
+
+```bash
+./program_turnon.py [args] POLARIMETER [POLARIMETER...]
+```
+
+Use the switch `--help` to get a full list of the available
+parameters. The procedure is written to the terminal, so you surely
+want to save it in a file; either use the syntax `> JSON_FILE` or the
+`-o` flag to do this.
+
+The specification for `POLARIMETER` can be one of the following:
+
+- A module name, like `G` or `R`: in this case, all the polarimeters
+  belonging to that module will be turned on in sequence.
+  
+- A horn name, like `G0` or `Y3`: in this case, the polarimeter that
+  should be connected to the horn will be turned on. (The nominal
+  correspondence between horns and polarimeters is provided in file
+  `data/default_warm_biases.xlsx`.)
+  
+- A string like `G0:STRIP33`: in this case, the default association
+  between horns and polarimeters can be overridden. This can be useful
+  when running debugging tests on the hardware.
+  

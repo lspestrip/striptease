@@ -2,8 +2,10 @@
 # -*- encoding: utf-8 -*-
 
 from collections import namedtuple
+from datetime import datetime
 import logging as log
 import os.path
+import re
 import sys
 
 from config import Config
@@ -18,24 +20,32 @@ class TurnOnProcedure(StripProcedure):
     def __init__(self, waittime_s=5):
         super(TurnOnProcedure, self).__init__()
         self.board = None
+        self.horn = None
         self.polarimeter = None
         self.waittime_s = waittime_s
 
-    def set_board_and_polarimeter(self, new_board, new_pol):
+    def set_board_horn_polarimeter(self, new_board, new_horn, new_pol=None):
         self.board = new_board
+        self.horn = new_horn
         self.polarimeter = new_pol
 
     def run(self):
-        assert self.polarimeter
+        assert self.horn
         board_setup = SetupBoard(
             config=self.conf, board_name=self.board, post_command=self.command_emitter
         )
 
+        current_time = datetime.now().strftime("%A %Y-%m-%d %H:%M:%S (%Z)")
+        board_setup.log(f"Here begins the turnon procedure for polarimeter {self.horn}, " +
+                        f"created on {current_time} using program_turnon.py")
+        if self.polarimeter:
+            board_setup.log(f"This procedure assumes that horn {self.horn} is connected to polarimeter {self.polarimeter}")
+        
         # 1
         with StripTag(
             conn=self.command_emitter,
             name="BOARD_TURN_ON",
-            comment=f"Turning on board for {self.polarimeter}",
+            comment=f"Turning on board for {self.horn}",
         ):
             board_setup.log("Going to set up the board…")
             board_setup.board_setup()
@@ -45,10 +55,10 @@ class TurnOnProcedure(StripProcedure):
         with StripTag(
             conn=self.command_emitter,
             name="ELECTRONICS_ENABLE",
-            comment=f"Enabling electronics for {self.polarimeter}",
+            comment=f"Enabling electronics for {self.horn}",
         ):
-            board_setup.log(f"Enabling electronics for {self.polarimeter}…")
-            board_setup.enable_electronics(polarimeter=self.polarimeter)
+            board_setup.log(f"Enabling electronics for {self.horn}…")
+            board_setup.enable_electronics(polarimeter=self.horn)
             board_setup.log("The electronics has been enabled")
 
         # 3
@@ -56,12 +66,18 @@ class TurnOnProcedure(StripProcedure):
             with StripTag(
                 conn=self.command_emitter,
                 name="DETECTOR_TURN_ON",
-                comment=f"Turning on detector {idx} in {self.polarimeter}",
+                comment=f"Turning on detector {idx} in {self.horn}",
             ):
-                board_setup.turn_on_detector(self.polarimeter, idx)
+                board_setup.turn_on_detector(self.horn, idx)
 
         # 4
-        biases = self.biases.get_biases(module_name=self.polarimeter)
+        if self.polarimeter:
+            biases = self.biases.get_biases(polarimeter_name=self.polarimeter)
+            board_setup.log(f"We are going to use biases for {self.polarimeter}: {biases}")
+        else:
+            biases = self.biases.get_biases(module_name=self.horn)
+            board_setup.log(f"We are going to use biases for {self.horn}: {biases}")
+            
         for (index, vpin, ipin) in zip(
             range(4),
             [biases.vpin0, biases.vpin1, biases.vpin2, biases.vpin3],
@@ -71,9 +87,9 @@ class TurnOnProcedure(StripProcedure):
                 with StripTag(
                     conn=self.command_emitter,
                     name="PHSW_BIAS",
-                    comment=f"Setting biases for PH/SW {index} in {self.polarimeter}",
+                    comment=f"Setting biases for PH/SW {index} in {self.horn}",
                 ):
-                    board_setup.set_phsw_bias(self.polarimeter, index, vpin, ipin)
+                    board_setup.set_phsw_bias(self.horn, index, vpin, ipin)
             except:
                 log.warning(f"Unable to set bias for detector #{index}")
 
@@ -82,9 +98,9 @@ class TurnOnProcedure(StripProcedure):
             with StripTag(
                 conn=self.command_emitter,
                 name="PHSW_STATUS",
-                comment=f"Setting status for PH/SW {idx} in {self.polarimeter}",
+                comment=f"Setting status for PH/SW {idx} in {self.horn}",
             ):
-                board_setup.set_phsw_status(self.polarimeter, idx, status=7)
+                board_setup.set_phsw_status(self.horn, idx, status=7)
 
         # 6
         for lna in ("HA3", "HA2", "HA1", "HB3", "HB2", "HB1"):
@@ -92,30 +108,35 @@ class TurnOnProcedure(StripProcedure):
                 with StripTag(
                     conn=self.command_emitter,
                     name="VD_SET",
-                    comment=f"Setting drain voltages for LNA {lna} in {self.polarimeter}",
+                    comment=f"Setting drain voltages for LNA {lna} in {self.horn}",
                 ):
-                    board_setup.setup_VD(self.polarimeter, lna, step=cur_step)
+                    board_setup.setup_VD(self.horn, lna, step=cur_step)
 
                     if step_idx == 0:
-                        board_setup.setup_VG(self.polarimeter, lna, step=1.0)
+                        board_setup.setup_VG(self.horn, lna, step=1.0)
 
                     if False and cur_step == 1.0:
                         # In mode 5, the following command should be useless…
-                        board_setup.setup_ID(self.polarimeter, lna, step=1.0)
+                        board_setup.setup_ID(self.horn, lna, step=1.0)
 
                 if self.waittime_s > 0:
                     self.wait(seconds=self.waittime_s)
         
 
 def unroll_polarimeters(pol_list):
+    board_horn_pol = re.compile(r"([GBPROYW][0-6]):(STRIP[0-9][0-9])")
     for cur_pol in pol_list:
         if cur_pol in ("V", "G", "B", "P", "R", "O", "Y"):
             for idx in range(7):
-                yield f"{cur_pol}{idx}"
+                yield (f"{cur_pol}{idx}", None)
             continue
-
-        yield cur_pol
-
+        else:
+            # Is this polarimeter in a form like "G0:STRIP33"?
+            m = board_horn_pol.match(cur_pol)
+            if m:
+                yield (m.group(1), m.group(2))
+            else:
+                yield (cur_pol, None)
 
 if __name__ == "__main__":
     import sys
@@ -167,8 +188,8 @@ if __name__ == "__main__":
     log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
 
     proc = TurnOnProcedure(waittime_s=args.waittime_s)
-    for cur_polarimeter in unroll_polarimeters(args.polarimeters):
-        proc.set_board_and_polarimeter(args.board, cur_polarimeter)
+    for cur_horn, cur_polarimeter in unroll_polarimeters(args.polarimeters):
+        proc.set_board_horn_polarimeter(args.board, cur_horn, cur_polarimeter)
         proc.run()
 
     import json
