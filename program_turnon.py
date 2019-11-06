@@ -140,10 +140,17 @@ def unroll_polarimeters(pol_list):
 
 if __name__ == "__main__":
     import sys
-    from argparse import ArgumentParser
+    from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
     parser = ArgumentParser(
-        description="Produce a command sequence to turn on one or more polarimeters"
+        description="Produce a command sequence to turn on one or more polarimeters",
+        formatter_class=RawDescriptionHelpFormatter,
+        epilog="""
+
+Usage example:
+
+    python3 program_turnon.py --board 2 G0 G3 G4:STRIP33
+"""
     )
     parser.add_argument(
         "polarimeters",
