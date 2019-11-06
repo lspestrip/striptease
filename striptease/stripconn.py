@@ -365,7 +365,7 @@ class StripConnection(Connection):
         if start_mjd:
             dic["start"] = start_mjd
 
-        if end_time:
+        if end_mjd:
             dic["stop"] = end_mjd
 
         self.last_response = self.post("rest/file_query", dic)
