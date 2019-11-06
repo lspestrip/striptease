@@ -38,6 +38,7 @@ class TurnOnProcedure(StripProcedure):
         current_time = datetime.now().strftime("%A %Y-%m-%d %H:%M:%S (%Z)")
         board_setup.log(f"Here begins the turnon procedure for polarimeter {self.horn}, " +
                         f"created on {current_time} using program_turnon.py")
+        board_setup.log(f"We are using the setup for board {self.board}")
         if self.polarimeter:
             board_setup.log(f"This procedure assumes that horn {self.horn} is connected to polarimeter {self.polarimeter}")
         
@@ -167,6 +168,7 @@ Usage example:
         type=str,
         dest="board",
         default="G",
+        required=True,
         help='Name of the board to use (default: "%(default)s")',
     )
     parser.add_argument(
