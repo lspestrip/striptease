@@ -24,7 +24,7 @@ def get_step(v, cal, step):
     val = v * step * cal.slope + cal.intercept
     if val < 0:
         val = 0
-    return int(val)
+    return int(val + 0.5)
 
 def get_polarimeter_index(pol_name):
     "Return the progressive number of the polarimeter within the board (1…8)"
