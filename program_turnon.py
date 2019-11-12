@@ -199,9 +199,8 @@ Usage example:
         metavar="NAME",
         type=str,
         dest="board",
-        default="G",
         required=True,
-        help='Name of the board to use (default: "%(default)s")',
+        help='Name of the board to use',
     )
     parser.add_argument(
         "--output",
