@@ -48,13 +48,14 @@ def biases_to_str(biases):
         str(biases.id5),
     ])
 
-class TurnOnProcedure(StripProcedure):
-    def __init__(self, waittime_s=5):
-        super(TurnOnProcedure, self).__init__()
+class TurnOnOffProcedure(StripProcedure):
+    def __init__(self, waittime_s=5, turnon=True):
+        super(TurnOnOffProcedure, self).__init__()
         self.board = None
         self.horn = None
         self.polarimeter = None
         self.waittime_s = waittime_s
+        self.turnon = turnon
 
     def set_board_horn_polarimeter(self, new_board, new_horn, new_pol=None):
         self.board = new_board
@@ -62,17 +63,27 @@ class TurnOnProcedure(StripProcedure):
         self.polarimeter = new_pol
 
     def run(self):
+        if self.turnon:
+            self.run_turnon()
+        else:
+            self.run_turnoff()
+
+    def run_turnon(self):
         assert self.horn
         board_setup = SetupBoard(
             config=self.conf, board_name=self.board, post_command=self.command_emitter
         )
 
         current_time = datetime.now().strftime("%A %Y-%m-%d %H:%M:%S (%Z)")
-        board_setup.log(f"Here begins the turnon procedure for polarimeter {self.horn}, " +
-                        f"created on {current_time} using program_turnon.py")
+        board_setup.log(
+            f"Here begins the turnon procedure for polarimeter {self.horn}, "
+            + f"created on {current_time} using program_turnon.py"
+        )
         board_setup.log(f"We are using the setup for board {self.board}")
         if self.polarimeter:
-            board_setup.log(f"This procedure assumes that horn {self.horn} is connected to polarimeter {self.polarimeter}")
+            board_setup.log(
+                f"This procedure assumes that horn {self.horn} is connected to polarimeter {self.polarimeter}"
+            )
 
         # 1
         with StripTag(
@@ -155,6 +166,73 @@ class TurnOnProcedure(StripProcedure):
                 if self.waittime_s > 0:
                     self.wait(seconds=self.waittime_s)
 
+    def run_turnoff(self):
+        assert self.horn
+        board_setup = SetupBoard(
+            config=self.conf, board_name=self.board, post_command=self.command_emitter
+        )
+
+        current_time = datetime.now().strftime("%A %Y-%m-%d %H:%M:%S (%Z)")
+        board_setup.log(
+            f"Here begins the turnoff procedure for polarimeter {self.horn}, "
+            + f"created on {current_time} using program_turnon.py"
+        )
+        board_setup.log(f"We are using the setup for board {self.board}")
+        if self.polarimeter:
+            board_setup.log(
+                f"This procedure assumes that horn {self.horn} is connected to polarimeter {self.polarimeter}"
+            )
+
+        # 1
+        with StripTag(
+            conn=self.command_emitter,
+            name="BOARD_TURN_OFF",
+            comment=f"Turning on board for {self.horn}",
+        ):
+            board_setup.log("Going to set up the board…")
+            board_setup.board_setup()
+            board_setup.log("Board has been set up")
+
+        # 6
+        for lna in reversed("HA3", "HA2", "HA1", "HB3", "HB2", "HB1"):
+            for step_idx, cur_step in enumerate(reversed([0.0, 0.5, 1.0])):
+                with StripTag(
+                    conn=self.command_emitter,
+                    name="VD_SET",
+                    comment=f"Setting drain voltages for LNA {lna} in {self.horn}",
+                ):
+                    board_setup.setup_VD(self.horn, lna, step=cur_step)
+
+                    if step_idx == 0:
+                        board_setup.setup_VG(self.horn, lna, step=1.0)
+
+                    if False and cur_step == 1.0:
+                        # In mode 5, the following command should be useless…
+                        board_setup.setup_ID(self.horn, lna, step=1.0)
+
+                if self.waittime_s > 0:
+                    self.wait(seconds=self.waittime_s)
+
+        # 3
+        for idx in (0, 1, 2, 3):
+            with StripTag(
+                conn=self.command_emitter,
+                name="DETECTOR_TURN_OFF",
+                comment=f"Turning off detector {idx} in {self.horn}",
+            ):
+                board_setup.turn_off_detector(self.horn, idx)
+
+        # 2
+        with StripTag(
+            conn=self.command_emitter,
+            name="ELECTRONICS_DISABLE",
+            comment=f"Enabling electronics for {self.horn}",
+        ):
+            board_setup.log(f"Disabling electronics for {self.horn}…")
+            board_setup.disable_electronics(polarimeter=self.horn)
+            board_setup.log("The electronics has been disabled")
+
+        board_setup(f"Turnoff procedure for {self.horn} completed")
 
 def unroll_polarimeters(pol_list):
     board_horn_pol = re.compile(r"([GBPROYW][0-6]):(STRIP[0-9][0-9])")
@@ -171,6 +249,7 @@ def unroll_polarimeters(pol_list):
             else:
                 yield (cur_pol, None)
 
+
 if __name__ == "__main__":
     import sys
     from argparse import ArgumentParser, RawDescriptionHelpFormatter
@@ -183,7 +262,7 @@ if __name__ == "__main__":
 Usage example:
 
     python3 program_turnon.py --board 2 G0 G3 G4:STRIP33
-"""
+""",
     )
     parser.add_argument(
         "polarimeters",
@@ -201,6 +280,13 @@ Usage example:
         dest="board",
         required=True,
         help='Name of the board to use',
+    )
+    parser.add_argument(
+        "--turnoff",
+        type=bool,
+        action="store_true",
+        default=False,
+        help="If this flag is present, the procedure will turn the polarimeter *off*",
     )
     parser.add_argument(
         "--output",
@@ -227,7 +313,7 @@ Usage example:
 
     log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
 
-    proc = TurnOnProcedure(waittime_s=args.waittime_s)
+    proc = TurnOnOffProcedure(waittime_s=args.waittime_s, turnon=True)
     for cur_horn, cur_polarimeter in unroll_polarimeters(args.polarimeters):
         proc.set_board_horn_polarimeter(args.board, cur_horn, cur_polarimeter)
         proc.run()
