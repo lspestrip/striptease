@@ -169,16 +169,24 @@ def main(stdscr):
 
         print_fn(stdscr, " " * indent_level + f"{curpath}: {command_descr}")
 
-        if cur_command["kind"] != "wait":
-            if not args.dry_run:
-                conn.post(cur_command["path"], message=cmddict)
+        try:
+            if cur_command["kind"] != "wait":
+                if not args.dry_run:
+                    conn.post(cur_command["path"], message=cmddict)
 
-            time.sleep(args.wait_time)
-        else:
-            wait_time = cmddict["wait_time_s"]
-            if args.waitcmd_time is not None:
-                wait_time = args.waitcmd_time
-            time.sleep(wait_time)
+                time.sleep(args.wait_time)
+            else:
+                wait_time = cmddict["wait_time_s"]
+                if args.waitcmd_time is not None:
+                    wait_time = args.waitcmd_time
+                time.sleep(wait_time)
+        except Exception as e:
+            warning(stdscr, f"Error: {e}")
+            prompt(stdscr, "Press any key to exit")
+            stdscr.nodelay(False)
+            stdscr.getch()
+            stdscr.nodelay(True)
+            return
 
         indent_level += indent_level_incr
         if indent_level < 0:
