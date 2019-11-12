@@ -16,6 +16,38 @@ from striptease.procedures import StripProcedure
 
 DEFAULT_WAITTIME_S = 5.0
 
+def biases_to_str(biases):
+    return "Biases: " + ",".join([
+        str(biases.vd0),
+        str(biases.vd1),
+        str(biases.vd2),
+        str(biases.vd3),
+        str(biases.vd4),
+        str(biases.vd5),
+        str(biases.vg0),
+        str(biases.vg1),
+        str(biases.vg2),
+        str(biases.vg3),
+        str(biases.vg4),
+        str(biases.vg5),
+        str(biases.vg4a),
+        str(biases.vg5a),
+        str(biases.vpin0),
+        str(biases.vpin1),
+        str(biases.vpin2),
+        str(biases.vpin3),
+        str(biases.ipin0),
+        str(biases.ipin1),
+        str(biases.ipin2),
+        str(biases.ipin3),
+        str(biases.id0),
+        str(biases.id1),
+        str(biases.id2),
+        str(biases.id3),
+        str(biases.id4),
+        str(biases.id5),
+    ])
+
 class TurnOnProcedure(StripProcedure):
     def __init__(self, waittime_s=5):
         super(TurnOnProcedure, self).__init__()
@@ -41,7 +73,7 @@ class TurnOnProcedure(StripProcedure):
         board_setup.log(f"We are using the setup for board {self.board}")
         if self.polarimeter:
             board_setup.log(f"This procedure assumes that horn {self.horn} is connected to polarimeter {self.polarimeter}")
-        
+
         # 1
         with StripTag(
             conn=self.command_emitter,
@@ -55,7 +87,7 @@ class TurnOnProcedure(StripProcedure):
         # 2
         with StripTag(
             conn=self.command_emitter,
-            name="ELECTRONICS_ENABLE",
+            name=f"ELECTRONICS_ENABLE_{self.horn}",
             comment=f"Enabling electronics for {self.horn}",
         ):
             board_setup.log(f"Enabling electronics for {self.horn}…")
@@ -66,7 +98,7 @@ class TurnOnProcedure(StripProcedure):
         for idx in (0, 1, 2, 3):
             with StripTag(
                 conn=self.command_emitter,
-                name="DETECTOR_TURN_ON",
+                name=f"DETECTOR_TURN_ON_{idx}",
                 comment=f"Turning on detector {idx} in {self.horn}",
             ):
                 board_setup.turn_on_detector(self.horn, idx)
@@ -74,11 +106,11 @@ class TurnOnProcedure(StripProcedure):
         # 4
         if self.polarimeter:
             biases = self.biases.get_biases(polarimeter_name=self.polarimeter)
-            board_setup.log(f"We are going to use biases for {self.polarimeter}: {biases}")
+            board_setup.log(f"{self.polarimeter}: {biases_to_str(biases)}")
         else:
             biases = self.biases.get_biases(module_name=self.horn)
-            board_setup.log(f"We are going to use biases for {self.horn}: {biases}")
-            
+            board_setup.log(f"{self.horn}: {biases_to_str(biases)}")
+
         for (index, vpin, ipin) in zip(
             range(4),
             [biases.vpin0, biases.vpin1, biases.vpin2, biases.vpin3],
@@ -87,7 +119,7 @@ class TurnOnProcedure(StripProcedure):
             try:
                 with StripTag(
                     conn=self.command_emitter,
-                    name="PHSW_BIAS",
+                    name=f"PHSW_BIAS_{index}",
                     comment=f"Setting biases for PH/SW {index} in {self.horn}",
                 ):
                     board_setup.set_phsw_bias(self.horn, index, vpin, ipin)
@@ -98,7 +130,7 @@ class TurnOnProcedure(StripProcedure):
         for idx in (0, 1, 2, 3):
             with StripTag(
                 conn=self.command_emitter,
-                name="PHSW_STATUS",
+                name=f"PHSW_STATUS_{idx}",
                 comment=f"Setting status for PH/SW {idx} in {self.horn}",
             ):
                 board_setup.set_phsw_status(self.horn, idx, status=7)
@@ -108,7 +140,7 @@ class TurnOnProcedure(StripProcedure):
             for step_idx, cur_step in enumerate([0.0, 0.5, 1.0]):
                 with StripTag(
                     conn=self.command_emitter,
-                    name="VD_SET",
+                    name=f"VD_SET_{lna}",
                     comment=f"Setting drain voltages for LNA {lna} in {self.horn}",
                 ):
                     board_setup.setup_VD(self.horn, lna, step=cur_step)
@@ -122,7 +154,7 @@ class TurnOnProcedure(StripProcedure):
 
                 if self.waittime_s > 0:
                     self.wait(seconds=self.waittime_s)
-        
+
 
 def unroll_polarimeters(pol_list):
     board_horn_pol = re.compile(r"([GBPROYW][0-6]):(STRIP[0-9][0-9])")
@@ -191,7 +223,7 @@ Usage example:
         help=f"Time to wait after having altered the bias level for each amplifier "
         "(default: {DEFAULT_WAITTIME_S}, set to 0 to disable)",
     )
-    
+
     args = parser.parse_args()
 
     log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
