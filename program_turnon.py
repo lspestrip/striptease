@@ -16,13 +16,15 @@ from striptease.procedures import StripProcedure
 
 DEFAULT_WAITTIME_S = 5.0
 
-class TurnOnProcedure(StripProcedure):
-    def __init__(self, waittime_s=5):
-        super(TurnOnProcedure, self).__init__()
-        self.board = None
+
+class TurnOnOffProcedure(StripProcedure):
+    def __init__(self, waittime_s=5, turnon=True):
+        super(TurnOnOffProcedure, self).__init__()
+        self.board =None
         self.horn = None
         self.polarimeter = None
         self.waittime_s = waittime_s
+        self.turnon = turnon
 
     def set_board_horn_polarimeter(self, new_board, new_horn, new_pol=None):
         self.board = new_board
@@ -30,18 +32,28 @@ class TurnOnProcedure(StripProcedure):
         self.polarimeter = new_pol
 
     def run(self):
+        if self.turnon:
+            self.run_turnon()
+        else:
+            self.run_turnoff()
+
+    def run_turnon(self):
         assert self.horn
         board_setup = SetupBoard(
             config=self.conf, board_name=self.board, post_command=self.command_emitter
         )
 
         current_time = datetime.now().strftime("%A %Y-%m-%d %H:%M:%S (%Z)")
-        board_setup.log(f"Here begins the turnon procedure for polarimeter {self.horn}, " +
-                        f"created on {current_time} using program_turnon.py")
+        board_setup.log(
+            f"Here begins the turnon procedure for polarimeter {self.horn}, "
+            + f"created on {current_time} using program_turnon.py"
+        )
         board_setup.log(f"We are using the setup for board {self.board}")
         if self.polarimeter:
-            board_setup.log(f"This procedure assumes that horn {self.horn} is connected to polarimeter {self.polarimeter}")
-        
+            board_setup.log(
+                f"This procedure assumes that horn {self.horn} is connected to polarimeter {self.polarimeter}"
+            )
+
         # 1
         with StripTag(
             conn=self.command_emitter,
@@ -74,11 +86,13 @@ class TurnOnProcedure(StripProcedure):
         # 4
         if self.polarimeter:
             biases = self.biases.get_biases(polarimeter_name=self.polarimeter)
-            board_setup.log(f"We are going to use biases for {self.polarimeter}: {biases}")
+            board_setup.log(
+                f"We are going to use biases for {self.polarimeter}: {biases}"
+            )
         else:
             biases = self.biases.get_biases(module_name=self.horn)
             board_setup.log(f"We are going to use biases for {self.horn}: {biases}")
-            
+
         for (index, vpin, ipin) in zip(
             range(4),
             [biases.vpin0, biases.vpin1, biases.vpin2, biases.vpin3],
@@ -122,7 +136,7 @@ class TurnOnProcedure(StripProcedure):
 
                 if self.waittime_s > 0:
                     self.wait(seconds=self.waittime_s)
-        
+
 
 def unroll_polarimeters(pol_list):
     board_horn_pol = re.compile(r"([GBPROYW][0-6]):(STRIP[0-9][0-9])")
@@ -139,6 +153,7 @@ def unroll_polarimeters(pol_list):
             else:
                 yield (cur_pol, None)
 
+
 if __name__ == "__main__":
     import sys
     from argparse import ArgumentParser, RawDescriptionHelpFormatter
@@ -151,7 +166,7 @@ if __name__ == "__main__":
 Usage example:
 
     python3 program_turnon.py --board 2 G0 G3 G4:STRIP33
-"""
+""",
     )
     parser.add_argument(
         "polarimeters",
@@ -170,6 +185,13 @@ Usage example:
         default="G",
         required=True,
         help='Name of the board to use (default: "%(default)s")',
+    )
+    parser.add_argument(
+        "--turnoff",
+        type=bool,
+        action="store_true",
+        default=False,
+        help="If this flag is present, the procedure will turn the polarimeter *off*",
     )
     parser.add_argument(
         "--output",
@@ -191,12 +213,12 @@ Usage example:
         help=f"Time to wait after having altered the bias level for each amplifier "
         "(default: {DEFAULT_WAITTIME_S}, set to 0 to disable)",
     )
-    
+
     args = parser.parse_args()
 
     log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
 
-    proc = TurnOnProcedure(waittime_s=args.waittime_s)
+    proc = TurnOnOffProcedure(waittime_s=args.waittime_s, turnon=True)
     for cur_horn, cur_polarimeter in unroll_polarimeters(args.polarimeters):
         proc.set_board_horn_polarimeter(args.board, cur_horn, cur_polarimeter)
         proc.run()
