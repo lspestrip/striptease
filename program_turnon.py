@@ -187,14 +187,14 @@ class TurnOnOffProcedure(StripProcedure):
         with StripTag(
             conn=self.command_emitter,
             name="BOARD_TURN_OFF",
-            comment=f"Turning on board for {self.horn}",
+            comment=f"Turning off board for {self.horn}",
         ):
             board_setup.log("Going to set up the board…")
             board_setup.board_setup()
             board_setup.log("Board has been set up")
 
         # 6
-        for lna in reversed("HA3", "HA2", "HA1", "HB3", "HB2", "HB1"):
+        for lna in reversed(["HA3", "HA2", "HA1", "HB3", "HB2", "HB1"]):
             for step_idx, cur_step in enumerate(reversed([0.0, 0.5, 1.0])):
                 with StripTag(
                     conn=self.command_emitter,
@@ -213,15 +213,6 @@ class TurnOnOffProcedure(StripProcedure):
                 if self.waittime_s > 0:
                     self.wait(seconds=self.waittime_s)
 
-        # 3
-        for idx in (0, 1, 2, 3):
-            with StripTag(
-                conn=self.command_emitter,
-                name="DETECTOR_TURN_OFF",
-                comment=f"Turning off detector {idx} in {self.horn}",
-            ):
-                board_setup.turn_off_detector(self.horn, idx)
-
         # 2
         with StripTag(
             conn=self.command_emitter,
@@ -232,7 +223,7 @@ class TurnOnOffProcedure(StripProcedure):
             board_setup.disable_electronics(polarimeter=self.horn)
             board_setup.log("The electronics has been disabled")
 
-        board_setup(f"Turnoff procedure for {self.horn} completed")
+        board_setup.log(f"Turnoff procedure for {self.horn} completed")
 
 def unroll_polarimeters(pol_list):
     board_horn_pol = re.compile(r"([GBPROYW][0-6]):(STRIP[0-9][0-9])")
@@ -283,7 +274,6 @@ Usage example:
     )
     parser.add_argument(
         "--turnoff",
-        type=bool,
         action="store_true",
         default=False,
         help="If this flag is present, the procedure will turn the polarimeter *off*",
@@ -313,7 +303,7 @@ Usage example:
 
     log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
 
-    proc = TurnOnOffProcedure(waittime_s=args.waittime_s, turnon=True)
+    proc = TurnOnOffProcedure(waittime_s=args.waittime_s, turnon=not args.turnoff)
     for cur_horn, cur_polarimeter in unroll_polarimeters(args.polarimeters):
         proc.set_board_horn_polarimeter(args.board, cur_horn, cur_polarimeter)
         proc.run()
