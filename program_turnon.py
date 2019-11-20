@@ -16,37 +16,41 @@ from striptease.procedures import StripProcedure
 
 DEFAULT_WAITTIME_S = 5.0
 
+
 def biases_to_str(biases):
-    return "Biases: " + ",".join([
-        str(biases.vd0),
-        str(biases.vd1),
-        str(biases.vd2),
-        str(biases.vd3),
-        str(biases.vd4),
-        str(biases.vd5),
-        str(biases.vg0),
-        str(biases.vg1),
-        str(biases.vg2),
-        str(biases.vg3),
-        str(biases.vg4),
-        str(biases.vg5),
-        str(biases.vg4a),
-        str(biases.vg5a),
-        str(biases.vpin0),
-        str(biases.vpin1),
-        str(biases.vpin2),
-        str(biases.vpin3),
-        str(biases.ipin0),
-        str(biases.ipin1),
-        str(biases.ipin2),
-        str(biases.ipin3),
-        str(biases.id0),
-        str(biases.id1),
-        str(biases.id2),
-        str(biases.id3),
-        str(biases.id4),
-        str(biases.id5),
-    ])
+    return "Biases: " + ",".join(
+        [
+            str(biases.vd0),
+            str(biases.vd1),
+            str(biases.vd2),
+            str(biases.vd3),
+            str(biases.vd4),
+            str(biases.vd5),
+            str(biases.vg0),
+            str(biases.vg1),
+            str(biases.vg2),
+            str(biases.vg3),
+            str(biases.vg4),
+            str(biases.vg5),
+            str(biases.vg4a),
+            str(biases.vg5a),
+            str(biases.vpin0),
+            str(biases.vpin1),
+            str(biases.vpin2),
+            str(biases.vpin3),
+            str(biases.ipin0),
+            str(biases.ipin1),
+            str(biases.ipin2),
+            str(biases.ipin3),
+            str(biases.id0),
+            str(biases.id1),
+            str(biases.id2),
+            str(biases.id3),
+            str(biases.id4),
+            str(biases.id5),
+        ]
+    )
+
 
 class TurnOnOffProcedure(StripProcedure):
     def __init__(self, waittime_s=5, turnon=True):
@@ -164,7 +168,21 @@ class TurnOnOffProcedure(StripProcedure):
                         board_setup.setup_ID(self.horn, lna, step=1.0)
 
                 if self.waittime_s > 0:
-                    self.wait(seconds=self.waittime_s)
+                    with StripTag(
+                        conn=self.command_emitter,
+                        name=f"VD_SET_{lna}_ACQUISITION",
+                        comment=f"Acquiring some data after VD_SET_{lna}",
+                    ):
+                        self.wait(seconds=self.waittime_s)
+
+        board_setup.log(
+            f"Horn {self.horn} has been turned on, stable acquisition begins here"
+        )
+        with StripTag(
+            conn=self.command_emitter, name=f"STABLE_ACQUISITION_{self.horn}"
+        ):
+            self.wait(seconds=120)
+        board_setup.log(f"End of stable acquisition for horn {self.horn}")
 
     def run_turnoff(self):
         assert self.horn
@@ -225,6 +243,7 @@ class TurnOnOffProcedure(StripProcedure):
 
         board_setup.log(f"Turnoff procedure for {self.horn} completed")
 
+
 def unroll_polarimeters(pol_list):
     board_horn_pol = re.compile(r"([GBPROYW][0-6]):(STRIP[0-9][0-9])")
     for cur_pol in pol_list:
@@ -270,7 +289,7 @@ Usage example:
         type=str,
         dest="board",
         required=True,
-        help='Name of the board to use',
+        help="Name of the board to use",
     )
     parser.add_argument(
         "--turnoff",
