@@ -351,7 +351,37 @@ class StripConnection(Connection):
 
         self.last_response = self.post("rest/command", {"command": command})
 
+    def round_all_files(self):
+        """Close all the files being written by the web server and start new ones.
+
+        This command is useful when you are going to start a long
+        acquisition and do not want the data to be split by the server
+        at some arbitrary point.  (The server flushes all its data to
+        files once its buffers have been filled.)
+        """
+
+        self.system_command("round_all_files")
+
+    def round_hdf5_files(self):
+        """Close all the HDF5 files being written by the web server.
+
+        This function should never be called. See
+        meth:`striptease.StripConnection.round_all_files` for a good
+        alternative.
+        """
+        self.system_command("round_hdf5_files")
+
+    def round_raw_files(self):
+        """Close all the raw files being written by the web server.
+
+        This function should never be called. See
+        meth:`striptease.StripConnection.round_all_files` for a good
+        alternative.
+        """
+        self.system_command("round_raw_files")
+
     def query_file(self, start_mjd=None, end_mjd=None):
+
         """Return a list of the files within some specified time interval.
 
         Args:
