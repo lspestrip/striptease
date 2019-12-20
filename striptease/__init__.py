@@ -282,8 +282,10 @@ class StripConnection(Connection):
 
             base_addr (str): name of the parameter to set, e.g., "VD0_HK"
 
-            data (integer or None): if method is "GET", it is unused.
-                Otherwise, it is the value to set.
+            data (integer, list, or None): if method is "GET", it is unused.
+                Otherwise, it is the value to set. More than one value can be
+                provided; in this case, the registers following "base_addr"
+                will be set too.
 
             timeout (int): Number of milliseconds to wait for an
                 answer from the instrument before signalling an error.
@@ -318,6 +320,13 @@ class StripConnection(Connection):
             "size": 1,
             "timeout": timeout_ms,
         }
+
+        if data:
+            if type(data) in [int, float]:
+                dic["data"] = [data]
+            else:
+                dic["data"] = data
+
         self.last_response = self.post("rest/slo", dic)
         assert len(self.last_response["data"]) == 1
 
