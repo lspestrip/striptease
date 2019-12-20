@@ -15,19 +15,17 @@ from pprint import pprint
 from striptease.biases import InstrumentBiases, BoardCalibration
 from striptease.procedures import StripProcedure
 
-CalibrationCurve = namedtuple("CalibrationCurve", [
-    "slope",
-    "intercept",
-    "mul",
-    "div",
-    "add",
-])
+CalibrationCurve = namedtuple(
+    "CalibrationCurve", ["slope", "intercept", "mul", "div", "add",]
+)
+
 
 def get_step(v, cal, step):
     val = v * step * cal.slope + cal.intercept
     if val < 0:
         val = 0
     return int(val + 0.5)
+
 
 def get_polarimeter_index(pol_name):
     "Return the progressive number of the polarimeter within the board (1…8)"
@@ -36,6 +34,7 @@ def get_polarimeter_index(pol_name):
         return 8
     else:
         return int(pol_name[1]) + 1
+
 
 def get_lna_num(name):
     """Return the number of an LNA, in the range 0…5
@@ -210,9 +209,8 @@ class SetupBoard(object):
             cmd["data"] = datum
 
             if not self.post_command(url, cmd):
-                log.warning(f'Unable to post command {addr}')
+                log.warning(f"Unable to post command {addr}")
                 return
-
 
     def enable_electronics(self, polarimeter, delay_sec=0.5, mode=5):
         url = self.conf.get_rest_base() + "/slo"
@@ -225,12 +223,16 @@ class SetupBoard(object):
 
         cmd["pol"] = polarimeter
         cmd["type"] = "BIAS"
-        for c in [("POL_PWR", 1), ("DAC_REF", 1), ("POL_MODE", mode)]:
+        for c in [("POL_PWR", 1), ("DAC_REF", 1), ("POL_MODE", mode), ("CLK_REF", 0)]:
             cmd["base_addr"] = c[0]
             cmd["data"] = [c[1]]
 
             if not self.post_command(url, cmd):
-                print(f"WARNING: command {c[0]}={c[1]} gave an error", file=sys.stderr, flush=True)
+                print(
+                    f"WARNING: command {c[0]}={c[1]} gave an error",
+                    file=sys.stderr,
+                    flush=True,
+                )
                 break
 
         cmd["base_addr"] = "PRE_EN"
@@ -294,12 +296,12 @@ class SetupBoard(object):
 
         cmd["base_addr"] = f"DET{detector_idx}_OFFS"
         cmd["data"] = [offset]
-        #if not self.post_command(url, cmd):
+        # if not self.post_command(url, cmd):
         #    return
 
         cmd["base_addr"] = f"DET{detector_idx}_GAIN"
         cmd["data"] = [gain]
-        #if not self.post_command(url, cmd):
+        # if not self.post_command(url, cmd):
         #    return
 
     def set_phsw_status(self, polarimeter, phsw_idx, status):
@@ -345,7 +347,9 @@ class SetupBoard(object):
         if not self.post_command(url, cmd):
             return
 
-    def setup_bias(self, polarimeter, index, bias_dict, param_name, excel_entry, step=1):
+    def setup_bias(
+        self, polarimeter, index, bias_dict, param_name, excel_entry, step=1
+    ):
         url = self.conf.get_rest_base() + "/slo"
 
         pol_index = get_polarimeter_index(polarimeter)
@@ -360,17 +364,21 @@ class SetupBoard(object):
             "timeout": 500,
             "pol": polarimeter,
             "base_addr": f"{param_name}{index}_SET",
-            "data": [get_step(
-                bc.__getattribute__(bias_dict[index]),
-                calib[title1][title2][index],
-                step,
-            )],
+            "data": [
+                get_step(
+                    bc.__getattribute__(bias_dict[index]),
+                    calib[title1][title2][index],
+                    step,
+                )
+            ],
         }
 
         if not self.post_command(url, cmd):
             return
 
-    def setup_lna_bias(self, polarimeter, lna, bias_dict, param_name, excel_entry, step=1):
+    def setup_lna_bias(
+        self, polarimeter, lna, bias_dict, param_name, excel_entry, step=1
+    ):
         self.setup_bias(
             polarimeter=polarimeter,
             index=get_lna_num(lna),
