@@ -1,9 +1,9 @@
 Authentication
 ==============
 
-In order to use the tools provided by Striptease, you must have an
-account for the STRIP web portal. Once you are registered, you must
-use your username and password to authenticate to the portal.
+To use the tools provided by Striptease, you must have an account for
+the STRIP web portal. Once you are registered, you must use your
+username and password to authenticate to the portal.
 
 Striptease provides a number of shortcuts to provide your own
 credentials to the web portal. Here are the possibilities:
@@ -21,9 +21,12 @@ credentials to the web portal. Here are the possibilities:
 Using credentials from a text file
 ----------------------------------
 
-We discuss this method first, because it is the most useful. You must
-save your credentials in a JSON file named ``conf.json`` and place it
-in the directory ``~/.strip``. Here is an example::
+We discuss this method first, because it is the most useful and
+provides a secure yet permanent way to connect to the server without
+re-entering your credentials again and again.
+
+You must save your credentials in a JSON file named ``conf.json`` and
+place it in the directory ``~/.strip``. Here is an example::
 
   {
     "user": "foo",

@@ -1,16 +1,8 @@
 API documentation
 =================
 
-Basic operations
-----------------
-
-.. automodule:: striptease.stripconn
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Connections
------------
+Basic operations and connections
+--------------------------------
 
 .. automodule:: striptease
     :members:

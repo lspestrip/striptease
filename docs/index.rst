@@ -11,6 +11,7 @@ Welcome to Striptease's documentation!
    :caption: Contents:
 
    authentication
+   tutorial
    API
    development
 
