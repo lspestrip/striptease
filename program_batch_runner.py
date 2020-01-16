@@ -187,7 +187,7 @@ def main(stdscr):
                 )
                 pass
 
-            warning(stdscr, f"Error: {e}")
+            warning(stdscr, f"Error in \"{cur_command['kind']}\" command: {e}")
             prompt(stdscr, "Press any key to exit")
             stdscr.nodelay(False)
             stdscr.getch()
