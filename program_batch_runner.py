@@ -51,7 +51,7 @@ def readkey(stdscr):
 
 
 def close_tags(stdscr, conn):
-    tags = [x for x in conn.tag_query() if x['stop'] < 0.0]
+    tags = [x for x in conn.tag_query() if x["stop"] < 0.0]
 
     if not tags:
         return
@@ -181,6 +181,12 @@ def main(stdscr):
                     wait_time = args.waitcmd_time
                 time.sleep(wait_time)
         except Exception as e:
+            if cur_command["kind"] == "tag":
+                warning(
+                    stdscr, f"Error while submitting tag {cmddict['tag']}, ignoring it"
+                )
+                pass
+
             warning(stdscr, f"Error: {e}")
             prompt(stdscr, "Press any key to exit")
             stdscr.nodelay(False)
