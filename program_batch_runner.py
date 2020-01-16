@@ -185,14 +185,13 @@ def main(stdscr):
                 warning(
                     stdscr, f"Error while submitting tag {cmddict['tag']}, ignoring it"
                 )
-                pass
-
-            warning(stdscr, f"Error in \"{cur_command['kind']}\" command: {e}")
-            prompt(stdscr, "Press any key to exit")
-            stdscr.nodelay(False)
-            stdscr.getch()
-            stdscr.nodelay(True)
-            return
+            else:
+                warning(stdscr, f"Error in \"{cur_command['kind']}\" command: {e}")
+                prompt(stdscr, "Press any key to exit")
+                stdscr.nodelay(False)
+                stdscr.getch()
+                stdscr.nodelay(True)
+                return
 
         indent_level += indent_level_incr
         if indent_level < 0:
