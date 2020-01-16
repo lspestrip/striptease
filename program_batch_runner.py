@@ -187,11 +187,10 @@ def main(stdscr):
                 )
             else:
                 warning(stdscr, f"Error in \"{cur_command['kind']}\" command: {e}")
-                prompt(stdscr, "Press any key to exit")
-                stdscr.nodelay(False)
-                stdscr.getch()
-                stdscr.nodelay(True)
-                return
+                prompt(stdscr, "Press q to quit, any other key to continue")
+                choice = readkey(stdscr)
+                if choice.upper() == "Q":
+                    return
 
         indent_level += indent_level_incr
         if indent_level < 0:
