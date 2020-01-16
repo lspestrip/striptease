@@ -223,7 +223,7 @@ class SetupBoard(object):
 
         cmd["pol"] = polarimeter
         cmd["type"] = "BIAS"
-        for c in [("POL_PWR", 1), ("DAC_REF", 1), ("POL_MODE", mode), ("CLK_REF", 0)]:
+        for c in [("POL_PWR", 1), ("DAC_REF", 1), ("POL_MODE", mode)]: # , ("CLK_REF", 0)]:
             cmd["base_addr"] = c[0]
             cmd["data"] = [c[1]]
 
