@@ -85,7 +85,7 @@ class Connection(object):
         else:
             self.id = None
 
-    def post(self, url, message, retry_count=5, retry_delay_s=None):
+    def post(self, url, message, retry_count=10, retry_delay_s=None):
         """encode the message in json format and send it using POST http method.
            :param str url: url to send the message.
            :param message: dictionary or list to send.
