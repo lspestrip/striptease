@@ -31,7 +31,7 @@ def get_polarimeter_index(pol_name):
     "Return the progressive number of the polarimeter within the board (1…8)"
 
     if pol_name[0] == "W":
-        return 8
+        return 7
     else:
         return int(pol_name[1]) + 1
 
