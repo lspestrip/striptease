@@ -27,8 +27,11 @@ for pair in V_W4 R_W3 O_W2 Y_W1 G_W6 B_W5; do
 done
 
 for board in R O Y G B V I; do
-	create_board_script $board $board "$output_dir/${board}_all"
 	for num in $(seq 0 6); do
 		create_board_script $board $board "$output_dir/${board}${num}"
 	done
+	create_board_script $board $board "$output_dir/${board}_all"
 done
+
+./join_scripts.py $(ls "$output_dir"/*_all_turnon.json | sort) > "$output_dir"/all_turnon.json
+./join_scripts.py $(ls "$output_dir"/*_all_turnoff.json | sort) > "$output_dir"/all_turnoff.json
