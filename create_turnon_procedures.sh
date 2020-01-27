@@ -23,7 +23,7 @@ fi
 for pair in V_W4 R_W3 O_W2 Y_W1 G_W6 B_W5; do
 	board=$(echo $pair | head -c 1)
 	pol=$(echo $pair | tail -c 3)
-	create_board_script
+	create_board_script $board $pol "$output_dir/$pair"
 done
 
 for board in R O Y G B V I; do
