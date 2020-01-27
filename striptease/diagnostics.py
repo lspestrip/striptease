@@ -8,11 +8,6 @@ import numpy as np
 import astropy.time
 import astropy.units as u
 
-import matplotlib.pylab as plt
-from matplotlib.patches import Rectangle
-from matplotlib.collections import PatchCollection
-import matplotlib.transforms as transforms
-
 TagEvent = namedtuple("TagEvent", ["start_time", "end_time", "tag", "polarimeter"])
 
 
@@ -111,6 +106,14 @@ def plot_tagevents(
     ```
 
     """
+
+    # Use these imports only if this function is actually called,
+    # otherwise it will import "tkinter", and this might lead to
+    # nasty effects on headless servers
+    import matplotlib.pylab as plt
+    from matplotlib.patches import Rectangle
+    from matplotlib.collections import PatchCollection
+    import matplotlib.transforms as transforms
 
     if polarimeters:
         true_pol_list = polarimeters
