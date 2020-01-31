@@ -28,7 +28,7 @@ done
 
 for board in R O Y G B V I; do
 	for num in $(seq 0 6); do
-		create_board_script $board $board "$output_dir/${board}${num}"
+		create_board_script $board $board$num "$output_dir/${board}${num}"
 	done
 	create_board_script $board $board "$output_dir/${board}_all"
 done
