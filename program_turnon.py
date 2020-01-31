@@ -18,10 +18,7 @@ def unroll_polarimeters(pol_list):
     board_horn_pol = re.compile(r"([GBPROYW][0-6]):(STRIP[0-9][0-9])")
     for cur_pol in pol_list:
         if cur_pol in ("V", "R", "O", "Y", "G", "B", "I"):
-            if cur_pol == "I":
-                maxidx = 6
-            else:
-                maxidx = 7
+            maxidx = 7
             for idx in range(maxidx):
                 yield (f"{cur_pol}{idx}", None)
             continue
