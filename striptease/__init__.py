@@ -7,7 +7,7 @@ Striptease
 from .unittests import *
 from .biases import *
 from .diagnostics import *
-from .hdf5files import *
+#from .hdf5files import *
 
 __version__ = "0.1.0"
 
