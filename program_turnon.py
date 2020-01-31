@@ -95,6 +95,7 @@ Usage example:
 
     proc = TurnOnOffProcedure(waittime_s=args.waittime_s, turnon=not args.turnoff)
     for cur_horn, cur_polarimeter in unroll_polarimeters(args.polarimeters):
+        log.info("Processing horn %s, polarimeter %s", cur_horn, cur_polarimeter)
         proc.set_board_horn_polarimeter(args.board, cur_horn, cur_polarimeter)
         proc.run()
 
