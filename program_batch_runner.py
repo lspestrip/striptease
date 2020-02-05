@@ -63,7 +63,7 @@ def close_tags(stdscr, conn):
                 comment="Closed automatically by program_batch_runner.py",
             )
     else:
-        tags = ", ".join([f"\"{x['tag']}\"" for x in tags])
+        tags = ", ".join([('"' + x["tag"] + '"') for x in tags])
         warning(stdscr, f"The tags {tags} are still open, do you want to quit (y/n)?")
         choice = readkey(stdscr)
         if choice.upper() == "Y":
