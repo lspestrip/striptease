@@ -16,7 +16,7 @@ def main():
         with open(curfilename, "rt") as inpf:
             commands += json.load(inpf)
 
-        json.dump(commands, sys.stdout, indent=4)
+    json.dump(commands, sys.stdout, indent=4)
 
 
 if __name__ == "__main__":
