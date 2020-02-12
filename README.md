@@ -16,10 +16,11 @@ You have two choices to install this program:
    some Python and do not want to prevent yourself from patching the
    code.
    
-If you want to follow the first route, use the following commands:
+If you want to follow the first route, use the following commands (possibly after having [created a virtual environment](https://docs.python.org/3/library/venv.html)):
 
 ```bash
 git clone git@github.com:lspestrip/striptease.git
+cd striptease
 python setup.py install
 ```
 
@@ -27,6 +28,7 @@ If you are a developer, use these commands:
 
 ```bash
 git clone git@github.com:lspestrip/striptease.git
+cd striptease
 python -m pip install -e .
 ```
 
