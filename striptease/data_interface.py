@@ -50,7 +50,7 @@ def load_sci_data(fname_or_data, polarimeter, detector, data_type):
     modules = ["O", "Y", "R", "G", "B", "R", "W"]
     polarimeters = ["0", "1", "2", "3", "4", "5", "6"]
     module = polarimeter[0]
-    pol    = polarimeter[1]
+    pol = polarimeter[1]
 
     if (not module.upper() in modules) or (not pol.upper() in polarimeters):
         raise ValueError(f"ERROR: Polarimeter {polarimeter} does not exist")
@@ -59,14 +59,14 @@ def load_sci_data(fname_or_data, polarimeter, detector, data_type):
         raise ValueError(f"ERROR: Polarimeter {polarimeter} does not exist")
 
     polarimeter = polarimeter.upper()
-    
+
     # Detector exists?
     detectors = ["Q1", "Q2", "U1", "U2"]
     if not detector.upper() in detectors:
         raise ValueError(f"ERROR: Detector %s does not exist")
 
     detector = detector.upper()
-    
+
     # Data type exists?
     data_types = ["PWR", "DEM"]
     if not data_type.upper() in data_types:
