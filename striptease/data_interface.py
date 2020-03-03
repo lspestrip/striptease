@@ -1,7 +1,8 @@
 def load_sci_data(fname_or_data, polarimeter, detector, data_type):
     """
     Loads scientific data from one detector of a given polarimeter
-    CALL time, data = load_sci_data(fname_or_data, module, polarimeter, detector, data_type)
+
+    CALL time, data = load_sci_data(fname_or_data, polarimeter, detector, data_type)
 
     INPUTS
     fname_or_data MIXED       if string then complete path to the filename, if h5py._hl.dataset.Dataset 
@@ -11,8 +12,7 @@ def load_sci_data(fname_or_data, polarimeter, detector, data_type):
     data_type     STRING      type of data to be retreived (DEM, PWR)
 
     OUTPUTS
-    time, data   INT or NUMPY_ARRAY     In case of error time, data = -1, 1. Otherwise they 
-                                        contain the time stream and the scientific data stream
+    time, data    NUMPY_ARRAY The time stream and the scientific data stream
     """
 
     import h5py
@@ -84,3 +84,105 @@ def load_sci_data(fname_or_data, polarimeter, detector, data_type):
     scitime = astropy.time.Time(scidata["m_jd"], format="mjd").unix  # time SCI in sec
 
     return scitime, scidata[data_type + detector]
+
+
+###########################################################################################################
+
+
+class load_hk_data:  # (fname_or_data, polarimeter, hk_type, hk_parameter):
+    """
+    Class to load housekeepings data
+    Instance creation
+    mydata = load_hk_data(fname)
+
+    INPUT
+    fname    STRING    filename pointing to the datafile
+
+    Methods:
+    read_hklist: - reads the list of housekeepings and stores it into a dictionary
+    print_hklist: - prints the list of housekeepings with its description
+    """
+
+    import h5py
+    import numpy as np
+    import matplotlib.pylab as plt
+    import astropy.time
+    import datetime
+    import os.path
+
+    hklist_fname = "bias_pars.csv"
+
+    def __init__(self, fname):
+        self.fname = fname
+
+    def read_hklist(self):
+        """
+        Reads the list of housekeeping parameters with their own description
+        CALL load_hk_data.red_hklist()
+        
+        INPUTS
+        None
+        
+        OUTPUTS
+        hk_list  DICT   the dictionary containing the housekeeping parameters and description strings
+        """
+        import csv
+
+        hklist = {}
+        with open(self.hklist_fname, mode="r") as csv_file:
+            csv_reader = csv.DictReader(csv_file)
+            line_count = 0
+            for row in csv_reader:
+                line_count += 1
+                hklist[row["HK_PAR"]] = row["Description"]
+
+        return hklist
+
+    def print_hklist(self):
+        """
+        Prints the list of housekeeping parameters with their own description
+        CALL hklist = load_hk_data.print_hklist()
+        
+        INPUTS
+        None
+        
+        OUTPUTS
+        None
+        """
+        hklist = self.read_hklist()
+        keys = hklist.keys()
+        for key in keys:
+            if len(key) < 8:
+                spacer = "\t\t"
+            else:
+                spacer = "\t"
+            outstring = "%s%s%s" % (key, spacer, hklist[key])
+            print(outstring)
+
+
+# ---------------------------------------------------------------------------------------------------------------
+
+# List of HK that we want to access as a first step
+
+# Drain current (read or set)
+# LNA voltages (read or set)
+# Phase switch voltages (read or set)
+# Phase switch currents (read or set)
+
+
+# Parametro mode
+# BIAS/POL_MODE (se open -5- o closed loop)
+
+# Parametro PINJ_CON (parametro fasi del phase switch)
+
+# Settaggi detector
+# DAQ/DETJ_BIAS (detector bias -read-, da verificare in che unita' di misura viene restituito)
+
+# Parametri daq board
+# Guadagno
+# DAQ/GAIN_EN (enable)
+# DAQ/DETJ_GAIN (guadagno post detection)
+# DAQ/DETJ_OFFS (offset post detection)
+
+
+# qub1c-in2p3-m3nn3ll4
