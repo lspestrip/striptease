@@ -1,18 +1,21 @@
 ###########################################################################################################
 
 
-class load_data:
+class LoadData:
     """
     Class to load housekeepings data
     Instance creation
-    mydata = hk_data(fname)
+    mydata = LoadData(fname)
 
     INPUT
     fname    STRING    filename pointing to the datafile
 
     Methods:
-    read_hklist: - reads the list of housekeepings and stores it into a dictionary
-    print_hklist: - prints the list of housekeepings with its description
+    ReadHKList: - reads the list of housekeepings and stores it into a dictionary
+    PrintHKList: - prints the list of housekeepings with its description
+   
+    LoadHK:  loads housekeepings data
+    LoadSci: loads scientific data
     """
 
     import h5py
@@ -54,10 +57,13 @@ class load_data:
 
         self.data = h5py.File(self.fname, "r")
 
-    def read_hklist(self, group, subgroup):
+    # -------------------------------------------------------------------------------------------
+
+    def ReadHKList(self, group, subgroup):
         """
         Reads the list of housekeeping parameters with their own description
-        CALL hk_data.red_hklist(group, subgroup)
+        CALL instance.ReadHKList(group, subgroup), where instance is the instance
+             of the class
         
         INPUTS
         group      STRING    the main group (either POL_XY or BOARD_X, where X is the module string
@@ -92,10 +98,13 @@ class load_data:
 
         return hklist
 
-    def print_hklist(self, group, subgroup):
+    # ---------------------------------------------------------------------------------------------
+
+    def PrintHKList(self, group, subgroup):
         """
         Prints the list of housekeeping parameters with their own description
-        CALL hklist = hk_data.print_hklist(group, subgroup)
+        CALL hklist = instance.PrintHKList(group, subgroup), where instance is the instance
+             of the class
         
         INPUTS
         group      STRING    the main group (either POL_XY or BOARD_X, where X is the module string
@@ -115,7 +124,7 @@ class load_data:
 
         par_fname = "%s_%s_%s.csv" % (self.hklist_fname, group, subgroup)
 
-        hklist = self.read_hklist(group.upper(), subgroup.upper())
+        hklist = self.ReadHKList(group.upper(), subgroup.upper())
         keys = hklist.keys()
 
         print("Parameters for group %s and subgroup %s" % (group, subgroup))
@@ -129,9 +138,21 @@ class load_data:
 
     # ---------------------------------------------------------------------------------------------------------------
 
-    def load_hk(self, group, subgroup, par):
+    def LoadHK(self, group, subgroup, par):
         """
-        Add description here
+        Loads scientific data from one detector of a given polarimeter
+
+        CALL time, data = instance.LoadHK(fname_or_data, polarimeter, detector, data_type), where instance is the instance
+             of the class
+
+        INPUTS
+             group         STRING      string of the HK group (of the type POL_XY, where X in [O,B,R,I,Y,G,W] and Y in [0, 1, 2, 3, 4, 5, 6]
+                                       or BOARD_X)
+             subgroup      STRING      either 'BIAS' or 'BOARD'
+             par           STRING      HK parameter
+
+        OUTPUTS
+             time, data    NUMPY_ARRAY The time stream and the housekeeping data stream
         """
         import h5py
         import astropy
@@ -150,7 +171,7 @@ class load_data:
         else:
             grp = "BOARD"
 
-        pars = self.read_hklist(grp, subgroup)
+        pars = self.ReadHKList(grp, subgroup)
         if not par.upper() in pars:
             raise ValueError(f"ERROR: Parameter %s does not exist" % par)
 
@@ -165,7 +186,7 @@ class load_data:
 
     # ---------------------------------------------------------------------------------------------------------------
 
-    def load_sci(self, polarimeter, detector, data_type):
+    def LoadSci(self, polarimeter, detector, data_type):
         """
         Loads scientific data from one detector of a given polarimeter
 
