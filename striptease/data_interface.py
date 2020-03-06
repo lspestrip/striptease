@@ -11,8 +11,8 @@ class LoadData:
     fname    STRING    filename pointing to the datafile
 
     Methods:
-    ReadHKList: - reads the list of housekeepings and stores it into a dictionary
-    PrintHKList: - prints the list of housekeepings with its description
+    read_hk_list: - reads the list of housekeepings and stores it into a dictionary
+    print_hk_list: - prints the list of housekeepings with its description
    
     LoadHK:  loads housekeepings data
     LoadSci: loads scientific data
@@ -59,10 +59,10 @@ class LoadData:
 
     # -------------------------------------------------------------------------------------------
 
-    def ReadHKList(self, group, subgroup):
+    def read_hk_list(self, group, subgroup):
         """
         Reads the list of housekeeping parameters with their own description
-        CALL instance.ReadHKList(group, subgroup), where instance is the instance
+        CALL instance.read_hk_list(group, subgroup), where instance is the instance
              of the class
         
         INPUTS
@@ -100,10 +100,10 @@ class LoadData:
 
     # ---------------------------------------------------------------------------------------------
 
-    def PrintHKList(self, group, subgroup):
+    def print_hk_list(self, group, subgroup):
         """
         Prints the list of housekeeping parameters with their own description
-        CALL hklist = instance.PrintHKList(group, subgroup), where instance is the instance
+        CALL hklist = instance.print_hk_list(group, subgroup), where instance is the instance
              of the class
         
         INPUTS
@@ -124,7 +124,7 @@ class LoadData:
 
         par_fname = "%s_%s_%s.csv" % (self.hklist_fname, group, subgroup)
 
-        hklist = self.ReadHKList(group.upper(), subgroup.upper())
+        hklist = self.read_hk_list(group.upper(), subgroup.upper())
         keys = hklist.keys()
 
         print("Parameters for group %s and subgroup %s" % (group, subgroup))
@@ -171,7 +171,7 @@ class LoadData:
         else:
             grp = "BOARD"
 
-        pars = self.ReadHKList(grp, subgroup)
+        pars = self.read_hk_list(grp, subgroup)
         if not par.upper() in pars:
             raise ValueError(f"ERROR: Parameter %s does not exist" % par)
 
