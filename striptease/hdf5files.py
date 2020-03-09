@@ -1,11 +1,130 @@
 # -*- encoding: utf-8 -*-
 
+from pathlib import Path
 from typing import Union, List, Set
 
-from pathlib import Path
 from astropy.time import Time
+import csv
 import h5py
+import numpy as np
 from datetime import datetime
+
+__all__ = [
+    "get_hk_descriptions",
+    "HkDescriptionList",
+    "DataFile",
+    "scan_data_path",
+]
+
+VALID_GROUPS = ["POL", "BOARD"]
+VALID_SUBGROUPS = ["BIAS", "DAQ"]
+VALID_DETECTORS = ["Q1", "Q2", "U1", "U2"]
+VALID_DATA_TYPES = ["PWR", "DEM"]
+
+
+def check_group_and_subgroup(group, subgroup):
+    if not group.upper() in VALID_GROUPS:
+        valid_choices = ", ".join(['"' + x + '"' for x in VALID_GROUPS])
+        raise ValueError(f"Group {group.upper()} must be one of {valid_choices}")
+
+    if not subgroup.upper() in VALID_SUBGROUPS:
+        valid_choices = ", ".join(['"' + x + '"' for x in VALID_SUBGROUPS])
+        raise ValueError(f"Subgroup {subgroup.upper()} must be one of {valid_choices}")
+
+    return True
+
+
+def hk_list_file_name(group, subgroup):
+    return (
+        Path(__file__).parent.parent
+        / "data"
+        / "hk_pars_{}_{}.csv".format(group.upper(), subgroup.upper(),)
+    )
+
+
+class HkDescriptionList:
+    """Result of a call to get_hk_descriptions
+
+    This class acts like a dictionary that associates the name of an
+    housekeeping parameter with a description. It provides a nice
+    textual representation when printed on the screen::
+
+        l = get_hk_descriptions("POL_Y6", "BIAS")
+
+        # Print the description of one parameter
+        if "VG4A_SET" in l:
+            print(l["VG4A_SET"])
+
+        # Print all the descriptions in a nicely-formatted table
+        print(l)
+
+    """
+
+    def __init__(self, group, subgroup, hklist):
+        self.group = group
+        self.subgroup = subgroup
+        self.hklist = hklist
+
+    def __contains__(self, k):
+        return self.hklist.__contains__(k)
+
+    def __iter__(self, k):
+        return self.hklist.__iter__(k)
+
+    def __len__(self):
+        return self.hklist.__len__()
+
+    def __getitem__(self, key):
+        return self.hklist.__getitem__(key)
+
+    def __str__(self):
+        result = f"Parameters for {self.group}/{self.subgroup}\n\n"
+
+        result += "{:15s}{}\n".format("HK name", "Description")
+
+        table_body = ""
+        linewidth = 0
+        for key in sorted(self.hklist.keys()):
+            cur_line = f"{key:15s}{self.hklist[key]}\n"
+            if len(cur_line) - 1 > linewidth:
+                linewidth = len(cur_line) - 1
+
+            table_body += cur_line
+
+        return result + ("-" * linewidth) + "\n" + table_body
+
+
+def get_hk_descriptions(group, subgroup):
+    """Reads the list of housekeeping parameters with their own description.
+
+    Args:
+        group (str): The group to load. It can either be ``POL_XY`` or
+            ``BOARD_X``, with `X` being the module letter, and `Y`
+            the number of the polarimeter.
+
+        subgroup (str): The subgroup. It must either be ``BIAS``
+            or ``DAQ``.
+
+    Returns:
+
+        A dictionary containing the association between the name
+        of the housekeeping parameter and its description.
+
+    Examples::
+
+        list = get_hk_descriptions("POL_G0", "DAQ")
+
+    """
+    check_group_and_subgroup(group, subgroup)
+    par_fname = hk_list_file_name(group, subgroup)
+
+    hklist = {}
+    with par_fname.open(mode="r") as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        for row in csv_reader:
+            hklist[row["HK_PAR"]] = row["Description"]
+
+    return HkDescriptionList(group, subgroup, hklist)
 
 
 def parse_datetime_from_filename(filename):
@@ -65,26 +184,47 @@ def scan_polarimeter_names(group_names: List[str]) -> Set[str]:
 
 
 class DataFile:
-    """A HDF5 file containing Strip data
+    """A HDF5 file containing timelines acquired by Strip
 
-    Class fields:
+    This is basically a high-level wrapper over a `h5py.File`
+    object. It assumes that the HDF5 file was saved by the acquisition
+    software used in Bologna and Tenerife, and it provides some tools
+    to navigate through the data saved in the file.
+
+    Creating a `DataFile` object does not automatically open the file;
+    this is done to preserve space. The file is lazily opened once you
+    call one of the methods that need to access file data.
+
+    The two methods you are going to use most of the time are:
+
+    - :meth:`load_hk`
+    - :meth:`load_sci`
+    
+    You can access these class fields directly:
     
     - ``filepath``: a ``Path`` object containing the full path of the
-                    HDF5 file
+          HDF5 file
 
     - ``datetime``: a Python ``datetime`` object containing the time
-                    when the acquisition started
+          when the acquisition started
 
     - ``hdf5_groups``: a list of ``str`` objects containing the names
-                       of the groups in the HDF5 file. To initialize
-                       this field, you must call
-                       ``DataFile.read_file_metadata`` first.
+          of the groups in the HDF5 file. To initialize this field,
+          you must call ``DataFile.read_file_metadata`` first.
 
     - ``polarimeters``: a Python ``set`` object containing the names
-                        of the polarimeters whose measurements have
-                        been saved in this file. To initialize this
-                        field, you must call
-                        ``DataFile.read_file_metadata`` first.
+          of the polarimeters whose measurements have been saved in
+          this file. To initialize this field, you must call
+          ``DataFile.read_file_metadata`` first.
+
+    - ``hdf5_file``: if the file has been opened using
+          :meth:`read_file_metadata`, this is the `h5py.File` object.
+
+    This class can be used in ``with`` statements; in this case, it will
+    automatically open and close the file::
+
+        with DataFile(myfile) as inpf:
+            # The variable "inpf" is a DataFile object in this context
 
     """
 
@@ -99,11 +239,142 @@ class DataFile:
     def read_file_metadata(self):
         "Open the file and checks the contents"
 
-        with h5py.File(self.filepath, "r") as inpf:
-            self.hdf5_groups = list(inpf.keys())
+        self.hdf5_file = h5py.File(self.filepath, "r")
+        self.hdf5_groups = list(self.hdf5_file)
 
         self.boards = scan_board_names(self.hdf5_groups)
         self.polarimeters = scan_polarimeter_names(self.hdf5_groups)
+
+    def close_file(self):
+        "Close the HDF5 file"
+
+        if self.hdf5_file:
+            self.hdf5_file.close()
+            self.hdf5_file = None
+
+    def __enter__(self):
+        # Force opening the file and reading the metadata
+        self.read_file_metadata()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close_file()
+
+    def load_hk(self, group, subgroup, par):
+        """Loads scientific data from one detector of a given polarimeter
+
+        Args:
+        
+            group (str): Name of the housekeeping group. It can either
+                be ``POL_XY`` or ``BOARD_X``, with `X` being the
+                letter identifying the module, and `Y` the polarimeter
+                number within the module. Possible examples are
+                ``POL_G0`` and ``BOARD_Y``.
+
+            subgroup (str): Either ``BIAS`` or ``BOARD``
+
+            par (str): Name of the housekeeping parameter,
+                e.g. ``ID4_DIV``.
+
+        Returns:
+
+             A tuple containing two NumPy arrays: the stream of times
+             (using the astropy.time.Time datatype), and the stream of
+             data.
+
+        Example::
+
+            from striptease.hdf5files import DataFile
+
+            f = DataFile(filename)
+            time, data = f.load_hk("POL_Y6", "BIAS", "VG4A_SET")
+
+        """
+        if not self.hdf5_groups:
+            self.read_file_metadata()
+
+        print(f"{group.upper()}, {subgroup.upper()}, {par.upper()}")
+        datahk = self.hdf5_file[group.upper()][subgroup.upper()][par.upper()]
+        hk_time = Time(datahk["m_jd"], format="mjd")
+        hk_data = datahk["value"]
+        return hk_time, hk_data
+
+    def load_sci(self, polarimeter, data_type, detector=[]):
+        """Loads scientific data from one detector of a given polarimeter
+
+        Args:
+
+            polarimeter (str): Name of the polarimeter, in the form
+                ``POL_XY`` or ``XY`` for short, with `X` being the
+                module letter and `Y` the polarimeter number within
+                the module.
+
+            data_type (str): Type of data to load, either ``DEM`` or
+                ``PWR``.
+
+            detector (str): Either ``Q1``, ``Q2``, ``U1`` or ``U2``.
+                You can also pass a list, e.g., ``["Q1", "Q2"]``. If
+                no value is provided for this parameter, all the four
+                detectors will be returned.
+
+        Returns:
+
+             A tuple containing two NumPy arrays: the stream of times
+             (using the astropy.time.Time datatype), and the stream of
+             data. For multiple detectors, the latter will be a list
+             of tuples, where each column is named either ``DEMnn`` or
+             ``PWRnn``, where ``nn`` is the name of the detector.
+
+
+        Examples::
+
+            from striptease.hdf5files import DataFile
+            import numpy as np
+
+            f = DataFile(filename)
+
+            # Load the output of only one detector
+            time, data = my_data.load_sci("POL_G0", "DEM", "Q1")
+            print(f"Q1 mean output: {np.mean(data)}")
+
+            # Load the output of several detectors at once
+            time, data = my_data.load_sci("POL_G0", "DEM", ("Q1", "Q2"))
+            print(f"Q1 mean output: {np.mean(data['DEMQ1'])}")
+
+            # Load the output of all the four detectors
+            time, data = my_data.load_sci("POL_G0", "DEM")
+            print(f"Q1 mean output: {np.mean(data['DEMQ1'])}")
+
+        """
+
+        if not self.hdf5_groups:
+            self.read_file_metadata()
+
+        if len(polarimeter) == 2:
+            polarimeter = "POL_" + polarimeter.upper()
+
+        if not data_type.upper() in VALID_DATA_TYPES:
+            raise ValueError(f"Invalid data type {data_type}")
+
+        data_type = data_type.upper()
+
+        scidata = self.hdf5_file[polarimeter]["pol_data"]
+
+        scitime = Time(scidata["m_jd"], format="mjd")
+
+        if isinstance(detector, str):
+            if not detector.upper() in VALID_DETECTORS:
+                raise ValueError(f"Invalid detector {detector}")
+            detector = detector.upper()
+
+            column_selector = f"{data_type}{detector}"
+        else:
+            if not detector:
+                detector = ["Q1", "Q2", "U1", "U2"]
+
+            column_selector = tuple([f"{data_type}{x}" for x in detector])
+
+        return scitime, scidata[column_selector]
 
 
 def scan_data_path(path: Union[str, Path]) -> List[DataFile]:

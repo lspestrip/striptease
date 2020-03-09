@@ -12,6 +12,7 @@ Welcome to Striptease's documentation!
 
    authentication
    tutorial
+   data_interface
    API
    development
 
