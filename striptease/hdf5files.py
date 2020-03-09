@@ -351,7 +351,7 @@ class DataFile:
             self.read_file_metadata()
 
         if len(polarimeter) == 2:
-            polarimeter = "POL_" + polarimeter
+            polarimeter = "POL_" + polarimeter.upper()
 
         if not data_type.upper() in VALID_DATA_TYPES:
             raise ValueError(f"Invalid data type {data_type}")
