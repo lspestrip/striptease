@@ -70,7 +70,7 @@ template_on = [
   "board": "G",
   "pol": "R0",
   "base_addr": "PRE_EN",
-  "type": "PREAMP",
+  "type": "DAQ",
   "method": "SET",
   "data": [
     1

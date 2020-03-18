@@ -279,7 +279,7 @@ class StripConnection(Connection):
                 or the full name (e.g., "R0"). If you are targeting
                 the whole board, pass None or an empty string.
 
-            kind (str): either "BIAS", "PREAMP", or "CRYO".
+            kind (str): either "BIAS", "DAQ", or "CRYO".
 
             base_addr (str): name of the parameter to set, e.g., "VD0_HK"
 
@@ -308,7 +308,7 @@ class StripConnection(Connection):
 
         assert kind in [
             "BIAS",
-            "PREAMP",
+            "DAQ",
             "CRYO",
         ], "Invalid value for 'kind=' ({})".format(kind)
 

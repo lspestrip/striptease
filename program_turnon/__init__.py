@@ -236,7 +236,7 @@ class SetupBoard(object):
                 break
 
         cmd["base_addr"] = "PRE_EN"
-        cmd["type"] = "PREAMP"
+        cmd["type"] = "DAQ"
         cmd["data"] = [1]
 
         if not self.post_command(url, cmd):
@@ -258,7 +258,7 @@ class SetupBoard(object):
         cmd["pol"] = polarimeter
 
         cmd["base_addr"] = "PRE_EN"
-        cmd["type"] = "PREAMP"
+        cmd["type"] = "DAQ"
         cmd["data"] = [0]
 
         if not self.post_command(url, cmd):
@@ -283,7 +283,7 @@ class SetupBoard(object):
 
         cmd = {}
         cmd["board"] = self.board
-        cmd["type"] = "PREAMP"
+        cmd["type"] = "DAQ"
         cmd["method"] = "SET"
         cmd["timeout"] = 500
 
@@ -533,14 +533,14 @@ class TurnOnOffProcedure(StripProcedure):
 
     def run_turnon(self, turn_on_board=True, stable_acquisition_time_s=120):
         """Execute a turn-on procedure for the horn specified in `self.horn`.
-        
+
         Optional parameters:
-        
+
         - turn_on_board: if True, turn on the board. Set it to false if you are sure the
             board has already been turned on (default: True).
 
         - stable_acquisition_time_s: if nonzero, wait for the specified amount of
-            seconds once the polarimeter has been fully turned on.                         
+            seconds once the polarimeter has been fully turned on.
         """
 
         assert self.horn
