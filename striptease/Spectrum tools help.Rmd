@@ -56,16 +56,14 @@ spec_inst = spectrum.Spectrum()
 spec_inst.parameters()
 ```
 
-<!-- #region heading_collapsed=true -->
 ### No windowing
-<!-- #endregion -->
 
-```{python hidden=TRUE}
+```{python}
 # Set sampling frequency
 samp_freq = 1.5 #Hz
 ```
 
-```{python hidden=TRUE}
+```{python}
 # Calculate amplitude spectrum and check white noise level
 spec_inst.spectrum_type[0] = 'AS'
 spec = spec_inst.spectrum(noise,samp_freq)
@@ -75,7 +73,7 @@ print('White noise level from spectrum = %4.3f, '
       'standard deviation = %4.3f' % (wnl, np.std(noise)))
 ```
 
-```{python hidden=TRUE}
+```{python}
 # Calculate amplitude spectral density and check white noise level
 spec_inst.spectrum_type[0] = 'ASD'
 spec = spec_inst.spectrum(noise,samp_freq)
@@ -85,7 +83,7 @@ print('White noise level from spectrum = %4.3f, '
       'standard deviation = %4.3f' % (wnl*np.sqrt(samp_freq), np.std(noise)))
 ```
 
-```{python hidden=TRUE}
+```{python}
 # Calculate power spectrum and check white noise level
 spec_inst.spectrum_type[0] = 'PS'
 spec = spec_inst.spectrum(noise,samp_freq)
@@ -95,7 +93,7 @@ print('White noise level from spectrum = %4.3f, '
       'variance = %4.3f' % (wnl, np.std(noise)**2))
 ```
 
-```{python hidden=TRUE}
+```{python}
 # Calculate power spectral density and check white noise level
 spec_inst.spectrum_type[0] = 'PSD'
 spec = spec_inst.spectrum(noise,samp_freq)
@@ -105,9 +103,11 @@ print('White noise level from spectrum = %4.3f, '
       'variance = %4.3f' % (wnl*samp_freq, np.std(noise)**2))
 ```
 
+<!-- #region heading_collapsed=true -->
 ### With windowing
+<!-- #endregion -->
 
-```{python}
+```{python hidden=TRUE}
 # Set sampling frequency
 samp_freq = 1.5 #Hz
 
@@ -116,7 +116,7 @@ spec_inst.welch[0] = True
 spec_inst.lowfreq[0] = 1.e-3
 ```
 
-```{python}
+```{python hidden=TRUE}
 # Calculate amplitude spectrum and check white noise level
 spec_inst.spectrum_type[0] = 'AS'
 spec = spec_inst.spectrum(noise,samp_freq)
@@ -126,7 +126,7 @@ print('White noise level from spectrum = %4.3f, '
       'standard deviation = %4.3f' % (wnl, np.std(noise)))
 ```
 
-```{python}
+```{python hidden=TRUE}
 # Calculate amplitude spectral density and check white noise level
 spec_inst.spectrum_type[0] = 'ASD'
 spec = spec_inst.spectrum(noise,samp_freq)
@@ -136,7 +136,7 @@ print('White noise level from spectrum = %4.3f, '
       'standard deviation = %4.3f' % (wnl*np.sqrt(samp_freq), np.std(noise)))
 ```
 
-```{python}
+```{python hidden=TRUE}
 # Calculate power spectrum and check white noise level
 spec_inst.spectrum_type[0] = 'PS'
 spec = spec_inst.spectrum(noise,samp_freq)
@@ -146,7 +146,7 @@ print('White noise level from spectrum = %4.3f, '
       'standard deviation = %4.3f' % (wnl, np.std(noise)**2))
 ```
 
-```{python}
+```{python hidden=TRUE}
 # Calculate power spectral density and check white noise level
 spec_inst.spectrum_type[0] = 'PSD'
 spec = spec_inst.spectrum(noise,samp_freq)
@@ -156,6 +156,6 @@ print('White noise level from spectrum = %4.3f, '
       'standard deviation = %4.3f' % (wnl*samp_freq, np.std(noise)**2))
 ```
 
-```{python}
+```{python hidden=TRUE}
 
 ```
