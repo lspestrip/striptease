@@ -16,6 +16,36 @@ from striptease import (
     get_lna_num,
 )
 
+__all__ = [
+    "CalibrationCurve",
+    "physical_units_to_adu",
+    "adu_to_physical_units",
+    "CalibrationTables",
+]
+
+#: Linear calibration curve (from physical units to ADU) for an
+#: housekeeping parameter.
+#:
+#: .. py:attribute:: slope
+#:
+#:    Floating-point value for the slope of the calibration curve
+#:
+#: .. py:attribute:: intercept
+#:
+#:    Floating-point value for the additive offset of the calibration curve
+#:
+#: .. py:attribute:: mul
+#:
+#:    Integer numerator of the slope of the calibration curve
+#:
+#: .. py:attribute:: div
+#:
+#:    Integer denominator of the slope of the calibration curve
+#:
+#: .. py:attribute:: add
+#:
+#:    Integer value for the additive offset of the calibration curve
+#:
 CalibrationCurve = namedtuple(
     "CalibrationCurve", ["slope", "intercept", "mul", "div", "add",]
 )
@@ -24,13 +54,53 @@ CalibrationCurve = namedtuple(
 def physical_units_to_adu(
     physical_value, calibration_curve: CalibrationCurve, step=1.0
 ):
+    """Convert physical units to an ADU value, using a linear interpolation
+
+    See also :meth:`.adu_to_physical_units`.
+
+    Args:
+
+        physical_value (float): the value to be converted; the measurement units
+            depend on the kind of calibration curve used
+
+        calibration_curve (CalibrationCurve): the calibration curve to use for
+            the conversion from physical units to ADUs
+
+        step (float): if provided, the physical value will be multiplied by
+            this factor before the conversion. The default value is 1.0.
+
+    Return:
+
+        The physical value converted to ADU units, expressed as a
+        positive integer number.
+
+    """
+
     adu = physical_value * step * calibration_curve.slope + calibration_curve.intercept
     if adu < 0:
         adu = 0
     return int(adu + 0.5)
 
 
-def adu_to_physical_units(adu_value, calibration_curve: CalibrationCurve, step=1.0):
+def adu_to_physical_units(adu_value, calibration_curve: CalibrationCurve):
+    """Convert physical units to an ADU value, using a linear interpolation
+
+    See also :meth:`.physical_units_to_adu`.
+
+    Args:
+
+        adu_value (int): the value to be converted
+
+        calibration_curve (CalibrationCurve): the calibration curve to use for
+            the conversion from physical units to ADUs
+
+    Return:
+
+        The physical value corresponding to the ADUs in `adu_value`.
+        The measurement unit used in the result depends on the kind of
+        calibration curve provided in `calibration_curve`.
+
+    """
     return (adu_value - calibration_curve.intercept) / calibration_curve.slope
 
 
@@ -144,6 +214,36 @@ class CalibrationTables(object):
                 self.calibration_curves["iphsw"][key] = pol["PIN DIODES"]["SET CURRENT"]
 
     def get_calibration_curve(self, polarimeter, hk, component):
+        """Return a :class:`CalibrationCurve` object for an housekeeping parameter
+
+        Args:
+
+            polarimeter (str): the name of the polarimeter, e.g., `I4` or `W3`
+
+            hk (str): one of the following strings:
+
+                - ``vdrain``: drain voltage
+        
+                - ``idrain``: drain current
+        
+                - ``vgate``: gate voltage
+        
+                - ``vphsw``: voltage pin for a phase switch
+        
+                - ``iphsw``: current pin for a phase switch
+
+            component (str): name of the component within the
+                polarimeter. For LNAs, you can use whatever string
+                works with :meth:`striptease.get_lna_num`. For phase
+                switches, you must pass an integer number in the range
+                0…3.
+
+        Return:
+
+            A :class:`.CalibrationCurve` object.
+
+        """
+
         hk_key = hk.lower()
         polarimeter_id = normalize_polarimeter_name(polarimeter)
         if hk_key in ("vdrain", "idrain", "vgate"):
@@ -154,9 +254,21 @@ class CalibrationTables(object):
         return self.calibration_curves[hk_key][polarimeter_id][component_id]
 
     def adu_to_physical_units(self, polarimeter, hk, component, value):
+        """Convert ADUs into physical units for an housekeeping parameter.
+
+        The meaning of the parameters `polarimeter`, `hk`, and
+        `component` is the same as in :meth:`.get_calibration_curve`.
+
+        """
         calibration_curve = self.get_calibration_curve(polarimeter, hk, component)
         return adu_to_physical_units(value, calibration_curve=calibration_curve)
 
     def physical_units_to_adu(self, polarimeter, hk, component, value):
+        """Convert physical units into ADUs for an housekeeping parameter.
+
+        The meaning of the parameters `polarimeter`, `hk`, and
+        `component` is the same as in :meth:`.get_calibration_curve`.
+
+        """
         calibration_curve = self.get_calibration_curve(polarimeter, hk, component)
         return physical_units_to_adu(value, calibration_curve=calibration_curve)
