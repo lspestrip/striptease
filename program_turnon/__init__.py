@@ -11,79 +11,14 @@ import time
 import csv
 import sys
 import pandas as pd
-from pprint import pprint
+from calibration import physical_units_to_adu
+from striptease import get_lna_num, get_polarimeter_index
 from striptease.biases import InstrumentBiases, BoardCalibration
 from striptease.procedures import StripProcedure
 
 CalibrationCurve = namedtuple(
     "CalibrationCurve", ["slope", "intercept", "mul", "div", "add",]
 )
-
-
-def get_step(v, cal, step):
-    val = v * step * cal.slope + cal.intercept
-    if val < 0:
-        val = 0
-    return int(val + 0.5)
-
-
-def get_polarimeter_index(pol_name):
-    "Return the progressive number of the polarimeter within the board (1…8)"
-
-    if pol_name[0] == "W":
-        return 7
-    else:
-        return int(pol_name[1]) + 1
-
-
-def get_lna_num(name):
-    """Return the number of an LNA, in the range 0…5
-
-    Valid values for `name` can be:
-    - The official name, e.g., HA1
-    - The UniMIB convention, e.g., H0
-    - The JPL convention, e.g., Q1
-    - An integer number, which will be returned identically
-    """
-
-    if type(name) is int:
-        # Assume that the index refers to the proper firmware register
-        return name
-    elif (len(name) == 3) and (name[0:2] in ["HA", "HB"]):
-        # Official names
-        d = {
-            "HA1": 0,
-            "HA2": 2,
-            "HA3": 4,
-            "HB1": 1,
-            "HB2": 3,
-            "HB3": 5,
-        }
-        return d[name]
-    elif (len(name) == 2) and (name[0] == "H"):
-        # UniMiB
-        d = {
-            "H0": 0,
-            "H1": 1,
-            "H2": 2,
-            "H3": 3,
-            "H4": 4,
-            "H5": 5,
-        }
-        return d[name]
-    elif (len(name) == 2) and (name[0] == "Q"):
-        # JPL
-        d = {
-            "Q1": 0,
-            "Q2": 1,
-            "Q3": 2,
-            "Q4": 3,
-            "Q5": 4,
-            "Q6": 5,
-        }
-        return d[name]
-    else:
-        raise ValueError(f"Invalid amplifier name '{name}'")
 
 
 def read_board_xlsx(path):
@@ -223,7 +158,11 @@ class SetupBoard(object):
 
         cmd["pol"] = polarimeter
         cmd["type"] = "BIAS"
-        for c in [("POL_PWR", 1), ("DAC_REF", 1), ("POL_MODE", mode)]: # , ("CLK_REF", 0)]:
+        for c in [
+            ("POL_PWR", 1),
+            ("DAC_REF", 1),
+            ("POL_MODE", mode),
+        ]:  # , ("CLK_REF", 0)]:
             cmd["base_addr"] = c[0]
             cmd["data"] = [c[1]]
 
@@ -336,25 +275,74 @@ class SetupBoard(object):
 
         cmd["pol"] = polarimeter
         cmd["base_addr"] = f"VPIN{index}_SET"
-        cmd["data"] = [get_step(vpin, calib["PIN DIODES"]["SET VOLTAGE"][index], 1.0)]
+        cmd["data"] = [
+            physical_units_to_adu(vpin, calib["PIN DIODES"]["SET VOLTAGE"][index], 1.0)
+        ]
 
         if not self.post_command(url, cmd):
             return
 
         cmd["base_addr"] = f"IPIN{index}_SET"
-        cmd["data"] = [get_step(ipin, calib["PIN DIODES"]["SET CURRENT"][index], 1.0)]
+        cmd["data"] = [
+            physical_units_to_adu(ipin, calib["PIN DIODES"]["SET CURRENT"][index], 1.0)
+        ]
 
         if not self.post_command(url, cmd):
             return
 
     def setup_bias(
-        self, polarimeter, index, bias_dict, param_name, excel_entry, step=1
+        self,
+        polarimeter,
+        index,
+        bias_dict,
+        param_name,
+        excel_entry,
+        value=None,
+        step=1,
     ):
+        """Set the value of a bias to some calibrated value (e.g., μA, mV)
+
+        Args:
+            polarimeter (str): Name of the polarimeter, e.g., `I0`
+
+            index (int): Zero-based index of the bias to set. For
+                `VD0`, the index is 0.
+
+            bias_dict (dict): Dictionary associating `index` with the
+                bias name used in the Excel file containing the
+                calibration parameters. It is needed only if you pass
+                ``None`` to `value`.
+
+            param_name (str): Base name of the parameter to set. If
+                you want to set up ``ID0``, you must pass here ``ID``;
+                the index will be appended automatically.
+
+            excel_entry (2-tuple): Pair of strings identifying the
+                name of the sheet and the row containing the
+                calibration factors for this bias parameter. For
+                instance, for drain currents you must pass the tuple
+                ``("DRAIN", "SET CURRENT")``.
+
+            value (float or None): Calibrated value (i.e., in physical
+                units) to set. If `value` is ``None``, the default
+                nominal value of the bias (read from Excel files) will
+                be used.
+
+            step (float): Multiplication factor used with `value`.
+                This value is multiplied by the parameter `step`
+                before the application, so ``value=None, step=0.5`
+                will set the bias to 50% of its nominal value.
+
+        """
         url = self.conf.get_rest_base() + "/slo"
 
         pol_index = get_polarimeter_index(polarimeter)
+
         bc = self.ib.get_biases(module_name=polarimeter)
         calib = self.bc[f"Pol{pol_index + 1}"]
+        if not value:
+            value = bc.__getattribute__(bias_dict[index])
+
         title1, title2 = excel_entry
 
         cmd = {
@@ -364,20 +352,14 @@ class SetupBoard(object):
             "timeout": 500,
             "pol": polarimeter,
             "base_addr": f"{param_name}{index}_SET",
-            "data": [
-                get_step(
-                    bc.__getattribute__(bias_dict[index]),
-                    calib[title1][title2][index],
-                    step,
-                )
-            ],
+            "data": [physical_units_to_adu(value, calib[title1][title2][index], step)],
         }
 
         if not self.post_command(url, cmd):
             return
 
     def setup_lna_bias(
-        self, polarimeter, lna, bias_dict, param_name, excel_entry, step=1
+        self, polarimeter, lna, bias_dict, param_name, excel_entry, value=None, step=1
     ):
         self.setup_bias(
             polarimeter=polarimeter,
@@ -385,10 +367,11 @@ class SetupBoard(object):
             bias_dict=bias_dict,
             param_name=param_name,
             excel_entry=excel_entry,
+            value=value,
             step=step,
         )
 
-    def setup_VD(self, polarimeter, lna, step=1):
+    def setup_VD(self, polarimeter, lna, value=None, step=1):
         vd = {
             0: "vd0",
             1: "vd1",
@@ -404,10 +387,11 @@ class SetupBoard(object):
             bias_dict=vd,
             param_name="VD",
             excel_entry=("DRAIN", "SET VOLTAGE"),
+            value=None,
             step=step,
         )
 
-    def setup_VG(self, polarimeter, lna, step=1):
+    def setup_VG(self, polarimeter, lna, value=None, step=1):
         vg = {
             0: "vg0",
             1: "vg1",
@@ -425,10 +409,11 @@ class SetupBoard(object):
             bias_dict=vg,
             param_name="VG",
             excel_entry=("GATE", "SET VOLTAGE"),
+            value=value,
             step=step,
         )
 
-    def setup_ID(self, polarimeter, lna, step=1):
+    def setup_ID(self, polarimeter, lna, value=None, step=1):
         id = {
             0: "id0",
             1: "id1",
@@ -444,6 +429,7 @@ class SetupBoard(object):
             bias_dict=id,
             param_name="ID",
             excel_entry=("DRAIN", "SET CURRENT"),
+            value=value,
             step=step,
         )
 
@@ -543,7 +529,7 @@ class TurnOnOffProcedure(StripProcedure):
             seconds once the polarimeter has been fully turned on.
         """
 
-        assert self.horn
+        assert not (self.horn is None)
         board_setup = SetupBoard(
             config=self.conf, board_name=self.board, post_command=self.command_emitter
         )

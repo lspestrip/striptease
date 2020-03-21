@@ -14,6 +14,105 @@ __version__ = "0.1.0"
 from urllib.parse import urljoin
 from web.rest.base import Connection
 
+# This dictionary associates the name of a board with the W-band
+# polarimeter associated with it.
+BOARD_TO_W_BAND_POL = {
+    "Y": "W1",
+    "O": "W2",
+    "R": "W3",
+    "V": "W4",
+    "B": "W5",
+    "G": "W6",
+    "I": None,
+}
+
+
+def normalize_polarimeter_name(name: str):
+    """Translate the name of W-band polarimeters
+
+    This function returns the name of a W-band polarimeter as if it
+    were named as the Q-band polarimeters in its own board::
+
+        >>> normalize_polarimeter_name("W2")
+        "O7"
+
+    """
+    result = name.upper()
+    if name[0] != "W":
+        return result
+
+    for board, w_pol in BOARD_TO_W_BAND_POL.items():
+        if w_pol == result:
+            return f"{board}7"
+
+    raise KeyError(f"unknown polarimeter {result}")
+
+
+def get_polarimeter_index(pol_name):
+    """Return the progressive number of the polarimeter within the board (0…7)
+
+    Args:
+        pol_name (str): Name of the polarimeter, like ``R0`` or ``W3``.
+
+    Returns:
+        An integer from 0 to 7.
+    """
+
+    if pol_name[0] == "W":
+        return 7
+    else:
+        return int(pol_name[1])
+
+
+def get_lna_num(name):
+    """Return the number of an LNA, in the range 0…5
+
+    Valid values for the parameter `name` can be:
+    - The official name, e.g., HA1
+    - The UniMIB convention, e.g., H0
+    - The JPL convention, e.g., Q1
+    - An integer number, which will be returned identically
+    """
+
+    if type(name) is int:
+        # Assume that the index refers to the proper firmware register
+        return name
+    elif (len(name) == 3) and (name[0:2] in ["HA", "HB"]):
+        # Official names
+        d = {
+            "HA1": 0,
+            "HA2": 2,
+            "HA3": 4,
+            "HB1": 1,
+            "HB2": 3,
+            "HB3": 5,
+        }
+        return d[name]
+    elif (len(name) == 2) and (name[0] == "H"):
+        # UniMiB
+        d = {
+            "H0": 0,
+            "H1": 1,
+            "H2": 2,
+            "H3": 3,
+            "H4": 4,
+            "H5": 5,
+        }
+        return d[name]
+    elif (len(name) == 2) and (name[0] == "Q"):
+        # JPL
+        d = {
+            "Q1": 0,
+            "Q2": 1,
+            "Q3": 2,
+            "Q4": 3,
+            "Q5": 4,
+            "Q6": 5,
+        }
+        return d[name]
+    else:
+        raise ValueError(f"Invalid amplifier name '{name}'")
+
 
 class StripConnection(Connection):
     """Connection to the Strip instrument
