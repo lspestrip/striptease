@@ -1,0 +1,315 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,Rmd
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.4.1
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+# Import and functions
+
+```{python}
+import spectrum
+import numpy as np
+import pylab as pl
+from importlib import reload
+import pdb
+import noise_generator
+reload(spectrum)
+```
+
+# Scope
+
+
+This notebook explains how to use the class NoiseGenerator. The class is used to generate noise data-streams that can cointain either white noise only or 1/f noise only or a combination of the two.
+
+There are two ways in which one may generate a noise data stream:
+
+\begin{enumerate}
+\item By specifying the signal temperature, the noise temperature and some characteristics of the apmplifiers. In this case the white noise is generated from the radiometer equation and the 1/f noise from the amplifier properties (for more information about the parameters As and Ns of the amplifier refert to the Seiffert et al, 2001 paper (A&A). In this case we mimick the total power noise and we have the possibility to add or not the signal offset
+\item By directly specifying the white noise, knee frequency and slope. We use this case when we want to mimick the noise characteristics after differentiation
+\end{enumerate}
+
+
+
+
+
+# Generate noise
+
+
+## Create instance to the class and display the various parameters
+
+```{python}
+# Here we create the instance to the class
+noisegen = noise_generator.NoiseGenerator()
+```
+
+```{python}
+# Here we display the various class attributes
+noisegen.parameters()
+```
+
+```{python}
+# Let's make a change to some parameters and check our changes. Notice that we must add [0] at the end of the parameter name
+noisegen.corr[0] = False
+noisegen.add_offset[0] = False
+noisegen.parameters()
+```
+
+```{python}
+# Now lets restore defaults
+noisegen.set_default()
+noisegen.parameters()
+```
+
+## First example: mimick the noise properties of a total power stream
+
+<!-- #region -->
+To mimick the noise properties of a total power stream we use the keyword ```total_power = True```. In this case we specify the 1/f noise properties using the parameters ```A``` and ```Ns``` while the white noise is calculated from the input signal and receiver noise temperature
+
+\begin{equation}
+\sigma_\mathrm{rms} = \frac{T_\mathrm{s}+T_\mathrm{n}}{\sqrt{\Delta\nu\, \tau}}
+\nonumber
+\end{equation}
+
+
+We can also choose whether to add the signal offset to the data
+<!-- #endregion -->
+
+<!-- #region heading_collapsed=true -->
+### White noise only
+<!-- #endregion -->
+
+```{python hidden=TRUE}
+frequency          = 30    # GHz
+bandwidth          = 6     # GHz
+Tsignal            = 10    # K
+Tnoise             = 10    # K
+slope              = -1.5  # This parameter must be set but it is not used with white noise only
+sampling_frequency = 1.    # Hz
+time_length        = 10**6 # seconds
+
+noisegen.add_offset[0] = False
+noisegen.wn_only[0] = True
+noisegen.total_power[0] = True
+```
+
+```{python hidden=TRUE}
+noise = noisegen.generate_noise(frequency,
+                                bandwidth,
+                                [Tsignal,Tnoise],
+                                slope,
+                                sampling_frequency,
+                                time_length)
+```
+
+```{python hidden=TRUE}
+#Let's plot the noise and its spectrum
+pl.plot(noise)
+```
+
+```{python hidden=TRUE}
+# Create instance to the class
+spec_inst = spectrum.Spectrum()
+
+# Calculate amplitude spectrum and check white noise level
+spec_inst.spectrum_type[0] = 'AS'
+spec_inst.welch[0] = False
+spec = spec_inst.spectrum(noise,sampling_frequency)
+
+# Calculate white noise level
+wnl = spec_inst.white_noise_level(spec)
+
+# Calculate expected white noise level from radiometer equation
+exp_wnl = (Tsignal+Tnoise)/(np.sqrt(bandwidth*1e9/sampling_frequency))
+
+pl.loglog(spec['frequencies'],spec['amplitudes'])
+print('White noise level from spectrum = %4.3e K, '
+      'white noise from equation = %4.3e K' % (wnl, np.std(noise)))
+```
+
+### White noise + 1/f
+
+```{python code_folding=c()}
+frequency          = 30    # GHz
+bandwidth          = 6     # GHz
+Tsignal            = 10    # K
+Tnoise             = 10    # K
+slope              = -1.  # Slope of the 1/f noise
+sampling_frequency = 1.    # Hz
+time_length        = 10**6 # seconds
+
+noisegen.add_offset[0]  = False
+noisegen.wn_only[0]     = False
+noisegen.total_power[0] = True
+noisegen.A[0]           = 1.5e-6
+
+# Generate noise
+noise = noisegen.generate_noise(frequency,
+                                bandwidth,
+                                [Tsignal,Tnoise],
+                                slope,
+                                sampling_frequency,
+                                time_length)
+
+#Let's plot the noise and its spectrum
+pl.plot(noise)
+```
+
+```{python}
+# Create instance to the class
+spec_inst = spectrum.Spectrum()
+
+# Calculate amplitude spectrum and check white noise level
+spec_inst.spectrum_type[0] = 'AS'
+spec_inst.welch[0]         = True
+spec_inst.lowfreq[0]       = 1.e-4
+
+spec = spec_inst.spectrum(noise,sampling_frequency)
+
+# Calculate white noise level
+wnl = spec_inst.white_noise_level(spec)
+
+# Calculate expected white noise level from radiometer equation
+exp_wnl = (Tsignal+Tnoise)/(np.sqrt(bandwidth*1e9/sampling_frequency))
+
+pl.loglog(spec['frequencies'],spec['amplitudes'])
+
+print('White noise level from spectrum = %4.3e K, '
+      'white noise from equation = %4.3e K' % (wnl, exp_wnl))
+```
+
+```{python code_folding=c()}
+# We can also add the signal offset to the noise
+noisegen.add_offset[0]  = True
+
+# Generate noise
+noise = noisegen.generate_noise(frequency,
+                                bandwidth,
+                                [Tsignal,Tnoise],
+                                slope,
+                                sampling_frequency,
+                                time_length)
+
+#Let's plot the noise and its spectrum
+pl.plot(noise)
+pl.ylim([19.9,20.1])
+```
+
+## Second example: mimick the noise properties of a differential data stream
+
+
+In this case we use a more general approach. We do not add any offset to the data and define the noise properties in terms of the noise sigma, knee frequency and slope. In this case the third argument of the function contains ```[sigma, fknee]``` instead of ```[Tsignal, Tnoise]```
+
+
+### White noise only
+
+```{python}
+noisegen.set_default()
+
+frequency          = 30    # GHz
+bandwidth          = 6     # GHz
+sigma              = 1e-3  # K
+fknee              = 1e-2  # This parameter must be set but it is not used with white noise only 
+slope              = -1.   # This parameter must be set but it is not used with white noise only
+sampling_frequency = 1.    # Hz
+time_length        = 10**6 # seconds
+
+noisegen.add_offset[0] = False
+noisegen.wn_only[0] = True
+noisegen.total_power[0] = False
+```
+
+```{python}
+noise = noisegen.generate_noise(frequency,
+                                bandwidth,
+                                [sigma, fknee],
+                                slope,
+                                sampling_frequency,
+                                time_length)
+```
+
+```{python}
+#Let's plot the noise and its spectrum
+pl.plot(noise)
+```
+
+```{python}
+# Create instance to the class
+spec_inst = spectrum.Spectrum()
+
+# Calculate amplitude spectrum and check white noise level
+spec_inst.spectrum_type[0] = 'AS'
+spec_inst.welch[0]         = True
+spec_inst.lowfreq[0]       = 1.e-4
+spec = spec_inst.spectrum(noise,sampling_frequency)
+
+# Calculate white noise level
+wnl = spec_inst.white_noise_level(spec)
+
+# Calculate expected white noise level from radiometer equation
+exp_wnl = sigma
+
+pl.loglog(spec['frequencies'],spec['amplitudes'])
+print('White noise level from spectrum = %4.3e K, '
+      'white noise from equation = %4.3e K' % (wnl, exp_wnl))
+```
+
+### White noise + 1/f
+
+```{python}
+noisegen.set_default()
+
+frequency          = 30    # GHz
+bandwidth          = 6     # GHz
+sigma              = 1e-3  # K
+fknee              = 1e-2  # Hz
+slope              = -1.   # 
+sampling_frequency = 1.    # Hz
+time_length        = 10**6 # seconds
+
+noisegen.add_offset[0] = False
+noisegen.wn_only[0] = False
+noisegen.total_power[0] = False
+```
+
+```{python}
+noise = noisegen.generate_noise(frequency,
+                                bandwidth,
+                                [sigma, fknee],
+                                slope,
+                                sampling_frequency,
+                                time_length)
+```
+
+```{python}
+pl.plot(noise)
+```
+
+```{python}
+# Create instance to the class
+spec_inst = spectrum.Spectrum()
+
+# Calculate amplitude spectrum and check white noise level
+spec_inst.spectrum_type[0] = 'AS'
+spec_inst.welch[0]         = True
+spec_inst.lowfreq[0]       = 1.e-4
+spec = spec_inst.spectrum(noise,sampling_frequency)
+
+# Calculate white noise level
+wnl = spec_inst.white_noise_level(spec)
+
+# Calculate expected white noise level from radiometer equation
+exp_wnl = sigma
+
+pl.loglog(spec['frequencies'],spec['amplitudes'])
+print('White noise level from spectrum = %4.3e K, '
+      'white noise from equation = %4.3e K' % (wnl, exp_wnl))
+```

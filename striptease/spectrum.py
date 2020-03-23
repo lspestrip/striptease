@@ -36,34 +36,34 @@ class Spectrum:
             1.0e-3,
             "%slowfreq = %s%s: Minimum frequency to be considered in Welch "
             "windowing and segmenting. It is  used only if "
-            "the key welch = True\n",
+            "the key welch = True\n"
         ]
         self.welch = [
             False,
             "%swelch = %s%s: Whether to use welch windowing and "
-            "segmenting (True) or not (False)\n",
+            "segmenting (True) or not (False)\n"
         ]
         self.fast = [
             False,
             "%sfast = %s%s: Whether to use fast FFT computation (True) "
             "or not (False). If ``fast = True`` "
             "only a number of elements equal to a "
-            "power of two is taken in the data.\n",
+            "power of two is taken in the data.\n"
         ]
         self.return_phase = [
             False,
             "%sreturn_phase = %s%s: Whether to return the phase values of "
-            "the spectrum (True) or not (False)\n",
+            "the spectrum (True) or not (False)\n"
         ]
         self.remove_drift = [
             False,
             "%sremove_drift = %s%s: Whether to use remove a linear drift "
-            "from the data (True) or not (False)\n",
+            "from the data (True) or not (False)\n"
         ]
         self.spectrum_type = [
             "ASD",
             "%sspectrum_type = %s%s: The type of spectrum requested by the "
-            "user. It can be ``ASD``, ``PSD``, ``AS``, ``PS``\n",
+            "user. It can be ``ASD``, ``PSD``, ``AS``, ``PS``\n"
         ]
 
     # METHODS

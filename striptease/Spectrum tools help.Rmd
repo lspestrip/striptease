@@ -40,7 +40,7 @@ noise = np.random.normal(mean, sigma, n_elements)
 pl.plot(noise)
 ```
 
-## Calculate spectrum
+## Calculate spectrum and white noise level
 
 ```{python}
 reload(spectrum)
@@ -103,11 +103,9 @@ print('White noise level from spectrum = %4.3f, '
       'variance = %4.3f' % (wnl*samp_freq, np.std(noise)**2))
 ```
 
-<!-- #region heading_collapsed=true -->
 ### With windowing
-<!-- #endregion -->
 
-```{python hidden=TRUE}
+```{python}
 # Set sampling frequency
 samp_freq = 1.5 #Hz
 
@@ -116,7 +114,7 @@ spec_inst.welch[0] = True
 spec_inst.lowfreq[0] = 1.e-3
 ```
 
-```{python hidden=TRUE}
+```{python}
 # Calculate amplitude spectrum and check white noise level
 spec_inst.spectrum_type[0] = 'AS'
 spec = spec_inst.spectrum(noise,samp_freq)
@@ -126,7 +124,7 @@ print('White noise level from spectrum = %4.3f, '
       'standard deviation = %4.3f' % (wnl, np.std(noise)))
 ```
 
-```{python hidden=TRUE}
+```{python}
 # Calculate amplitude spectral density and check white noise level
 spec_inst.spectrum_type[0] = 'ASD'
 spec = spec_inst.spectrum(noise,samp_freq)
@@ -136,7 +134,7 @@ print('White noise level from spectrum = %4.3f, '
       'standard deviation = %4.3f' % (wnl*np.sqrt(samp_freq), np.std(noise)))
 ```
 
-```{python hidden=TRUE}
+```{python}
 # Calculate power spectrum and check white noise level
 spec_inst.spectrum_type[0] = 'PS'
 spec = spec_inst.spectrum(noise,samp_freq)
@@ -146,7 +144,7 @@ print('White noise level from spectrum = %4.3f, '
       'standard deviation = %4.3f' % (wnl, np.std(noise)**2))
 ```
 
-```{python hidden=TRUE}
+```{python}
 # Calculate power spectral density and check white noise level
 spec_inst.spectrum_type[0] = 'PSD'
 spec = spec_inst.spectrum(noise,samp_freq)
@@ -156,6 +154,100 @@ print('White noise level from spectrum = %4.3f, '
       'standard deviation = %4.3f' % (wnl*samp_freq, np.std(noise)**2))
 ```
 
-```{python hidden=TRUE}
+# Test with white noise + 1/f
+
+
+## Generate noise
+
+```{python}
+import noise_generator
+reload(noise_generator)
+```
+
+```{python}
+noisegen = noise_generator.NoiseGenerator()
+```
+
+```{python}
+noisegen.parameters()
+```
+
+```{python}
+fr = 30
+bw = 6
+Ts = 10
+Tn = 10
+sl = -1.5
+fs = 1.
+tl = 10**6
+noisegen.A[0] = 1.e-7
+noisegen.add_offset[0] = False
+noisegen.wn_only[0] = False
+noisegen.total_power[0] = True
+```
+
+```{python}
+noise = noisegen.generate_noise(fr,bw,[Ts,Tn],sl,fs,tl)
+```
+
+```{python}
+pl.plot(noise)
+```
+
+```{python}
+fr = 30
+bw = 6
+wn = 0.01
+fk = 1e-2
+sl = -1.
+fs = 1.
+tl = 10**6
+noisegen.A[0] = 1.e-7
+noisegen.add_offset[0] = False
+noisegen.wn_only[0] = False
+noisegen.total_power[0] = False
+```
+
+```{python}
+noise = noisegen.generate_noise(fr,bw,[wn,fk],sl,fs,tl)
+```
+
+```{python}
+pl.plot(noise)
+```
+
+```{python}
+# Create instance to the class
+spec_inst = spectrum.Spectrum()
+
+# Set sampling frequency
+samp_freq = 1. #Hz
+
+# Calculate amplitude spectrum and check white noise level
+spec_inst.spectrum_type[0] = 'PS'
+spec_inst.welch[0] = True
+spec_inst.lowfreq[0] = 1e-4
+spec = spec_inst.spectrum(noise,samp_freq)
+
+wnl = spec_inst.white_noise_level(spec)
+
+pl.loglog(spec['frequencies'],spec['amplitudes'])
+print('White noise level from spectrum = %4.3f, '
+      'standard deviation = %4.3f' % (wnl, np.std(noise)))
+```
+
+```{python}
+spec['amplitudes']
+```
+
+```{python}
+a = np.abs(np.fft.fft(noise))
+```
+
+```{python}
+pl.plot(a)
+```
+
+```{python}
 
 ```
