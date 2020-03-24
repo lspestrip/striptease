@@ -36,34 +36,39 @@ class Spectrum:
             1.0e-3,
             "%slowfreq = %s%s: Minimum frequency to be considered in Welch "
             "windowing and segmenting. It is  used only if "
-            "the key welch = True\n"
+            "the key welch = True\n",
         ]
         self.welch = [
             False,
             "%swelch = %s%s: Whether to use welch windowing and "
-            "segmenting (True) or not (False)\n"
+            "segmenting (True) or not (False)\n",
         ]
         self.fast = [
             False,
             "%sfast = %s%s: Whether to use fast FFT computation (True) "
             "or not (False). If ``fast = True`` "
             "only a number of elements equal to a "
-            "power of two is taken in the data.\n"
+            "power of two is taken in the data.\n",
         ]
         self.return_phase = [
             False,
             "%sreturn_phase = %s%s: Whether to return the phase values of "
-            "the spectrum (True) or not (False)\n"
+            "the spectrum (True) or not (False)\n",
         ]
         self.remove_drift = [
             False,
             "%sremove_drift = %s%s: Whether to use remove a linear drift "
-            "from the data (True) or not (False)\n"
+            "from the data (True) or not (False)\n",
         ]
         self.spectrum_type = [
             "ASD",
             "%sspectrum_type = %s%s: The type of spectrum requested by the "
-            "user. It can be ``ASD``, ``PSD``, ``AS``, ``PS``\n"
+            "user. It can be ``ASD``, ``PSD``, ``AS``, ``PS``\n",
+        ]
+        self.noise_fit = [
+            False,
+            "%snoise_fit = %s%s: Whether to use a three parameters fit or just fit linearly "
+            "1/f noise in log space\n",
         ]
 
     # METHODS
@@ -179,6 +184,7 @@ class Spectrum:
             "amplitudes": z[:, 1],
             "norm": norm,
             "phases": phases,
+            "welch": self.welch[0],
         }
 
         return result
@@ -361,6 +367,8 @@ class Spectrum:
         |                         |                  | array of zeros is returned        |
         +-------------------------+------------------+-----------------------------------+
         | ``result.norm``         | Double precision | Used normalisation constant       |
+        +-------------------------+------------------+-----------------------------------+
+        | ``result.welch``        | Boolean          | Wether windowing is used          |
         +-------------------------+------------------+-----------------------------------+
         """
 
@@ -558,3 +566,240 @@ class Spectrum:
         x = np.arange(data.size)
         fit = np.polyfit(x, data, 1)
         return data - fit[1] - fit[0] * x
+
+    #######################################
+
+    def get_noise_parameters(self, spectrum):
+
+        """
+        Function to calculate the noise parameters from a spectrum. It assumes that 
+        the input spectrum is a power spectrum, but the function can work with any kind
+        of spectrum
+
+        *CALL*
+
+        ``result = .noise_parameters(spectrum, guess)``
+
+        *INPUTS*
+
+        +-------------------------+------------------+-----------------------------------+
+        | Name                    | Type             | Description                       |
+        +=========================+==================+===================================+
+        | ``spectrum``            | Dictionary       | Dictionary containing frequencies |
+        |                         |                  | and amplitudes. The dictionary    |
+        |                         |                  | must be as follows (other entries |
+        |                         |                  | are simply neglected)             |
+        +-------------------------+------------------+-----------------------------------+
+        | ``spectrum.frequencies``| Double precision | Array of frequencies in Hz        |
+        |                         | array            |                                   |
+        +-------------------------+------------------+-----------------------------------+
+        | ``spectrum.amplitudes`` | Double precision | Array of amplitudes               |
+        |                         | array            |                                   |
+        +-------------------------+------------------+-----------------------------------+
+
+
+        *OUTPUT*
+
+        +-------------------------+------------------+-----------------------------------+
+        | Name                    | Type             | Description                       |
+        +=========================+==================+===================================+
+        | ``result``              | Double precision | White noise value in the same     |
+        |                         |                  | units of the input spectrum       |
+        +-------------------------+------------------+-----------------------------------+
+        """
+
+        result = -1
+        return result
+
+    class FitNoise:
+        """
+        Class that fits a noise spectrum to extract the noise parameters. There are two methods:
+        
+        linear_fit - fits the 1/f part with a straight line in log-log space and finds the slope
+        and frequency where the 1/f part equals white noise
+        
+        full_fit - fits the whole spectrum with a 3 parameters model
+        """
+
+        def __init__(self):
+
+            self.guess = [1.0e-1, -1.0]
+            self.spect = Spectrum()
+            self.fkguess = 1.0e-1
+            self.slopeguess = -1.0
+
+        def fit(self, spectrum):
+            """
+            This function is a wrapper to linear_fit or full_fit. The choice is done by checking spectrum['welch']. 
+            If windowing is used (welch = True) then the full_fit is called, otherwise the linear_fit is used
+            *CALL*
+
+            ``result = .fit(spectrum)``
+
+            *INPUTS*
+
+            +-------------------------+------------------+-----------------------------------+
+            | Name                    | Type             | Description                       |
+            +=========================+==================+===================================+
+            |   spectrum              | Dictionary       | Dictionary containing frequencies |
+            |                         |                  | and amplitudes. The dictionary    |
+            |                         |                  | must be as follows (other entries |
+            |                         |                  | are simply neglected)             |
+            +-------------------------+------------------+-----------------------------------+
+            |  spectrum['frequencies']| Double precision | Array of frequencies in Hz        |
+            |                         | array            |                                   |
+            +-------------------------+------------------+-----------------------------------+
+            |  spectrum['amplitudes'] | Double precision | Array of amplitudes               |
+            |                         | array            |                                   |
+            +-------------------------+------------------+-----------------------------------+
+            | spectrum['welch']       | Boolean          | Whether windowing was used        |
+            +-------------------------+------------------+-----------------------------------+
+
+
+            *OUTPUT*
+
+            +-------------------------+------------------+-----------------------------------+
+            | Name                    | Type             | Description                       |
+            +=========================+==================+===================================+
+            | ``result``              | Double precision | Array of fit parameters           |
+            |                         | array            | [sigma, f_knee, slope]            |
+            +-------------------------+------------------+-----------------------------------+
+            """
+            if spectrum["welch"]:
+                return self.full_fit(spectrum)
+            else:
+                return self.linear_fit(spectrum)
+
+        def linear_fit(self, spectrum):
+
+            """
+            This function calculates noise properties using a linear fit in log-log space
+
+            *CALL*
+
+            ``result = .linear_fit(spectrum)``
+
+            *INPUTS*
+
+            +-------------------------+------------------+-----------------------------------+
+            | Name                    | Type             | Description                       |
+            +=========================+==================+===================================+
+            |   spectrum              | Dictionary       | Dictionary containing frequencies |
+            |                         |                  | and amplitudes. The dictionary    |
+            |                         |                  | must be as follows (other entries |
+            |                         |                  | are simply neglected)             |
+            +-------------------------+------------------+-----------------------------------+
+            |  spectrum['frequencies']| Double precision | Array of frequencies in Hz        |
+            |                         | array            |                                   |
+            +-------------------------+------------------+-----------------------------------+
+            |  spectrum['amplitudes'] | Double precision | Array of amplitudes               |
+            |                         | array            |                                   |
+            +-------------------------+------------------+-----------------------------------+
+            | spectrum['welch']       | Boolean          | Whether windowing was used        |
+            +-------------------------+------------------+-----------------------------------+
+
+
+            *OUTPUT*
+
+            +-------------------------+------------------+-----------------------------------+
+            | Name                    | Type             | Description                       |
+            +=========================+==================+===================================+
+            | ``result``              | Double precision | Array of fit parameters           |
+            |                         | array            | [sigma, f_knee, slope]            |
+            +-------------------------+------------------+-----------------------------------+
+            """
+
+            import numpy as np
+
+            freqs = spectrum["frequencies"]
+            power = spectrum["amplitudes"]
+            nel = len(spectrum["frequencies"])
+
+            # choose the first nfirst frequency and power points
+            if spectrum["welch"]:
+                start = 0
+                nfirst = 15
+            else:
+                start = 5
+                nfirst = 15
+
+            freq1f = freqs[start:nfirst]
+            power1f = power[start:nfirst]
+            freq1flog = np.log10(freq1f)
+            power1flog = np.log10(power1f)
+            linearfit = np.polyfit(freq1flog, power1flog, 1)
+            slope = linearfit[0]
+            intercept = linearfit[1]
+
+            wnl = self.spect.white_noise_level(spectrum)
+            avwhite = 2.0 * wnl
+            avwhitelog = np.log10(avwhite)
+            fklog = (avwhitelog - intercept) / slope
+            fk = 10 ** fklog
+
+            result = [wnl, fk, slope, intercept]
+
+            return result
+
+        ##
+
+        def full_fit(self, spectrum):
+
+            """
+            This function calculates noise properties using a three parameters fit of the input
+            spectrum against a function \sigma(1+ (fk/f)^(-slope)). This function is used only
+            if windowing was used in the spectrum computation. In case welch = 0 the linear_fit
+            is called instead
+
+            *CALL*
+
+            ``result = .full_fit(spectrum)``
+
+            *INPUTS*
+
+            +-------------------------+------------------+-----------------------------------+
+            | Name                    | Type             | Description                       |
+            +=========================+==================+===================================+
+            |   spectrum              | Dictionary       | Dictionary containing frequencies |
+            |                         |                  | and amplitudes. The dictionary    |
+            |                         |                  | must be as follows (other entries |
+            |                         |                  | are simply neglected)             |
+            +-------------------------+------------------+-----------------------------------+
+            |  spectrum['frequencies']| Double precision | Array of frequencies in Hz        |
+            |                         | array            |                                   |
+            +-------------------------+------------------+-----------------------------------+
+            |  spectrum['amplitudes'] | Double precision | Array of amplitudes               |
+            |                         | array            |                                   |
+            +-------------------------+------------------+-----------------------------------+
+            | spectrum['welch']       | Boolean          | Whether windowing was used        |
+            +-------------------------+------------------+-----------------------------------+
+
+
+            *OUTPUT*
+
+            +-------------------------+------------------+-----------------------------------+
+            | Name                    | Type             | Description                       |
+            +=========================+==================+===================================+
+            | ``result``              | Double precision | Array of fit parameters           |
+            |                         | array            | [sigma, f_knee, slope]            |
+            +-------------------------+------------------+-----------------------------------+
+            """
+
+            import numpy as np
+            from scipy.optimize import curve_fit
+
+            # Check if windowing was used. Otherwise fall back on linear_fit
+            if not spectrum["welch"]:
+                return self.linear_fit(spectrum)
+
+            one_over_f = lambda x, sig, fk, sl: sig * (1.0 + (fk / x) ** (-sl))
+
+            wn_guess = self.spect.white_noise_level(spectrum)
+            guess = [wn_guess, self.fkguess, self.slopeguess]
+
+            freqs = spectrum["frequencies"]
+            power = spectrum["amplitudes"]
+
+            resfit = curve_fit(one_over_f, freqs, power, p0=guess)
+
+            return resfit[0]

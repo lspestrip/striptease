@@ -173,39 +173,17 @@ noisegen.parameters()
 ```
 
 ```{python}
-fr = 30
-bw = 6
-Ts = 10
-Tn = 10
-sl = -1.5
-fs = 1.
-tl = 10**6
-noisegen.A[0] = 1.e-7
-noisegen.add_offset[0] = False
-noisegen.wn_only[0] = False
-noisegen.total_power[0] = True
-```
+fr = 30                         # Central frequency [GHz]
+bw = 6                          # Bandwidth [GHz]
+wn = 0.01                       # Standard deviation of white noise
+fk = 1e-2                       # Knee frequency [Hz]
+sl = -1.                        # Slope
+fs = 1.                         # Sampling frequency [Hz]
+tl = 10**6                      # Datastream length [s]
 
-```{python}
-noise = noisegen.generate_noise(fr,bw,[Ts,Tn],sl,fs,tl)
-```
-
-```{python}
-pl.plot(noise)
-```
-
-```{python}
-fr = 30
-bw = 6
-wn = 0.01
-fk = 1e-2
-sl = -1.
-fs = 1.
-tl = 10**6
-noisegen.A[0] = 1.e-7
-noisegen.add_offset[0] = False
-noisegen.wn_only[0] = False
-noisegen.total_power[0] = False
+noisegen.add_offset[0] = False  # No offset added
+noisegen.wn_only[0] = False     # Add 1/f noise
+noisegen.total_power[0] = False # Simulate differenced data
 ```
 
 ```{python}
@@ -216,36 +194,95 @@ noise = noisegen.generate_noise(fr,bw,[wn,fk],sl,fs,tl)
 pl.plot(noise)
 ```
 
+## Calculate spectrum and noise properties
+
+
+### No windowing
+
 ```{python}
 # Create instance to the class
 spec_inst = spectrum.Spectrum()
 
 # Set sampling frequency
-samp_freq = 1. #Hz
+samp_freq = fs # Hz (see above in noise generation part)
 
 # Calculate amplitude spectrum and check white noise level
-spec_inst.spectrum_type[0] = 'PS'
-spec_inst.welch[0] = True
-spec_inst.lowfreq[0] = 1e-4
+spec_inst.spectrum_type[0] = 'PS' # Calculate power spectrum
+spec_inst.welch[0] = False        # No windowing
+#spec_inst.lowfreq[0] = 1e-3  
 spec = spec_inst.spectrum(noise,samp_freq)
 
-wnl = spec_inst.white_noise_level(spec)
+pl.loglog(spec['frequencies'],spec['amplitudes'])
+```
+
+```{python}
+# Calculate noise properties. With no windowing the fit is performed with a linear fit in log-log space of the 1/f end
+
+fit = spec_inst.FitNoise()
+noise_properties = fit.fit(spec)
+onef = spec['frequencies'][1:]**(noise_properties[2])*(10**noise_properties[3])
+#onef = lambda x, sig, fk, sl : sig * (1. + (fk/x)**(-sl))
+
+# Plots the spectrum and the fit
+pl.loglog(spec['frequencies'][1:], spec['amplitudes'][1:])
+pl.loglog(spec['frequencies'][1:], onef)
+pl.loglog(spec['frequencies'][1:], np.zeros(len(spec['frequencies'][1:]))+2*noise_properties[0])
+
+# Prints the result
+print('White noise = %4.3e, fk = %4.3e, slope = %2.1f' % (noise_properties[0], noise_properties[1], noise_properties[2]))
+```
+
+### With windowing
+
+```{python}
+# Create instance to the class
+spec_inst = spectrum.Spectrum()
+
+# Set sampling frequency
+samp_freq = fs # Hz (see above in noise generation part)
+
+# Calculate amplitude spectrum and check white noise level
+spec_inst.spectrum_type[0] = 'PS' # Calculate power spectrum
+spec_inst.welch[0] = True         # Welch windowing
+spec_inst.lowfreq[0] = 1e-3       # Lowest frequency
+
+spec = spec_inst.spectrum(noise,samp_freq)
 
 pl.loglog(spec['frequencies'],spec['amplitudes'])
-print('White noise level from spectrum = %4.3f, '
-      'standard deviation = %4.3f' % (wnl, np.std(noise)))
 ```
 
 ```{python}
-spec['amplitudes']
+# Calculate noise properties. With welch windowing the fit is performed with a full three parameters fit
+
+fit = spec_inst.FitNoise()
+noise_properties = fit.fit(spec)
+onef = lambda x, sig, fk, sl : sig * (1. + (fk/x)**(-sl))
+
+# Plots the spectrum and the fit
+plot_freqs = spec['frequencies'][1:]
+plot_amps  = spec['amplitudes'][1:]
+pl.loglog(plot_freqs, plot_amps)
+pl.loglog(plot_freqs, onef(plot_freqs, *noise_properties))
+pl.loglog(plot_freqs, np.zeros(len(plot_freqs))+2*noise_properties[0])
+
+# Prints the result
+print('White noise = %4.3e, fk = %4.3e, slope = %2.1f' % (noise_properties[0], noise_properties[1], noise_properties[2]))
 ```
 
 ```{python}
-a = np.abs(np.fft.fft(noise))
-```
+# We can force the fit to be linear
 
-```{python}
-pl.plot(a)
+fit = spec_inst.FitNoise()
+noise_properties = fit.linear_fit(spec)
+onef = spec['frequencies'][1:]**(noise_properties[2])*(10**noise_properties[3])
+
+# Plots the spectrum and the fit
+pl.loglog(spec['frequencies'][1:], spec['amplitudes'][1:])
+pl.loglog(spec['frequencies'][1:], onef)
+pl.loglog(spec['frequencies'][1:], np.zeros(len(spec['frequencies'][1:]))+2*noise_properties[0])
+
+# Prints the result
+print('White noise = %4.3e, fk = %4.3e, slope = %2.1f' % (noise_properties[0], noise_properties[1], noise_properties[2]))
 ```
 
 ```{python}
