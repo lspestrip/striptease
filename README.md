@@ -44,7 +44,7 @@ qmake TestRunner.pro && make
 ## How to use the code
 
 Once you have configured the library using the
-[documentation](https://lspestrip.github.io/striptease/authentication.html),
+[documentation](https://striptease.readthedocs.io/en/latest/authentication.html),
 you can happily use IPython or a Jupyter notebook to write your code.
 Start with the following command:
 

@@ -157,7 +157,7 @@ class StripConnection(Connection):
     The following code shows how to connect to a machine. It
     assumes that the user has properly configured the library
     following the documentation
-    (https://lspestrip.github.io/striptease/authentication.html)::
+    (https://striptease.readthedocs.io/en/latest/authentication.html)::
 
         from stripeline import StripConnection
 
@@ -239,7 +239,8 @@ class StripConnection(Connection):
         Establish a connection with Strip. If the parameters `user`
         and `password` are not specified, they are either taken from
         the configuration file (see
-        https://lspestrip.github.io/striptease/authentication.html).
+        https://striptease.readthedocs.io/en/latest/authentication.html).
+
         """
 
         if user:
