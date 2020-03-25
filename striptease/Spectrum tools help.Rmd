@@ -1,0 +1,290 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,Rmd
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.4.1
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+# Import and functions
+
+```{python}
+import spectrum
+import numpy as np
+import pylab as pl
+from importlib import reload
+import pdb
+reload(spectrum)
+```
+
+# Test with white noise data stream
+
+
+## Noise generation
+
+```{python}
+sigma = 2.
+mean = 0.
+n_elements = 1000000
+noise = np.random.normal(mean, sigma, n_elements)
+```
+
+```{python}
+pl.plot(noise)
+```
+
+## Calculate spectrum and white noise level
+
+```{python}
+reload(spectrum)
+```
+
+```{python}
+# Create instance to the class
+spec_inst = spectrum.Spectrum()
+```
+
+```{python}
+# Print parameters
+spec_inst.parameters()
+```
+
+### No windowing
+
+```{python}
+# Set sampling frequency
+samp_freq = 1.5 #Hz
+```
+
+```{python}
+# Calculate amplitude spectrum and check white noise level
+spec_inst.spectrum_type[0] = 'AS'
+spec = spec_inst.spectrum(noise,samp_freq)
+wnl = spec_inst.white_noise_level(spec)
+pl.plot(spec['frequencies'],spec['amplitudes'])
+print('White noise level from spectrum = %4.3f, '
+      'standard deviation = %4.3f' % (wnl, np.std(noise)))
+```
+
+```{python}
+# Calculate amplitude spectral density and check white noise level
+spec_inst.spectrum_type[0] = 'ASD'
+spec = spec_inst.spectrum(noise,samp_freq)
+wnl = spec_inst.white_noise_level(spec)
+pl.plot(spec['frequencies'],spec['amplitudes'])
+print('White noise level from spectrum = %4.3f, '
+      'standard deviation = %4.3f' % (wnl*np.sqrt(samp_freq), np.std(noise)))
+```
+
+```{python}
+# Calculate power spectrum and check white noise level
+spec_inst.spectrum_type[0] = 'PS'
+spec = spec_inst.spectrum(noise,samp_freq)
+wnl = spec_inst.white_noise_level(spec)
+pl.plot(spec['frequencies'],spec['amplitudes'])
+print('White noise level from spectrum = %4.3f, '
+      'variance = %4.3f' % (wnl, np.std(noise)**2))
+```
+
+```{python}
+# Calculate power spectral density and check white noise level
+spec_inst.spectrum_type[0] = 'PSD'
+spec = spec_inst.spectrum(noise,samp_freq)
+wnl = spec_inst.white_noise_level(spec)
+pl.plot(spec['frequencies'],spec['amplitudes'])
+print('White noise level from spectrum = %4.3f, '
+      'variance = %4.3f' % (wnl*samp_freq, np.std(noise)**2))
+```
+
+### With windowing
+
+```{python}
+# Set sampling frequency
+samp_freq = 1.5 #Hz
+
+# Set windowing and lowest freq
+spec_inst.welch[0] = True
+spec_inst.lowfreq[0] = 1.e-3
+```
+
+```{python}
+# Calculate amplitude spectrum and check white noise level
+spec_inst.spectrum_type[0] = 'AS'
+spec = spec_inst.spectrum(noise,samp_freq)
+wnl = spec_inst.white_noise_level(spec)
+pl.plot(spec['frequencies'],spec['amplitudes'])
+print('White noise level from spectrum = %4.3f, '
+      'standard deviation = %4.3f' % (wnl, np.std(noise)))
+```
+
+```{python}
+# Calculate amplitude spectral density and check white noise level
+spec_inst.spectrum_type[0] = 'ASD'
+spec = spec_inst.spectrum(noise,samp_freq)
+wnl = spec_inst.white_noise_level(spec)
+pl.plot(spec['frequencies'],spec['amplitudes'])
+print('White noise level from spectrum = %4.3f, '
+      'standard deviation = %4.3f' % (wnl*np.sqrt(samp_freq), np.std(noise)))
+```
+
+```{python}
+# Calculate power spectrum and check white noise level
+spec_inst.spectrum_type[0] = 'PS'
+spec = spec_inst.spectrum(noise,samp_freq)
+wnl = spec_inst.white_noise_level(spec)
+pl.plot(spec['frequencies'],spec['amplitudes'])
+print('White noise level from spectrum = %4.3f, '
+      'standard deviation = %4.3f' % (wnl, np.std(noise)**2))
+```
+
+```{python}
+# Calculate power spectral density and check white noise level
+spec_inst.spectrum_type[0] = 'PSD'
+spec = spec_inst.spectrum(noise,samp_freq)
+wnl = spec_inst.white_noise_level(spec)
+pl.plot(spec['frequencies'],spec['amplitudes'])
+print('White noise level from spectrum = %4.3f, '
+      'standard deviation = %4.3f' % (wnl*samp_freq, np.std(noise)**2))
+```
+
+# Test with white noise + 1/f
+
+
+## Generate noise
+
+```{python}
+import noise_generator
+reload(noise_generator)
+```
+
+```{python}
+noisegen = noise_generator.NoiseGenerator()
+```
+
+```{python}
+noisegen.parameters()
+```
+
+```{python}
+fr = 30                         # Central frequency [GHz]
+bw = 6                          # Bandwidth [GHz]
+wn = 0.01                       # Standard deviation of white noise
+fk = 1e-2                       # Knee frequency [Hz]
+sl = -1.                        # Slope
+fs = 1.                         # Sampling frequency [Hz]
+tl = 10**6                      # Datastream length [s]
+
+noisegen.add_offset[0] = False  # No offset added
+noisegen.wn_only[0] = False     # Add 1/f noise
+noisegen.total_power[0] = False # Simulate differenced data
+```
+
+```{python}
+noise = noisegen.generate_noise(fr,bw,[wn,fk],sl,fs,tl)
+```
+
+```{python}
+pl.plot(noise)
+```
+
+## Calculate spectrum and noise properties
+
+
+### No windowing
+
+```{python}
+# Create instance to the class
+spec_inst = spectrum.Spectrum()
+
+# Set sampling frequency
+samp_freq = fs # Hz (see above in noise generation part)
+
+# Calculate amplitude spectrum and check white noise level
+spec_inst.spectrum_type[0] = 'PS' # Calculate power spectrum
+spec_inst.welch[0] = False        # No windowing
+#spec_inst.lowfreq[0] = 1e-3  
+spec = spec_inst.spectrum(noise,samp_freq)
+
+pl.loglog(spec['frequencies'],spec['amplitudes'])
+```
+
+```{python}
+# Calculate noise properties. With no windowing the fit is performed with a linear fit in log-log space of the 1/f end
+
+fit = spec_inst.FitNoise()
+noise_properties = fit.fit(spec)
+onef = spec['frequencies'][1:]**(noise_properties[2])*(10**noise_properties[3])
+#onef = lambda x, sig, fk, sl : sig * (1. + (fk/x)**(-sl))
+
+# Plots the spectrum and the fit
+pl.loglog(spec['frequencies'][1:], spec['amplitudes'][1:])
+pl.loglog(spec['frequencies'][1:], onef)
+pl.loglog(spec['frequencies'][1:], np.zeros(len(spec['frequencies'][1:]))+2*noise_properties[0])
+
+# Prints the result
+print('White noise = %4.3e, fk = %4.3e, slope = %2.1f' % (noise_properties[0], noise_properties[1], noise_properties[2]))
+```
+
+### With windowing
+
+```{python}
+# Create instance to the class
+spec_inst = spectrum.Spectrum()
+
+# Set sampling frequency
+samp_freq = fs # Hz (see above in noise generation part)
+
+# Calculate amplitude spectrum and check white noise level
+spec_inst.spectrum_type[0] = 'PS' # Calculate power spectrum
+spec_inst.welch[0] = True         # Welch windowing
+spec_inst.lowfreq[0] = 1e-3       # Lowest frequency
+
+spec = spec_inst.spectrum(noise,samp_freq)
+
+pl.loglog(spec['frequencies'],spec['amplitudes'])
+```
+
+```{python}
+# Calculate noise properties. With welch windowing the fit is performed with a full three parameters fit
+
+fit = spec_inst.FitNoise()
+noise_properties = fit.fit(spec)
+onef = lambda x, sig, fk, sl : sig * (1. + (fk/x)**(-sl))
+
+# Plots the spectrum and the fit
+plot_freqs = spec['frequencies'][1:]
+plot_amps  = spec['amplitudes'][1:]
+pl.loglog(plot_freqs, plot_amps)
+pl.loglog(plot_freqs, onef(plot_freqs, *noise_properties))
+pl.loglog(plot_freqs, np.zeros(len(plot_freqs))+2*noise_properties[0])
+
+# Prints the result
+print('White noise = %4.3e, fk = %4.3e, slope = %2.1f' % (noise_properties[0], noise_properties[1], noise_properties[2]))
+```
+
+```{python}
+# We can force the fit to be linear
+
+fit = spec_inst.FitNoise()
+noise_properties = fit.linear_fit(spec)
+onef = spec['frequencies'][1:]**(noise_properties[2])*(10**noise_properties[3])
+
+# Plots the spectrum and the fit
+pl.loglog(spec['frequencies'][1:], spec['amplitudes'][1:])
+pl.loglog(spec['frequencies'][1:], onef)
+pl.loglog(spec['frequencies'][1:], np.zeros(len(spec['frequencies'][1:]))+2*noise_properties[0])
+
+# Prints the result
+print('White noise = %4.3e, fk = %4.3e, slope = %2.1f' % (noise_properties[0], noise_properties[1], noise_properties[2]))
+```
+
+```{python}
+
+```
