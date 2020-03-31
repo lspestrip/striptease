@@ -10,7 +10,7 @@ Welcome to Striptease's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   authentication
+   installation
    tutorial
    hk_calibration
    data_interface
