@@ -103,13 +103,4 @@ Usage example:
 
     proc = PinchOffProcedure()
     proc.run()
-
-    import json
-
-    output = json.dumps(proc.get_command_list(), indent=4)
-
-    if args.output_filename == "":
-        print(output)
-    else:
-        with open(args.output_filename, "wt") as outf:
-            outf.write(output)
+    proc.output_json(args.output_filename)
