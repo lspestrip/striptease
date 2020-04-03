@@ -1,12 +1,14 @@
-PyQt5       ~= 5.11
-numpy       >= 1.15
-astropy     ~= 3.0
-matplotlib  ~= 2.2
-websockets  ~= 6.0
-requests    ~= 2.19
-h5py        ~= 2.8
-autobahn    ~= 19.2
-pyserial    ~= 3.4
-xlrd        ~= 1.2.0
-pandas      ~= 0.24.2
-pyqtgraph   ~= 0.10
+PyQt5
+numpy
+astropy
+matplotlib
+websockets
+requests
+h5py
+autobahn
+pyserial
+xlrd
+pandas
+pyqtgraph
+pytest
+black

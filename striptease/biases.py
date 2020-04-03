@@ -98,9 +98,10 @@ ChannelCalibration = namedtuple(
         "id2_hk",
         "id3_hk",
         "id4_hk",
-        "id5_hk"
+        "id5_hk",
     ],
 )
+
 
 class InstrumentBiases:
     """InstrumentBiases
@@ -195,10 +196,11 @@ class BoardCalibration:
     Once you have created an instance of `BoardCalibration`, call `get_channel_calibration` to return
     the calibration of one channel.
     """
+
     def __init__(self, filename):
         pass
 
-    def get_channel_calibration(self,channel_no=None,channel_name=None):
+    def get_channel_calibration(self, channel_no=None, channel_name=None):
         """Return the calibration needed to drive a channel.
 
         The return value is an instance of `ChannelCalibration`. You can specify either the name
@@ -209,22 +211,20 @@ class BoardCalibration:
                 "You must provide either 'channel_no' or 'channel_name' to 'BoardCalibration.get_channel_calibration'"
             )
 
-        if  channel_no is not None and channel_name is not None:
+        if channel_no is not None and channel_name is not None:
             raise ValueError(
                 "You cannot provide both 'channel_no' and 'channel_name' to 'BoardCalibration.get_channel_calibration'"
             )
 
         if channel_no is not None:
             if channel_no < 0 or channel_no > 7:
-                raise ValueError(
-                    "'channel_no' must be a value from 0 to 7"
-                    )
-            channel = 'Pol'+str(channel_no+1)
+                raise ValueError("'channel_no' must be a value from 0 to 7")
+            channel = "Pol" + str(channel_no + 1)
         else:
             # if channel_name not in ['Pol1',]
             raise Exception("Not implemented yet!")
 
-            
+
 RefBiasConfiguration = namedtuple(
     "RefBiasConfiguration",
     [
