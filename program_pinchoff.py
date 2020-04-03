@@ -9,7 +9,6 @@ from striptease import (
     BOARD_TO_W_BAND_POL,
     StripTag,
     normalize_polarimeter_name,
-    get_lna_num,
 )
 from striptease.procedures import StripProcedure
 from program_turnon import TurnOnOffProcedure, SetupBoard
@@ -83,7 +82,6 @@ class PinchOffProcedure(StripProcedure):
 
 
 if __name__ == "__main__":
-    import sys
     from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
     parser = ArgumentParser(
