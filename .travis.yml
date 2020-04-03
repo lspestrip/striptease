@@ -17,7 +17,8 @@ install:
   - conda info -a
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
   - conda activate test-environment
-  - conda install --file=requirements.txt
+  - conda install pyqt=5
+  - pip install -r requirements.txt
 
 script:
   - black --check .
