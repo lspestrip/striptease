@@ -14,6 +14,10 @@ __version__ = "0.1.0"
 from urllib.parse import urljoin
 from web.rest.base import Connection
 
+# List of all the board names: handy if you need to iterate over them,
+# or if you need to validate user input
+STRIP_BOARD_NAMES = ["R", "V", "G", "B", "Y", "O", "I"]
+
 # This dictionary associates the name of a board with the W-band
 # polarimeter associated with it.
 BOARD_TO_W_BAND_POL = {
@@ -294,7 +298,7 @@ class StripConnection(Connection):
                     result["status"]
                 )
             else:
-                return True
+                result = {"status": "OK"}
 
         return result
 
@@ -348,7 +352,7 @@ class StripConnection(Connection):
             else:
                 assert not board, "Pass None to the 'board=' parameter"
 
-        assert pol in ["BOARD", 0, 1, 2, 3, 4, 5, 6]
+        assert pol in ["BOARD", 0, 1, 2, 3, 4, 5, 6, 7]
 
         if type(pol) is int:
             pol = "{0}{1}".format(board, pol)
@@ -679,6 +683,41 @@ class StripConnection(Connection):
         assert level_toupper in ["ERROR", "WARNING", "INFO", "DEFAULT"]
         dic = {"message": message, "level": level_toupper}
         self.last_response = self.post("rest/log", dic)
+
+    def __set_bias(self, polarimeter, component_index, param_name, value_adu):
+        real_polarimeter = normalize_polarimeter_name(polarimeter)
+        board = real_polarimeter[0]
+        self.slo_command(
+            method="SET",
+            board=board,
+            pol=int(real_polarimeter[1]),
+            kind="BIAS",
+            base_addr=f"{param_name}{component_index}_SET",
+            data=[value_adu],
+        )
+
+    def __set_lna_bias(self, polarimeter, lna, param_name, value_adu):
+        self.__set_bias(
+            polarimeter=polarimeter,
+            component_index=get_lna_num(lna),
+            param_name=param_name,
+            value_adu=value_adu,
+        )
+
+    def set_vd(self, polarimeter, lna, value_adu):
+        self.__set_lna_bias(
+            polarimeter=polarimeter, lna=lna, param_name="VD", value_adu=value_adu
+        )
+
+    def set_vg(self, polarimeter, lna, value_adu):
+        self.__set_lna_bias(
+            polarimeter=polarimeter, lna=lna, param_name="VG", value_adu=value_adu
+        )
+
+    def set_id(self, polarimeter, lna, value_adu):
+        self.__set_lna_bias(
+            polarimeter=polarimeter, lna=lna, param_name="ID", value_adu=value_adu
+        )
 
 
 class StripTag:

@@ -5,6 +5,7 @@ import logging as log
 
 from calibration import CalibrationTables
 from striptease import (
+    STRIP_BOARD_NAMES,
     BOARD_TO_W_BAND_POL,
     StripTag,
     normalize_polarimeter_name,
@@ -35,8 +36,9 @@ class PinchOffProcedure(StripProcedure):
 
     def run(self):
         conn = self.command_emitter
+        calibr = CalibrationTables()
 
-        for cur_board in ["R", "V", "G", "B", "Y", "O", "I"]:
+        for cur_board in STRIP_BOARD_NAMES:
             board_setup = SetupBoard(
                 config=self.conf,
                 board_name=cur_board,
@@ -64,7 +66,14 @@ class PinchOffProcedure(StripProcedure):
 
                 for id_value in (100, 4_000, 8_000, 12_000):
                     for cur_lna in ("HA3", "HA2", "HA1", "HB3", "HB2", "HB1"):
-                        board_setup.setup_ID(cur_horn_name, cur_lna, value=id_value)
+                        # Convert the current (μA) in ADU
+                        adu = calibr.physical_units_to_adu(
+                            polarimeter=cur_horn_name,
+                            hk="idrain",
+                            component=cur_lna,
+                            value=id_value,
+                        )
+                        self.conn.set_id(cur_horn_name, cur_lna, value_adu=adu)
 
                         with StripTag(
                             conn=self.command_emitter,

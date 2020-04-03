@@ -40,7 +40,7 @@ class JSONCommandEmitter:
             "command": cmd,
         }
         self.command_list.append(deepcopy(new_command))
-        return True
+        return {"status": "OK", "data": [0]}
 
     def wait(self, seconds):
         return self.post_command("", {"wait_time_s": seconds})
