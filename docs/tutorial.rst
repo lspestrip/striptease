@@ -174,4 +174,4 @@ containing an ordered list of dictionaries, each containing a command.
 How to create test procedures
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-See the chapter `Writing test procedures_`.
+See the chapter :ref:`Writing test procedures`.
