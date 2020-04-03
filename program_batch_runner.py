@@ -5,7 +5,6 @@ from argparse import ArgumentParser
 import curses
 import json
 import time
-import sys
 
 from striptease import StripConnection
 
@@ -117,6 +116,9 @@ def main(stdscr):
             return
 
         print("…connection established")
+
+        if (not args.dry_run) and (not args.do_not_round):
+            conn.round_all_files()
     else:
         conn = None
 
@@ -231,6 +233,9 @@ def main(stdscr):
     prompt(stdscr, "Execution completed, press a key to exit")
     readkey(stdscr)
     if not args.dry_run:
+        if conn and (not args.do_not_round):
+            conn.round_all_files()
+
         conn.logout()
 
 
@@ -280,6 +285,14 @@ next command. Default is {DEFAULT_WAIT_TIME_S}
         help="Name of the JSON files containing the test procedures. More "
         "than one file can be provided. If no files are provided, the JSON record "
         "will be read from the terminal.",
+    )
+    parser.add_argument(
+        "--do-not-round",
+        action="store_false",
+        default=True,
+        help="Avoid closing HDF5 files before and after the execution of the "
+        "script. (Default is forcing the server to keep all the data acquired "
+        "during the procedure in one HDF file.)",
     )
 
     args = parser.parse_args()
