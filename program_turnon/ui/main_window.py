@@ -14,14 +14,20 @@ class Ui_main_window(object):
         main_window.setObjectName("main_window")
         main_window.resize(775, 725)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../images/turnon_icon.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(
+            QtGui.QPixmap("../images/turnon_icon.svg"),
+            QtGui.QIcon.Normal,
+            QtGui.QIcon.Off,
+        )
         main_window.setWindowIcon(icon)
         self.centralwidget = QtWidgets.QWidget(main_window)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.centralwidget)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.groupBox = QtWidgets.QGroupBox(self.centralwidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.groupBox.sizePolicy().hasHeightForWidth())
@@ -35,7 +41,9 @@ class Ui_main_window(object):
         self.formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
         self.formLayout.setObjectName("formLayout")
         self.board_label = QtWidgets.QLabel(self.groupBox)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.board_label.sizePolicy().hasHeightForWidth())
@@ -43,7 +51,9 @@ class Ui_main_window(object):
         self.board_label.setObjectName("board_label")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.board_label)
         self.list_boards = QtWidgets.QComboBox(self.groupBox)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.list_boards.sizePolicy().hasHeightForWidth())
@@ -52,15 +62,23 @@ class Ui_main_window(object):
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.list_boards)
         self.channel_label = QtWidgets.QLabel(self.groupBox)
         self.channel_label.setObjectName("channel_label")
-        self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.channel_label)
+        self.formLayout.setWidget(
+            1, QtWidgets.QFormLayout.LabelRole, self.channel_label
+        )
         self.list_channels = QtWidgets.QComboBox(self.groupBox)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.list_channels.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.list_channels.sizePolicy().hasHeightForWidth()
+        )
         self.list_channels.setSizePolicy(sizePolicy)
         self.list_channels.setObjectName("list_channels")
-        self.formLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.list_channels)
+        self.formLayout.setWidget(
+            1, QtWidgets.QFormLayout.FieldRole, self.list_channels
+        )
         self.delay_label = QtWidgets.QLabel(self.groupBox)
         self.delay_label.setObjectName("delay_label")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.delay_label)
@@ -70,7 +88,9 @@ class Ui_main_window(object):
         self.delay_spinbox.setSingleStep(0.5)
         self.delay_spinbox.setProperty("value", 0.5)
         self.delay_spinbox.setObjectName("delay_spinbox")
-        self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.delay_spinbox)
+        self.formLayout.setWidget(
+            2, QtWidgets.QFormLayout.FieldRole, self.delay_spinbox
+        )
         self.verticalLayout_3.addLayout(self.formLayout)
         self.verticalLayout_5.addWidget(self.groupBox)
         self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
@@ -78,7 +98,9 @@ class Ui_main_window(object):
         self.mock_run = QtWidgets.QCheckBox(self.centralwidget)
         self.mock_run.setObjectName("mock_run")
         self.horizontalLayout_6.addWidget(self.mock_run)
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout_6.addItem(spacerItem)
         self.start_button = QtWidgets.QPushButton(self.centralwidget)
         self.start_button.setDefault(True)
@@ -123,7 +145,9 @@ class Ui_main_window(object):
         self.verticalLayout_2.addWidget(self.commands_widget)
         self.verticalLayout_5.addWidget(self.splitter)
         self.groupBox_2 = QtWidgets.QGroupBox(self.centralwidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.groupBox_2.sizePolicy().hasHeightForWidth())
@@ -137,7 +161,9 @@ class Ui_main_window(object):
         self.verticalLayout_4.addWidget(self.log_message_edit)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem1 = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout.addItem(spacerItem1)
         self.new_log_button = QtWidgets.QPushButton(self.groupBox_2)
         self.new_log_button.setObjectName("new_log_button")
@@ -184,15 +210,33 @@ class Ui_main_window(object):
 
     def retranslateUi(self, main_window):
         _translate = QtCore.QCoreApplication.translate
-        main_window.setWindowTitle(_translate("main_window", "Turn on Strip polarimeters"))
+        main_window.setWindowTitle(
+            _translate("main_window", "Turn on Strip polarimeters")
+        )
         self.groupBox.setTitle(_translate("main_window", "Options"))
         self.board_label.setText(_translate("main_window", "&Board"))
-        self.list_boards.setToolTip(_translate("main_window", "<html><head/><body><p>Name of the board to turn on</p></body></html>"))
+        self.list_boards.setToolTip(
+            _translate(
+                "main_window",
+                "<html><head/><body><p>Name of the board to turn on</p></body></html>",
+            )
+        )
         self.channel_label.setText(_translate("main_window", "&Channel"))
-        self.delay_label.setText(_translate("main_window", "&Delay between commands (sec)"))
-        self.mock_run.setStatusTip(_translate("main_window", "If checked, no command will be sent to the webserver"))
+        self.delay_label.setText(
+            _translate("main_window", "&Delay between commands (sec)")
+        )
+        self.mock_run.setStatusTip(
+            _translate(
+                "main_window", "If checked, no command will be sent to the webserver"
+            )
+        )
         self.mock_run.setText(_translate("main_window", "Dry run"))
-        self.start_button.setToolTip(_translate("main_window", "<html><head/><body><p>Start the turn-on procedure</p></body></html>"))
+        self.start_button.setToolTip(
+            _translate(
+                "main_window",
+                "<html><head/><body><p>Start the turn-on procedure</p></body></html>",
+            )
+        )
         self.start_button.setText(_translate("main_window", "&Start"))
         self.stop_button.setText(_translate("main_window", "S&top"))
         self.pause_button.setText(_translate("main_window", "&Pause"))
@@ -201,9 +245,11 @@ class Ui_main_window(object):
         self.groupBox_2.setTitle(_translate("main_window", "Create log message"))
         self.new_log_button.setText(_translate("main_window", "Cr&eate"))
         self.menuFile.setTitle(_translate("main_window", "&File"))
-        self.actionload_board_file.setText(_translate("main_window", "Load board file…"))
-        self.actionload_pol_calibration.setText(_translate("main_window", "Load &pol calibration…"))
+        self.actionload_board_file.setText(
+            _translate("main_window", "Load board file…")
+        )
+        self.actionload_pol_calibration.setText(
+            _translate("main_window", "Load &pol calibration…")
+        )
         self.action_exit.setText(_translate("main_window", "&Exit"))
         self.action_exit.setShortcut(_translate("main_window", "Ctrl+Q"))
-
-

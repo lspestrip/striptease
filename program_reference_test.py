@@ -35,7 +35,9 @@ class ReferenceTestProcedure(StripProcedure):
             config=self.conf, board_name=self.board, post_command=self.command_emitter
         )
 
-        board_setup.log(f"Test procedure for the phase switches of {self.horn} (board {self.board})")
+        board_setup.log(
+            f"Test procedure for the phase switches of {self.horn} (board {self.board})"
+        )
 
         with StripTag(
             conn=self.command_emitter,
@@ -166,7 +168,10 @@ class ReferenceTestProcedure(StripProcedure):
             if self.waittime_s > 0:
                 self.wait(seconds=self.waittime_s)
 
-        board_setup.log(f"Test procedure for the phase switches of {self.horn} (board {self.board}) has completed")
+        board_setup.log(
+            f"Test procedure for the phase switches of {self.horn} (board {self.board}) has completed"
+        )
+
 
 ################################################################################
 
@@ -182,7 +187,7 @@ if __name__ == "__main__":
 Usage example:
 
     python3 program_turnon.py G0 G4
-"""
+""",
     )
     parser.add_argument(
         "--output",
@@ -209,7 +214,7 @@ Usage example:
         type=str,
         dest="board",
         required=True,
-        help='Name of the board to use',
+        help="Name of the board to use",
     )
     parser.add_argument(
         "polarimeters",

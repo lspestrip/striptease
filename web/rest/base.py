@@ -9,15 +9,17 @@ import requests
 import time
 import web.rest.errors as err
 
+
 class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
+
 
 class Connection(object):
     """Class Handling login and session"""
@@ -100,10 +102,11 @@ class Connection(object):
             response = self.session.post(url, data=pkt)
             if (response.status_code == 503) and (count <= retry_count):
                 print(
-                    bcolors.WARNING +
-                    bcolors.BOLD +
-                    f"Got error 503, response is {response.json()}, retrying ({count}/{retry_count})" +
-                    bcolors.ENDC)
+                    bcolors.WARNING
+                    + bcolors.BOLD
+                    + f"Got error 503, response is {response.json()}, retrying ({count}/{retry_count})"
+                    + bcolors.ENDC
+                )
 
                 if retry_delay_s:
                     time.sleep(retry_delay_s)
@@ -114,7 +117,7 @@ class Connection(object):
                 break
 
         if not (response is None):
-            if (response.status_code != 200):
+            if response.status_code != 200:
                 response.raise_for_status()
             else:
                 return response.json()

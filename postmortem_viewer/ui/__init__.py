@@ -19,16 +19,24 @@ class Ui_mainWindow(object):
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.centralwidget)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.calendarWidget = QtWidgets.QCalendarWidget(self.centralwidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.calendarWidget.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.calendarWidget.sizePolicy().hasHeightForWidth()
+        )
         self.calendarWidget.setSizePolicy(sizePolicy)
         self.calendarWidget.setMinimumDate(QtCore.QDate(2019, 1, 1))
         self.calendarWidget.setMaximumDate(QtCore.QDate(2021, 12, 31))
         self.calendarWidget.setGridVisible(False)
-        self.calendarWidget.setHorizontalHeaderFormat(QtWidgets.QCalendarWidget.ShortDayNames)
-        self.calendarWidget.setVerticalHeaderFormat(QtWidgets.QCalendarWidget.NoVerticalHeader)
+        self.calendarWidget.setHorizontalHeaderFormat(
+            QtWidgets.QCalendarWidget.ShortDayNames
+        )
+        self.calendarWidget.setVerticalHeaderFormat(
+            QtWidgets.QCalendarWidget.NoVerticalHeader
+        )
         self.calendarWidget.setNavigationBarVisible(True)
         self.calendarWidget.setDateEditEnabled(True)
         self.calendarWidget.setObjectName("calendarWidget")
@@ -67,7 +75,9 @@ class Ui_mainWindow(object):
         self.checkBox_Y.setEnabled(False)
         self.checkBox_Y.setObjectName("checkBox_Y")
         self.verticalLayout.addWidget(self.checkBox_Y)
-        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        spacerItem = QtWidgets.QSpacerItem(
+            20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding
+        )
         self.verticalLayout.addItem(spacerItem)
         self.horizontalLayout.addLayout(self.verticalLayout)
         self.graphicsView = QtWidgets.QGraphicsView(self.centralwidget)
@@ -115,5 +125,7 @@ class Ui_mainWindow(object):
         self.checkBox_O.setText(_translate("mainWindow", "O module"))
         self.checkBox_Y.setText(_translate("mainWindow", "Y module"))
         self.menu_File.setTitle(_translate("mainWindow", "&File"))
-        self.action_Set_data_directory.setText(_translate("mainWindow", "&Set data directory…"))
+        self.action_Set_data_directory.setText(
+            _translate("mainWindow", "&Set data directory…")
+        )
         self.action_Quit.setText(_translate("mainWindow", "&Quit"))
