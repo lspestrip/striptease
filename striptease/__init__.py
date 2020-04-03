@@ -719,6 +719,50 @@ class StripConnection(Connection):
             polarimeter=polarimeter, lna=lna, param_name="ID", value_adu=value_adu
         )
 
+    def set_pol_mode(self, board, polarimeter, mode):
+        real_polarimeter = normalize_polarimeter_name(polarimeter)
+        board = real_polarimeter[0]
+        self.slo_command(
+            method="SET",
+            board=board,
+            pol=real_polarimeter,
+            kind="BIAS",
+            base_addr="POL_MODE",
+            data=[mode],
+        )
+
+    def pol_pwr(self, polarimeter, value=1):
+        real_polarimeter = normalize_polarimeter_name(polarimeter)
+        board = real_polarimeter[0]
+        self.slo_command(
+            method="SET",
+            board=board,
+            pol=real_polarimeter,
+            kind="BIAS",
+            base_addr="POL_PWR",
+            data=[value],
+        )
+
+    def dac_ref(self, polarimeter, value=1):
+        real_polarimeter = normalize_polarimeter_name(polarimeter)
+        board = real_polarimeter[0]
+        self.slo_command(
+            method="SET",
+            board=board,
+            pol=real_polarimeter,
+            kind="BIAS",
+            base_addr="DAC_REF",
+            data=[value],
+        )
+
+    def enable_electronics(self, polarimeter, pol_mode=5):
+        real_polarimeter = normalize_polarimeter_name(polarimeter)
+        board = real_polarimeter[0]
+
+        self.pol_pwr(polarimeter, value=1)
+        self.dac_ref(polarimeter, value=1)
+        self.set_pol_mode(board=board, polarimeter=polarimeter, mode=pol_mode)
+
 
 class StripTag:
 
