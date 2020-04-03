@@ -17,7 +17,6 @@ from program_turnon import TurnOnOffProcedure
 class PinchOffProcedure(StripProcedure):
     def __init__(self):
         super(PinchOffProcedure, self).__init__()
-        self.cal = CalibrationTables()
 
     def turn_on_board(self, board):
         log.info(f"Turnon of board {board}")
