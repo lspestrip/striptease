@@ -11,7 +11,7 @@ from striptease import (
     normalize_polarimeter_name,
 )
 from striptease.procedures import StripProcedure
-from program_turnon import TurnOnOffProcedure, SetupBoard
+from program_turnon import TurnOnOffProcedure
 
 
 class PinchOffProcedure(StripProcedure):
@@ -19,7 +19,7 @@ class PinchOffProcedure(StripProcedure):
         super(PinchOffProcedure, self).__init__()
         self.cal = CalibrationTables()
 
-    def turn_on_board(self, conn, board_setup, board):
+    def turn_on_board(self, board):
         log.info(f"Turnon of board {board}")
         turnon_proc = TurnOnOffProcedure(waittime_s=1.0, turnon=True)
 
@@ -34,19 +34,12 @@ class PinchOffProcedure(StripProcedure):
         return turnon_proc.get_command_list()
 
     def run(self):
-        conn = self.command_emitter
         calibr = CalibrationTables()
 
         for cur_board in STRIP_BOARD_NAMES:
-            board_setup = SetupBoard(
-                config=self.conf,
-                board_name=cur_board,
-                post_command=self.command_emitter,
-            )
-
-            self.command_emitter.command_list += self.turn_on_board(
-                conn, board_setup, cur_board
-            )
+            # Append the sequence of commands to turnon this board to
+            # the JSON object
+            self.command_emitter.command_list += self.turn_on_board(cur_board)
 
             # Wait a while after having turned on the board
             self.wait(seconds=5)
@@ -61,24 +54,24 @@ class PinchOffProcedure(StripProcedure):
                 else:
                     cur_horn_name = f"{cur_board}{cur_horn_idx}"
 
-                board_setup.enable_electronics(polarimeter=cur_horn_name, mode=0)
+                self.conn.enable_electronics(polarimeter=cur_horn_name, pol_mode=5)
 
-                for id_value in (100, 4_000, 8_000, 12_000):
+                for id_value_muA in (100, 4_000, 8_000, 12_000):
                     for cur_lna in ("HA3", "HA2", "HA1", "HB3", "HB2", "HB1"):
                         # Convert the current (μA) in ADU
                         adu = calibr.physical_units_to_adu(
                             polarimeter=cur_horn_name,
                             hk="idrain",
                             component=cur_lna,
-                            value=id_value,
+                            value=id_value_muA,
                         )
                         self.conn.set_id(cur_horn_name, cur_lna, value_adu=adu)
 
                         with StripTag(
                             conn=self.command_emitter,
-                            name=f"PINCHOFF_IDSET_{cur_horn_name}_{cur_lna}_{id_value:.0f}muA",
+                            name=f"PINCHOFF_IDSET_{cur_horn_name}_{cur_lna}_{id_value_muA:.0f}muA",
                         ):
-                            conn.wait(seconds=5)
+                            self.conn.wait(seconds=5)
 
 
 if __name__ == "__main__":
