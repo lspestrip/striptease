@@ -705,21 +705,77 @@ class StripConnection(Connection):
         )
 
     def set_vd(self, polarimeter, lna, value_adu):
+        """Send a command to change the drain voltage of an amplifier.
+
+        If you want to use physical units for the voltage, use
+        :class:`.CalibrationTables`.
+
+        Args
+        ----
+
+            polarimeter (str): name of the polarimeter, e.g., ``I0``
+
+            lna (str): name of the amplifier, e.g., ``HA1``
+
+            value_adu (int): value (in ADU) to be used
+
+        """
+
         self.__set_lna_bias(
             polarimeter=polarimeter, lna=lna, param_name="VD", value_adu=value_adu
         )
 
     def set_vg(self, polarimeter, lna, value_adu):
+        """Send a command to change the gate voltage of an amplifier.
+
+        If you want to use physical units for the voltage, use
+        :class:`.CalibrationTables`.
+
+        Args
+        ----
+
+            polarimeter (str): name of the polarimeter, e.g., ``I0``
+
+            lna (str): name of the amplifier, e.g., ``HA1``
+
+            value_adu (int): value (in ADU) to be used
+
+        """
+
         self.__set_lna_bias(
             polarimeter=polarimeter, lna=lna, param_name="VG", value_adu=value_adu
         )
 
     def set_id(self, polarimeter, lna, value_adu):
+        """Send a command to change the drain current of an amplifier.
+
+        If you want to use physical units for the voltage, use
+        :class:`.CalibrationTables`.
+
+        Args
+        ----
+
+            polarimeter (str): name of the polarimeter, e.g., ``I0``
+
+            lna (str): name of the amplifier, e.g., ``HA1``
+
+            value_adu (int): value (in ADU) to be used
+
+        """
+
         self.__set_lna_bias(
             polarimeter=polarimeter, lna=lna, param_name="ID", value_adu=value_adu
         )
 
-    def set_pol_mode(self, board, polarimeter, mode):
+    def set_pol_mode(self, polarimeter, mode):
+        """Send a POL_MODE command to a polarimeter
+
+        Args
+        ----
+
+            polarimeter (str): name of the board, e.g., ``I0``
+        """
+
         real_polarimeter = normalize_polarimeter_name(polarimeter)
         board = real_polarimeter[0]
         self.slo_command(
@@ -732,6 +788,16 @@ class StripConnection(Connection):
         )
 
     def pol_pwr(self, polarimeter, value=1):
+        """Send a POL_PWR command to a polarimeter
+
+        Args
+        ----
+
+            polarimeter (str): name of the board, e.g., ``I0``
+
+            value (int): either 0 (turn off power) or 1 (turn on power)
+        """
+
         real_polarimeter = normalize_polarimeter_name(polarimeter)
         board = real_polarimeter[0]
         self.slo_command(
@@ -744,6 +810,16 @@ class StripConnection(Connection):
         )
 
     def dac_ref(self, polarimeter, value=1):
+        """Send a DAC_REF command to a polarimeter
+
+        Args
+        ----
+
+            polarimeter (str): name of the board, e.g., ``I0``
+
+            value (int): either 0 (turn off power) or 1 (turn on power)
+        """
+
         real_polarimeter = normalize_polarimeter_name(polarimeter)
         board = real_polarimeter[0]
         self.slo_command(
@@ -756,12 +832,81 @@ class StripConnection(Connection):
         )
 
     def enable_electronics(self, polarimeter, pol_mode=5):
+        "Start the acquisition for one polarimeter (e.g., ``I0``)"
+        self.pol_pwr(polarimeter, value=1)
+        self.dac_ref(polarimeter, value=1)
+        self.set_pol_mode(polarimeter=polarimeter, mode=pol_mode)
+
+    def disable_electronics(self, polarimeter):
+        "Start the acquisition for one polarimeter (e.g., ``I0``)"
+        self.set_pol_mode(polarimeter=polarimeter, mode=0)
+        self.dac_ref(polarimeter, value=0)
+        self.pol_pwr(polarimeter, value=0)
+
+    def set_phsw_status(self, polarimeter, phsw_index, status):
+        """Set the status of the phase switch
+
+        Args
+        ----
+
+            polarimeter (str): name of the polarimeter (``I0``)
+
+            phsw_index (int): a number from 0 to 3, indicating the
+                phase switch to control
+
+            status (int): bitmask used to set up the mode of the phase
+                switch
+        """
+        real_polarimeter = normalize_polarimeter_name(polarimeter)
+        board = real_polarimeter[0]
+        self.slo_command(
+            method="SET",
+            board=board,
+            pol=real_polarimeter,
+            kind="BIAS",
+            base_addr=f"PIN{phsw_index}_CON",
+            data=[status],
+        )
+
+    def set_phsw_bias(self, polarimeter, phsw_index, vpin_adu, ipin_adu):
+        """Set the biases of the phase switch
+
+        Args
+        ----
+
+            polarimeter (str): name of the polarimeter (``I0``)
+
+            phsw_index (int): a number from 0 to 3, indicating the
+                phase switch to control
+
+            vpin_adu (int or ``None``): value of the voltage, in ADU;
+                use ``None`` if you do not want to change the voltage
+
+            ipin_adu (int or ``None``): value of the current, in ADU;
+                use ``None`` if you do not want to change the current
+        """
         real_polarimeter = normalize_polarimeter_name(polarimeter)
         board = real_polarimeter[0]
 
-        self.pol_pwr(polarimeter, value=1)
-        self.dac_ref(polarimeter, value=1)
-        self.set_pol_mode(board=board, polarimeter=polarimeter, mode=pol_mode)
+        if isinstance(vpin_adu, int):
+            self.slo_command(
+                method="SET",
+                board=board,
+                pol=real_polarimeter,
+                kind="BIAS",
+                base_addr=f"VPIN{phsw_index}_SET",
+                data=[vpin_adu],
+            )
+
+        if isinstance(ipin_adu, int):
+            self.slo_command(
+                method="SET",
+                board=board,
+                pol=real_polarimeter,
+                kind="BIAS",
+                base_addr=f"IPIN{phsw_index}_SET",
+                data=[ipin_adu],
+            )
 
 
 class StripTag:

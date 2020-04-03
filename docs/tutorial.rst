@@ -174,25 +174,4 @@ containing an ordered list of dictionaries, each containing a command.
 How to create test procedures
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To create a new script that builds a sequence of JSON commands, the
-easiest way is to create a new class derived from
-:class:`striptease.procedures.StripProcedure`::
-  
-  from striptease.procedures import StripProcedure
-
-  class MyProcedure(StripProcedure):
-      def __init__(self):
-          super(MyProcedure, self).__init__()
-
-      def run(self):
-          conn = self.command_emitter
-
-          # Run all your commands using "conn": it works like a
-          # StripConnection object, but it writes command to a JSON
-          # buffer instead of sending them to the server
-
-   if __name__ == "__main__":
-       proc = MyProcedure()
-       proc.run()
-
-The method ``run`` will output the JSON file to ``stdout``.
+See the chapter `Writing test procedures_`.

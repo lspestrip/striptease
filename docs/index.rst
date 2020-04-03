@@ -14,6 +14,7 @@ Welcome to Striptease's documentation!
    tutorial
    hk_calibration
    data_interface
+   procedures
    API
    development
 
