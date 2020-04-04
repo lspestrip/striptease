@@ -92,15 +92,32 @@ class StripProcedure:
         self.conn = conn
 
     def wait(self, seconds):
+        "Make the test procedure wait for some time before continuing"
         return self.command_emitter.wait(seconds)
 
     def run(self):
+        "Redefine this method in derived classes"
         pass
 
     def get_command_list(self):
+        """Return a list object containing the commands executed so far.
+
+        This list will be dumped as a JSON object by :meth:`.output_json`.
+        """
         return self.command_emitter.command_list
 
     def output_json(self, output_filename=None):
+        """Write the list of commands executed so far in a JSON object.
+
+        Args
+        ----
+
+            output_filename (str or Path): path to the file to be
+                created that will contain the list of commands in JSON
+                format. If ``None`` is used, the commands will be
+                printed to ``stdout``.
+
+        """
         output = json.dumps(self.get_command_list(), indent=4)
 
         if (not output_filename) or (output_filename == ""):
