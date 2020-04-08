@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 
+from collections import namedtuple
 from pathlib import Path
 from typing import Union, List, Set
 
@@ -20,6 +21,11 @@ VALID_GROUPS = ["POL", "BOARD"]
 VALID_SUBGROUPS = ["BIAS", "DAQ"]
 VALID_DETECTORS = ["Q1", "Q2", "U1", "U2"]
 VALID_DATA_TYPES = ["PWR", "DEM"]
+
+
+Tag = namedtuple(
+    "Tag", ["id", "mjd_start", "mjd_end", "name", "start_comment", "end_comment",]
+)
 
 
 def check_group_and_subgroup(group, subgroup):
@@ -244,6 +250,18 @@ class DataFile:
 
         self.boards = scan_board_names(self.hdf5_groups)
         self.polarimeters = scan_polarimeter_names(self.hdf5_groups)
+
+        self.tags = [
+            Tag(
+                x[0],
+                x[1],
+                x[2],
+                bytes(x[3]).decode("utf-8"),
+                bytes(x[4]).decode("utf-8"),
+                bytes(x[5]).decode("utf-8"),
+            )
+            for x in self.hdf5_file["TAGS"]["tag_data"][:]
+        ]
 
     def close_file(self):
         "Close the HDF5 file"
