@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 
+from collections import namedtuple
 from pathlib import Path
 from typing import Union, List, Set
 
@@ -20,6 +21,19 @@ VALID_GROUPS = ["POL", "BOARD"]
 VALID_SUBGROUPS = ["BIAS", "DAQ"]
 VALID_DETECTORS = ["Q1", "Q2", "U1", "U2"]
 VALID_DATA_TYPES = ["PWR", "DEM"]
+
+#: Information about a tag loaded from a HDF5 file
+#:
+#: Fields are:
+#: - ``id``: unique integer number
+#: - ``mjd_start``: start time of the tag (MJD)
+#: - ``mjd_end``: stop time of the tag (MJD)
+#: - ``name``: string containing the name of the tag
+#: - ``start_comment``: comment put at the start
+#: - ``end_comment``: comment put at the end
+Tag = namedtuple(
+    "Tag", ["id", "mjd_start", "mjd_end", "name", "start_comment", "end_comment",]
+)
 
 
 def check_group_and_subgroup(group, subgroup):
@@ -220,6 +234,9 @@ class DataFile:
     - ``hdf5_file``: if the file has been opened using
           :meth:`read_file_metadata`, this is the `h5py.File` object.
 
+    - ``tags``: a list of Tag objects; you must call
+      :meth:`read_file_metadata` before reading it.
+
     This class can be used in ``with`` statements; in this case, it will
     automatically open and close the file::
 
@@ -232,6 +249,7 @@ class DataFile:
         self.filepath = Path(filepath)
         self.datetime = parse_datetime_from_filename(self.filepath)
         self.hdf5_groups = []
+        self.tags = None
 
     def __str__(self):
         return f'striptease.DataFile("{self.filepath}")'
@@ -244,6 +262,18 @@ class DataFile:
 
         self.boards = scan_board_names(self.hdf5_groups)
         self.polarimeters = scan_polarimeter_names(self.hdf5_groups)
+
+        self.tags = [
+            Tag(
+                x[0],
+                x[1],
+                x[2],
+                bytes(x[3]).decode("utf-8"),
+                bytes(x[4]).decode("utf-8"),
+                bytes(x[5]).decode("utf-8"),
+            )
+            for x in self.hdf5_file["TAGS"]["tag_data"][:]
+        ]
 
     def close_file(self):
         "Close the HDF5 file"
