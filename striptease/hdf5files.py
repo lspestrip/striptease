@@ -17,9 +17,9 @@ __all__ = [
     "scan_data_path",
 ]
 
-VALID_GROUPS     = ["BIAS", "DAQ"]
-VALID_SUBGROUPS  = ["POL", "BOARD"]
-VALID_DETECTORS  = ["Q1", "Q2", "U1", "U2"]
+VALID_GROUPS = ["BIAS", "DAQ"]
+VALID_SUBGROUPS = ["POL", "BOARD"]
+VALID_DETECTORS = ["Q1", "Q2", "U1", "U2"]
 VALID_DATA_TYPES = ["PWR", "DEM"]
 
 #: Information about a tag loaded from a HDF5 file
