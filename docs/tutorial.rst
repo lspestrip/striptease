@@ -68,18 +68,22 @@ retrieves the drain voltage for HEMT #0 from detector `R0`::
 
 The example above retrieved a value from the electronic board and
 saved it into ``vd0_hk``. Changing the method from ``GET`` to ``SET``
-permits to set new values in the board; we are going to overwrite the
-same parameter, thus with a null net effect::
+permits to set new values in the board; in this case, we must change
+the name of the parameter as well, because of the way the Strip
+electronics works::
 
   conn.slo_command(
       method="SET",
       board="R",
       pol=0,
       kind="BIAS",
-      base_addr="VD0_HK",
+      base_addr="VD0_SET",
       data=vd0_hk,
   )
 
+The class :class:`.StripConnection` has more high-level methods that
+rely on :meth:`.slo_command`: refer to its documentation for more
+details.
 
 How data are saved and accessed
 -------------------------------
