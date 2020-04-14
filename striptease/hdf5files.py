@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 
+from collections import namedtuple
 from pathlib import Path
 from typing import Union, List, Set
 
@@ -16,10 +17,23 @@ __all__ = [
     "scan_data_path",
 ]
 
-VALID_GROUPS = ["POL", "BOARD"]
-VALID_SUBGROUPS = ["BIAS", "DAQ"]
-VALID_DETECTORS = ["Q1", "Q2", "U1", "U2"]
+VALID_GROUPS     = ["BIAS", "DAQ"]
+VALID_SUBGROUPS  = ["POL", "BOARD"]
+VALID_DETECTORS  = ["Q1", "Q2", "U1", "U2"]
 VALID_DATA_TYPES = ["PWR", "DEM"]
+
+#: Information about a tag loaded from a HDF5 file
+#:
+#: Fields are:
+#: - ``id``: unique integer number
+#: - ``mjd_start``: start time of the tag (MJD)
+#: - ``mjd_end``: stop time of the tag (MJD)
+#: - ``name``: string containing the name of the tag
+#: - ``start_comment``: comment put at the start
+#: - ``end_comment``: comment put at the end
+Tag = namedtuple(
+    "Tag", ["id", "mjd_start", "mjd_end", "name", "start_comment", "end_comment",]
+)
 
 
 def check_group_and_subgroup(group, subgroup):
@@ -38,7 +52,7 @@ def hk_list_file_name(group, subgroup):
     return (
         Path(__file__).parent.parent
         / "data"
-        / "hk_pars_{}_{}.csv".format(group.upper(), subgroup.upper(),)
+        / "hk_pars_{}_{}.csv".format(subgroup.upper(), group.upper(),)
     )
 
 
@@ -49,7 +63,7 @@ class HkDescriptionList:
     housekeeping parameter with a description. It provides a nice
     textual representation when printed on the screen::
 
-        l = get_hk_descriptions("POL_Y6", "BIAS")
+        l = get_hk_descriptions("BIAS", "POL")
 
         # Print the description of one parameter
         if "VG4A_SET" in l:
@@ -61,8 +75,8 @@ class HkDescriptionList:
     """
 
     def __init__(self, group, subgroup, hklist):
-        self.group = group
-        self.subgroup = subgroup
+        self.group = subgroup
+        self.subgroup = group
         self.hklist = hklist
 
     def __contains__(self, k):
@@ -98,12 +112,12 @@ def get_hk_descriptions(group, subgroup):
     """Reads the list of housekeeping parameters with their own description.
 
     Args:
-        group (str): The group to load. It can either be ``POL_XY`` or
+        group (str): The subgroup. It must either be ``BIAS``
+            or ``DAQ``.
+
+        subgroup (str): The group to load. It can either be ``POL_XY`` or
             ``BOARD_X``, with `X` being the module letter, and `Y`
             the number of the polarimeter.
-
-        subgroup (str): The subgroup. It must either be ``BIAS``
-            or ``DAQ``.
 
     Returns:
 
@@ -112,7 +126,7 @@ def get_hk_descriptions(group, subgroup):
 
     Examples::
 
-        list = get_hk_descriptions("POL_G0", "DAQ")
+        list = get_hk_descriptions("DAQ", "POL_G0")
 
     """
     check_group_and_subgroup(group, subgroup)
@@ -220,6 +234,9 @@ class DataFile:
     - ``hdf5_file``: if the file has been opened using
           :meth:`read_file_metadata`, this is the `h5py.File` object.
 
+    - ``tags``: a list of Tag objects; you must call
+      :meth:`read_file_metadata` before reading it.
+
     This class can be used in ``with`` statements; in this case, it will
     automatically open and close the file::
 
@@ -232,6 +249,7 @@ class DataFile:
         self.filepath = Path(filepath)
         self.datetime = parse_datetime_from_filename(self.filepath)
         self.hdf5_groups = []
+        self.tags = None
 
     def __str__(self):
         return f'striptease.DataFile("{self.filepath}")'
@@ -244,6 +262,18 @@ class DataFile:
 
         self.boards = scan_board_names(self.hdf5_groups)
         self.polarimeters = scan_polarimeter_names(self.hdf5_groups)
+
+        self.tags = [
+            Tag(
+                x[0],
+                x[1],
+                x[2],
+                bytes(x[3]).decode("utf-8"),
+                bytes(x[4]).decode("utf-8"),
+                bytes(x[5]).decode("utf-8"),
+            )
+            for x in self.hdf5_file["TAGS"]["tag_data"][:]
+        ]
 
     def close_file(self):
         "Close the HDF5 file"
@@ -265,13 +295,13 @@ class DataFile:
 
         Args:
         
-            group (str): Name of the housekeeping group. It can either
+            group (str): Either ``BIAS`` or ``DAQ``
+
+            subgroup (str): Name of the housekeeping group. It can either
                 be ``POL_XY`` or ``BOARD_X``, with `X` being the
                 letter identifying the module, and `Y` the polarimeter
                 number within the module. Possible examples are
                 ``POL_G0`` and ``BOARD_Y``.
-
-            subgroup (str): Either ``BIAS`` or ``BOARD``
 
             par (str): Name of the housekeeping parameter,
                 e.g. ``ID4_DIV``.
@@ -294,7 +324,7 @@ class DataFile:
             self.read_file_metadata()
 
         print(f"{group.upper()}, {subgroup.upper()}, {par.upper()}")
-        datahk = self.hdf5_file[group.upper()][subgroup.upper()][par.upper()]
+        datahk = self.hdf5_file[subgroup.upper()][group.upper()][par.upper()]
         hk_time = Time(datahk["m_jd"], format="mjd")
         hk_data = datahk["value"]
         return hk_time, hk_data
