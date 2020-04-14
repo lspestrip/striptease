@@ -1,0 +1,284 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,Rmd
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.4.1
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+# Introduction
+
+
+This provides an interface to the data acquired by the instrument and stored in HDF5 files
+It allows the user to access both scientific and housekeepings data returning them into time, data numpy arrays.
+Here is an example that shows how to use it:
+
+
+# Imports and functions
+
+```{python}
+import hdf5files
+import numpy as np
+import pylab as pl
+from importlib import reload
+reload(hdf5files)
+from hdf5files import DataFile
+```
+
+# Metadata and tags
+
+
+Here we learn how to access the file metadata and, in particular, its tags. Tags are useful to distinguish different parts of the file pertaining to various steps of a procedure
+
+```{python}
+# Specify the filename containing the data
+fname = '/home/daniele/Documents/LSPE/testing_integration/system_level_tests/pre_tests/2020_04_05_14-31-54.h5' 
+
+# Initialize the class
+my_data = DataFile(fname)
+
+# Read the file metadata
+my_data.read_file_metadata()
+```
+
+```{python}
+# Display the tags
+my_data.tags
+```
+
+```{python}
+# Let's see how many tags we have and display the first one
+tags = my_data.tags
+len(tags)
+```
+
+```{python}
+tags[0]
+```
+
+\begin{itemize}
+    \item id: the ID of the tag. Generally useless for general purposes
+    \item mjd_start: the starting time (modified Julian date)
+    \item mjd_edn: the ending time (modified Julian date)
+    \item name: the name of the tag (probably the most useful piece of information)
+    \item start_comment, end_comment: comments at the beginning and end of a tag
+\end{itemize}
+
+```{python}
+# Let's see the boards:
+boards = my_data.boards
+
+print(boards)
+```
+
+# Scientific data
+
+
+The user must load scientific data by specifying, in order:
+\begin{itemize}
+    \item The polarimeter, with a string of the form POL_XY, where X is the module and Y is the number
+    \item The type of data (demodulated, DEM, or undemodulated, PWR)
+    \item the diode detector Q1, Q2, U2, U2
+\end{itemize}
+
+
+## Select all the data in the file
+
+```{python}
+# Specify the filename containing the data
+fname = '/home/daniele/Documents/LSPE/testing_integration/system_level_tests/pre_tests/2020_04_05_14-31-54.h5' 
+
+# Initialize the class
+my_data = DataFile(fname)
+```
+
+```{python}
+# Now read demodulated data from polarimeter G0, detector Q1
+
+polarimeter = 'G0'
+data_type = 'DEM'
+detector = 'Q1'
+
+time_obj, data = my_data.load_sci(polarimeter, data_type, detector)
+```
+
+```{python}
+# !! Important notice: the time returned by this function is an astropy object. To use it we need
+#    to convert it to a normal array
+
+time = time_obj.unix # Converts the time in seconds
+time = time - time[0]
+```
+
+```{python}
+pl.plot(time, data)
+```
+
+## Select a subset of data based on tags
+
+```{python}
+# Let's look at the tags regarding a certain polarimeter and the part of test with pinchoff
+polarimeter = 'R0'
+
+pol_tags = [t for t in tags if (polarimeter in t.name and t.name.startswith('PINCH'))]
+pol_tags
+```
+
+```{python}
+# Now let's select only the data regarding the first tag. We do this by using the mjd_start and mjd_end fields
+curtag = tags[0]
+tstart = curtag.mjd_start
+tend   = curtag.mjd_end
+```
+
+```{python}
+# Now let's read all data
+# Now read demodulated data from polarimeter R0, detector Q1
+
+data_type = 'DEM'
+detector = 'Q1'
+
+time_obj, data = my_data.load_sci(polarimeter, data_type, detector)
+```
+
+```{python}
+# Now we set a mask to select only the data subset
+mjd = time_obj.mjd # Convert to Julian date
+mask = (mjd >= tstart) & (mjd <= tend)
+mask
+```
+
+```{python}
+# Now we extract a data subset
+subdata = data[mask]
+subtime = time_obj[mask].unix
+subtime = subtime - subtime[0]
+```
+
+```{python}
+pl.plot(subtime, subdata)
+```
+
+# Housekeepings data
+
+
+The housekeepings data are organized into two groups, 'BIAS' (regarding all HKs relative to BIAS boards) and 'DAQ' (regarding all HKs. relative to data acquisition boards)
+
+Each group is subdivided into two subgroups: POL_XY (regarding parameters relative to a given polarimeter) and BOARD_X (regarding parameters relative to a given board)
+
+
+## List parameters
+
+```{python}
+# Specify the filename containing the data
+fname = '/home/daniele/Documents/LSPE/testing_integration/system_level_tests/pre_tests/2020_04_05_14-31-54.h5' 
+
+# Initialize the class
+my_data = DataFile(fname)
+```
+
+```{python}
+# Let's list all the BIAS parameters relative to polarimeters
+
+group = 'BIAS'
+subgroup = 'POL'
+
+print(hdf5files.get_hk_descriptions(group, subgroup))
+```
+
+```{python}
+# Groups and subgroups are listed here
+print(hdf5files.VALID_GROUPS)
+print(hdf5files.VALID_SUBGROUPS)
+```
+
+## Load all data
+
+```{python}
+# Specify the filename containing the data
+fname = '/home/daniele/Documents/LSPE/testing_integration/system_level_tests/pre_tests/2020_04_05_14-31-54.h5' 
+
+# Initialize the class
+my_data = DataFile(fname)
+
+# Read the file metadata
+my_data.read_file_metadata()
+tags = my_data.tags
+```
+
+```{python}
+# Here we load the data passing the group, the subgroup and the parameter
+group = 'BIAS'
+subgroup = 'POL_R0'
+parameter = 'ID1_HK'
+
+time_obj, data = my_data.load_hk(group, subgroup, parameter)
+
+time = time_obj.unix
+time = time - time[0]
+```
+
+```{python}
+pl.plot(time, data)
+```
+
+## Select data subset
+
+
+Here the procedure is the same used for scientific data
+
+```{python}
+# Let's look at the tags regarding a certain polarimeter and the part of test with pinchoff
+polarimeter = 'R0'
+
+pol_tags = [t for t in tags if (polarimeter in t.name and t.name.startswith('PINCH'))]
+pol_tags
+```
+
+```{python}
+# Now let's select only the data regarding the first 21 tags. We do this by using the mjd_start and mjd_end fields
+starttag = tags[0]
+endtag = tags[20]
+tstart = starttag.mjd_start
+tend   = endtag.mjd_end
+```
+
+```{python}
+# Now let's read all data
+# Now read demodulated data from polarimeter R0, detector Q1
+
+group = 'BIAS'
+subgroup = 'POL_R0'
+parameter = 'ID1_HK'
+
+time_obj, data = my_data.load_hk(group, subgroup, parameter)
+```
+
+```{python}
+# Now we set a mask to select only the data subset
+mjd = time_obj.mjd # Convert to Julian date
+mask = (mjd >= tstart) & (mjd <= tend)
+mask
+```
+
+```{python}
+# Now we extract a data subset
+subdata = data[mask]
+subtime = time_obj[mask].unix
+subtime = subtime - subtime[0]
+```
+
+```{python}
+pl.plot(subtime, subdata)
+```
+
+```{python}
+
+```
