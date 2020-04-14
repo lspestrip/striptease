@@ -17,9 +17,9 @@ __all__ = [
     "scan_data_path",
 ]
 
-VALID_GROUPS = ["POL", "BOARD"]
-VALID_SUBGROUPS = ["BIAS", "DAQ"]
-VALID_DETECTORS = ["Q1", "Q2", "U1", "U2"]
+VALID_GROUPS     = ["BIAS", "DAQ"]
+VALID_SUBGROUPS  = ["POL", "BOARD"]
+VALID_DETECTORS  = ["Q1", "Q2", "U1", "U2"]
 VALID_DATA_TYPES = ["PWR", "DEM"]
 
 #: Information about a tag loaded from a HDF5 file
@@ -52,7 +52,7 @@ def hk_list_file_name(group, subgroup):
     return (
         Path(__file__).parent.parent
         / "data"
-        / "hk_pars_{}_{}.csv".format(group.upper(), subgroup.upper(),)
+        / "hk_pars_{}_{}.csv".format(subgroup.upper(), group.upper(),)
     )
 
 
@@ -63,7 +63,7 @@ class HkDescriptionList:
     housekeeping parameter with a description. It provides a nice
     textual representation when printed on the screen::
 
-        l = get_hk_descriptions("POL_Y6", "BIAS")
+        l = get_hk_descriptions("BIAS", "POL")
 
         # Print the description of one parameter
         if "VG4A_SET" in l:
@@ -75,8 +75,8 @@ class HkDescriptionList:
     """
 
     def __init__(self, group, subgroup, hklist):
-        self.group = group
-        self.subgroup = subgroup
+        self.group = subgroup
+        self.subgroup = group
         self.hklist = hklist
 
     def __contains__(self, k):
@@ -112,12 +112,12 @@ def get_hk_descriptions(group, subgroup):
     """Reads the list of housekeeping parameters with their own description.
 
     Args:
-        group (str): The group to load. It can either be ``POL_XY`` or
+        group (str): The subgroup. It must either be ``BIAS``
+            or ``DAQ``.
+
+        subgroup (str): The group to load. It can either be ``POL_XY`` or
             ``BOARD_X``, with `X` being the module letter, and `Y`
             the number of the polarimeter.
-
-        subgroup (str): The subgroup. It must either be ``BIAS``
-            or ``DAQ``.
 
     Returns:
 
@@ -126,7 +126,7 @@ def get_hk_descriptions(group, subgroup):
 
     Examples::
 
-        list = get_hk_descriptions("POL_G0", "DAQ")
+        list = get_hk_descriptions("DAQ", "POL_G0")
 
     """
     check_group_and_subgroup(group, subgroup)
@@ -295,13 +295,13 @@ class DataFile:
 
         Args:
         
-            group (str): Name of the housekeeping group. It can either
+            group (str): Either ``BIAS`` or ``DAQ``
+
+            subgroup (str): Name of the housekeeping group. It can either
                 be ``POL_XY`` or ``BOARD_X``, with `X` being the
                 letter identifying the module, and `Y` the polarimeter
                 number within the module. Possible examples are
                 ``POL_G0`` and ``BOARD_Y``.
-
-            subgroup (str): Either ``BIAS`` or ``BOARD``
 
             par (str): Name of the housekeeping parameter,
                 e.g. ``ID4_DIV``.
@@ -324,7 +324,7 @@ class DataFile:
             self.read_file_metadata()
 
         print(f"{group.upper()}, {subgroup.upper()}, {par.upper()}")
-        datahk = self.hdf5_file[group.upper()][subgroup.upper()][par.upper()]
+        datahk = self.hdf5_file[subgroup.upper()][group.upper()][par.upper()]
         hk_time = Time(datahk["m_jd"], format="mjd")
         hk_data = datahk["value"]
         return hk_time, hk_data
