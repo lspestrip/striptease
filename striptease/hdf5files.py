@@ -93,6 +93,30 @@ class HkDescriptionList:
 
         return result + ("-" * linewidth) + "\n" + table_body
 
+def get_group_subgroup(parameter):
+    '''
+    Gets the group and subgroup names of a given parameter
+
+    Args:
+        parameter (str): The HK parameter name
+
+    Returns:
+
+        group, subgroup (str): the strings of the group and subgroup of the parameter
+
+    '''
+    for g in VALID_GROUPS:
+        for s in VALID_SUBGROUPS:
+            par_fname = hk_list_file_name(g, s)
+            with par_fname.open(mode="r") as csv_file:
+                csv_reader = csv.DictReader(csv_file)
+                for row in csv_reader:
+                    if parameter == row["HK_PAR"]:
+                        return s, g
+        print('Parameter %s does not exist' % parameter)
+        return None, None
+              
+            
 
 def get_hk_descriptions(group, subgroup):
     """Reads the list of housekeeping parameters with their own description.
