@@ -294,9 +294,9 @@ class StripConnection(Connection):
             # and this "if" has no effect.
             if abs_url != "":
                 result = super(StripConnection, self).post(url=abs_url, message=message)
-                assert result["status"] == "OK", "Error in POST ({0}): '{1}'".format(
-                    result["status"]
-                )
+                # TODO: once the firmware is updated, remove "ERROR_TIMEOUT_GET" from here!
+                if result["status"] not in ["OK", "ERROR_TIMEOUT_GET"]:
+                    assert False, "Error in POST ({0}): '{1}'".format(result["status"])
             else:
                 result = {"status": "OK"}
 
