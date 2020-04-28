@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(
     name="Striptease",
@@ -10,5 +10,5 @@ setup(
     author="Stefano Sartor, Maurizio Tomasi",
     author_email="",
     url="https://github.com/lspestrip/striptease",
-    packages=["config", "web", "widgets"],
+    packages=find_packages(),
 )
