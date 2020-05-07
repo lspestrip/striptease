@@ -10,6 +10,7 @@ import sys
 
 from config import Config
 from program_turnon import SetupBoard, TurnOnOffProcedure
+from striptease import BOARD_TO_W_BAND_POL
 
 DEFAULT_WAITTIME_S = 5.0
 
@@ -18,9 +19,13 @@ def unroll_polarimeters(pol_list):
     board_horn_pol = re.compile(r"([GBPROYW][0-6]):(STRIP[0-9][0-9])")
     for cur_pol in pol_list:
         if cur_pol in ("V", "R", "O", "Y", "G", "B", "I"):
-            maxidx = 7
-            for idx in range(maxidx):
+            for idx in range(7):
                 yield (f"{cur_pol}{idx}", None)
+
+            # Include the W-band polarimeter
+            if cur_pol != "I":
+                yield (BOARD_TO_W_BAND_POL[cur_pol], None)
+
             continue
         else:
             # Is this polarimeter in a form like "G0:STRIP33"?
