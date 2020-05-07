@@ -7,7 +7,68 @@ import numpy as np
 from pathlib import Path
 import h5py
 import sys
-from tqdm import tqdm
+
+try:
+    from tqdm import tqdm
+except:
+    ERASE_EOL = "\033[K"
+
+    # If the awesome tqdm library is not available, fall back to some
+    # less nicer, custom-made solution
+    from datetime import datetime
+
+    class tqdm:
+        def __init__(self, desc, total):
+            self.desc = desc
+            self.total = total
+            self.current = 0
+            self.last_print = None
+
+        def __enter__(self):
+            self.start_time = datetime.now()
+            print(
+                f"\r{self.desc}: copying {self.total} datasets…" + ERASE_EOL,
+                end="",
+                file=sys.stderr,
+            )
+            return self
+
+        def __exit__(self, type, value, traceback):
+            self.end_time = datetime.now()
+            elapsed_time = (self.end_time - self.start_time).total_seconds()
+            print(
+                f"\r{self.desc}: {self.total} datasets copied in {elapsed_time:.1f} s"
+                + ERASE_EOL,
+                file=sys.stderr,
+            )
+
+        def update(self):
+            self.current += 1
+
+            now = datetime.now()
+
+            if self.last_print:
+                delta_time = (now - self.last_print).total_seconds()
+            else:
+                delta_time = None
+
+            if (not delta_time) or (delta_time > 0.25):
+                if self.total > 0:
+                    percent = "{0:.1f}%".format(self.current * 100.0 / self.total)
+                else:
+                    percent = "?"
+
+                print(
+                    f"\r{self.desc}: copying {self.current}/{self.total} datasets ({percent})…"
+                    + ERASE_EOL,
+                    file=sys.stderr,
+                    end="",
+                )
+                self.last_print = now
+
+    # def tqdm(desc, total):
+    #    return PercentBarCounter(desc=desc, total=total)
+
 
 DEFAULT_OUTPUT_FILENAME = "joined.h5"
 
@@ -63,8 +124,9 @@ def copy_dataset(name, source, dest, objtype, start_time=None, end_time=None):
 
         num_of_elements = source_dataset[mask].shape[0]
 
-        dataset.resize(dataset.shape[0] + num_of_elements, axis=0)
-        dataset[-num_of_elements:] = source_dataset[mask]
+        if num_of_elements > 0:
+            dataset.resize(dataset.shape[0] + num_of_elements, axis=0)
+            dataset[-num_of_elements:] = source_dataset[mask]
     else:
         # Unsupported type, just skip this
         pass
