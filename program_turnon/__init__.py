@@ -162,7 +162,9 @@ class SetupBoard(object):
             ("POL_PWR", 1),
             ("DAC_REF", 1),
             ("POL_MODE", mode),
-        ]:  # , ("CLK_REF", 0)]:
+            ("CLK_REF", 0),
+            ("PHASE_SRC", 0),
+        ]:
             cmd["base_addr"] = c[0]
             cmd["data"] = [c[1]]
 
