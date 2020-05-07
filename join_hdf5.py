@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import astropy.time
 import numpy as np
 from pathlib import Path
@@ -82,7 +82,7 @@ def parse_datetime(s):
         jd = float(s)
     except ValueError:
         # If we reach this point, it surely is not a JD
-        jd = astropy.time.Time(s).jd
+        jd = astropy.time.Time(s).mjd
 
     return jd
 
@@ -162,7 +162,21 @@ def copy_hdf5(source, dest, start_time=None, end_time=None):
 
 def parse_args():
     parser = ArgumentParser(
-        description="Join two or more HDF5 files containing Strip data"
+        description="Join two or more HDF5 files containing Strip data",
+        formatter_class=RawDescriptionHelpFormatter,
+        epilog="""Here are some examples:
+
+    # Join all the data files acquired on 2020/04/23 in one file
+    join_hdf5.py -o test1.h5 /storage/2020_04_23_*.h5
+
+    # Specify start and end times as Julian dates
+    join_hdf5.py -f 58962.6028166157 -t 58962.6038166157 -o test2.h5 /storage/2020_04_23_*.h5
+
+    # You can specify times using human-readable formats
+    # There's no need to specify *both* -f and -t; the following
+    # example considers only the data acquired before 10:30am
+    join_hdf5.py -t 2020-04-23T10:30:00 -o test3.h5 /storage/2020_04_23_*.h5
+""",
     )
 
     parser.add_argument(
