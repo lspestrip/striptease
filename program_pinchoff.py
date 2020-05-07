@@ -49,6 +49,13 @@ class PinchOffProcedure(StripProcedure):
             # Wait a while after having turned on the board
             self.wait(seconds=5)
 
+        # Verification step
+        with StripTag(
+            conn=self.command_emitter, name=f"PINCHOFF_VERIFICATION_1",
+        ):
+            self.wait(seconds=300)
+
+        for cur_board in STRIP_BOARD_NAMES:
             # Now run the pinch-off procedure
             for cur_horn_idx in range(8):
                 if cur_board == "I" and cur_horn_idx == 7:
@@ -76,7 +83,7 @@ class PinchOffProcedure(StripProcedure):
                             conn=self.command_emitter,
                             name=f"PINCHOFF_IDSET_{cur_horn_name}_{cur_lna}_{id_value_muA:.0f}muA",
                         ):
-                            self.conn.wait(seconds=5)
+                            self.conn.wait(seconds=18)
 
 
 if __name__ == "__main__":
