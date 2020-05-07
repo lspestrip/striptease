@@ -22,11 +22,17 @@ class PinchOffProcedure(StripProcedure):
         log.info(f"Turnon of board {board}")
         turnon_proc = TurnOnOffProcedure(waittime_s=1.0, turnon=True)
 
-        for cur_horn_idx in range(7):
+        for cur_horn_idx in range(8):
+            if board == "I" and cur_horn_idx == 7:
+                continue
+
+            if cur_horn_idx != 7:
+                polname = f"{board}{cur_horn_idx}"
+            else:
+                polname = BOARD_TO_W_BAND_POL[board]
+
             turnon_proc.set_board_horn_polarimeter(
-                new_board=board,
-                new_horn=normalize_polarimeter_name(f"{board}{cur_horn_idx}"),
-                new_pol=None,
+                new_board=board, new_horn=polname, new_pol=None,
             )
             turnon_proc.run()
 
