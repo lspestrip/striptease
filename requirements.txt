@@ -12,3 +12,4 @@ pandas
 pyqtgraph
 pytest
 black
+tqdm
