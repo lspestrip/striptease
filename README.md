@@ -22,6 +22,7 @@ If you want to follow the first route, use the following commands (possibly afte
 ```bash
 git clone git@github.com:lspestrip/striptease.git
 cd striptease
+pip install --user -r requirements.txt
 python setup.py install
 ```
 
@@ -30,6 +31,7 @@ If you are a developer, use these commands:
 ```bash
 git clone git@github.com:lspestrip/striptease.git
 cd striptease
+pip install --user -r requirements.txt
 python -m pip install -e .
 ```
 
