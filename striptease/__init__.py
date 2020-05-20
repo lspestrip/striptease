@@ -11,15 +11,16 @@ from .hdf5files import *
 
 __version__ = "0.1.0"
 
+from enum import IntFlag
 from urllib.parse import urljoin
 from web.rest.base import Connection
 
-# List of all the board names: handy if you need to iterate over them,
-# or if you need to validate user input
+#: List of all the board names: handy if you need to iterate over them,
+#: or if you need to validate user input
 STRIP_BOARD_NAMES = ["R", "V", "G", "B", "Y", "O", "I"]
 
-# This dictionary associates the name of a board with the W-band
-# polarimeter associated with it.
+#: This dictionary associates the name of a board with the W-band
+#: polarimeter associated with it.
 BOARD_TO_W_BAND_POL = {
     "Y": "W1",
     "O": "W2",
@@ -29,6 +30,26 @@ BOARD_TO_W_BAND_POL = {
     "G": "W6",
     "I": None,
 }
+
+
+#: Used to set the operational mode of a polarimeter. See
+#: :data:`CLOSED_LOOP_FLAGS` and :data:`OPEN_LOOP_FLAGS`.
+class PolMode(IntFlag):
+    # If this is not set, the electronics will ignore drain settings
+    ENABLE_VDRAIN = 1
+    # If this is set, the LNA works in open-loop mode
+    ENABLE_IDRAIN_LOOP = 2
+    # If enable, gate voltage is set to a constant value
+    MANUAL_MODE = 4
+
+
+#: Value to be passed to ``POL_MODE`` to use open-loop mode for LNAs
+#: (constant drain voltage)
+OPEN_LOOP_MODE = PolMode.ENABLE_VDRAIN
+
+#: Value to be passed to ``POL_MODE`` to use closed-loop mode for LNAs
+#: (constant drain current)
+CLOSED_LOOP_MODE = PolMode.ENABLE_VDRAIN | PolMode.ENABLE_IDRAIN_LOOP
 
 
 def normalize_polarimeter_name(name: str):
@@ -774,6 +795,10 @@ class StripConnection(Connection):
         ----
 
             polarimeter (str): name of the board, e.g., ``I0``
+
+            mode (int or PolMode): operational mode for the
+              polarimeter. See :class:`PolMode`.
+
         """
 
         real_polarimeter = normalize_polarimeter_name(polarimeter)
@@ -784,7 +809,7 @@ class StripConnection(Connection):
             pol=real_polarimeter,
             kind="BIAS",
             base_addr="POL_MODE",
-            data=[mode],
+            data=[int(mode)],
         )
 
     def pol_pwr(self, polarimeter, value=1):

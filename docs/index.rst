@@ -13,6 +13,7 @@ Welcome to Striptease's documentation!
    installation
    tutorial
    hk_calibration
+   polarimeters
    data_interface
    procedures
    API
