@@ -8,6 +8,8 @@ from pathlib import Path
 import h5py
 import sys
 
+DEFAULT_COMPRESSION_LEVEL = 4
+
 try:
     from tqdm import tqdm
 except:
@@ -87,7 +89,16 @@ def parse_datetime(s):
     return jd
 
 
-def copy_dataset(name, source, dest, objtype, start_time=None, end_time=None):
+def compression_params(level):
+    if level < 0:
+        return {}
+    else:
+        return {"compression": "gzip", "compression_opts": level}
+
+
+def copy_dataset(
+    name, source, dest, objtype, start_time=None, end_time=None, compression_level=4
+):
     if isinstance(objtype, h5py.Group):
         dest.require_group(name)
     elif isinstance(objtype, h5py.Dataset):
@@ -104,6 +115,7 @@ def copy_dataset(name, source, dest, objtype, start_time=None, end_time=None):
                 chunks=True,
                 maxshape=(None,),
                 exact=True,
+                **compression_params(compression_level),
             )
         except TypeError:
             # If require_dataset raises a TypeError, it means that the
@@ -127,35 +139,41 @@ def copy_dataset(name, source, dest, objtype, start_time=None, end_time=None):
         if num_of_elements > 0:
             dataset.resize(dataset.shape[0] + num_of_elements, axis=0)
             dataset[-num_of_elements:] = source_dataset[mask]
+
+        # Return the number of rows "visited" (*not* copied)
+        return source_dataset.shape[0]
     else:
         # Unsupported type, just skip this
         pass
 
-    return None  # This ensures that visititems keeps running
+    return 0  # No rows have been visited during this iteration
 
 
-def copy_hdf5(source, dest, start_time=None, end_time=None):
+def copy_hdf5(source, dest, start_time=None, end_time=None, compression_level=4):
     class Counter:
         counter = 0
 
-        def increment(self):
-            self.counter += 1
+        def increment(self, objname, objtype):
+            if isinstance(objtype, h5py.Dataset):
+                self.counter += source[objname].shape[0]
 
+    # Count the overall number of rows in the dataset
     count = Counter()
-    source.visit(lambda x: count.increment())
+    source.visititems(lambda objname, objtype: count.increment(objname, objtype))
 
     with tqdm(desc=source.filename, total=count.counter) as progress_bar:
 
         def visit_function(name, objtype):
-            copy_dataset(
+            num_of_rows = copy_dataset(
                 name=name,
                 source=source,
                 dest=dest,
                 objtype=objtype,
                 start_time=start_time,
                 end_time=end_time,
+                compression_level=compression_level,
             )
-            progress_bar.update()
+            progress_bar.update(num_of_rows)
 
         source.visititems(visit_function)
 
@@ -198,6 +216,20 @@ can either be a datetime in the format YYYY-MM-DDTHH:MM:SS
 result. If not specified, the first sample in the output
 will be the first sample in the first input file. The format
 for TIME is the same as for --start-time.""",
+    )
+
+    parser.add_argument(
+        "--compression-level",
+        "-z",
+        metavar="LEVEL",
+        type=int,
+        default=DEFAULT_COMPRESSION_LEVEL,
+        help="""Specify the compression level to be used in
+the creation of the output HDF5. It must be a number in the
+range 0...9, where 0 deactivates compression and 9 is the
+maximum value. (Default is {0}.)""".format(
+            DEFAULT_COMPRESSION_LEVEL
+        ),
     )
 
     parser.add_argument(
@@ -256,6 +288,7 @@ def main():
                     dest=outf,
                     start_time=args.start_time,
                     end_time=args.end_time,
+                    compression_level=args.compression_level,
                 )
 
             copied_files.append(cur_input_filename)
