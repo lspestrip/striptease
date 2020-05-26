@@ -56,34 +56,37 @@ class PinchOffProcedure(StripProcedure):
             self.wait(seconds=300)
 
         for cur_board in STRIP_BOARD_NAMES:
-            # Now run the pinch-off procedure
-            for cur_horn_idx in range(8):
-                if cur_board == "I" and cur_horn_idx == 7:
-                    continue
+            # Now run the pinch-off procedure for each board
+            with StripTag(
+                conn=self.command_emitter, name=f"PINCHOFF_TILE_{cur_board}",
+            ):
+                for cur_horn_idx in range(8):
+                    if cur_board == "I" and cur_horn_idx == 7:
+                        continue
 
-                if cur_horn_idx == 7:
-                    cur_horn_name = BOARD_TO_W_BAND_POL[cur_board]
-                else:
-                    cur_horn_name = f"{cur_board}{cur_horn_idx}"
+                    if cur_horn_idx == 7:
+                        cur_horn_name = BOARD_TO_W_BAND_POL[cur_board]
+                    else:
+                        cur_horn_name = f"{cur_board}{cur_horn_idx}"
 
-                self.conn.enable_electronics(polarimeter=cur_horn_name, pol_mode=5)
+                    self.conn.enable_electronics(polarimeter=cur_horn_name, pol_mode=5)
 
-                for id_value_muA in (100, 4_000, 8_000, 12_000):
-                    for cur_lna in ("HA3", "HA2", "HA1", "HB3", "HB2", "HB1"):
-                        # Convert the current (μA) in ADU
-                        adu = calibr.physical_units_to_adu(
-                            polarimeter=cur_horn_name,
-                            hk="idrain",
-                            component=cur_lna,
-                            value=id_value_muA,
-                        )
-                        self.conn.set_id(cur_horn_name, cur_lna, value_adu=adu)
+                    for id_value_muA in (100, 4_000, 8_000, 12_000):
+                        for cur_lna in ("HA3", "HA2", "HA1", "HB3", "HB2", "HB1"):
+                            # Convert the current (μA) in ADU
+                            adu = calibr.physical_units_to_adu(
+                                polarimeter=cur_horn_name,
+                                hk="idrain",
+                                component=cur_lna,
+                                value=id_value_muA,
+                            )
+                            self.conn.set_id(cur_horn_name, cur_lna, value_adu=adu)
 
-                        with StripTag(
-                            conn=self.command_emitter,
-                            name=f"PINCHOFF_IDSET_{cur_horn_name}_{cur_lna}_{id_value_muA:.0f}muA",
-                        ):
-                            self.conn.wait(seconds=18)
+                            with StripTag(
+                                conn=self.command_emitter,
+                                name=f"PINCHOFF_IDSET_{cur_horn_name}_{cur_lna}_{id_value_muA:.0f}muA",
+                            ):
+                                self.conn.wait(seconds=18)
 
 
 if __name__ == "__main__":
