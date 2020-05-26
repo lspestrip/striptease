@@ -125,7 +125,8 @@ def copy_dataset(
 
         mask = np.ones(source_dataset.shape[0], dtype=bool)
         if (
-            ("m_jd" in source_dataset.dtype.fields)
+        	(source_dataset.dtype.fields)
+            and ("m_jd" in source_dataset.dtype.fields)
             and (len(source_dataset) > 0)
             and (start_time or end_time)
         ):
@@ -295,12 +296,13 @@ def main():
 
         maxlen = max([len(x) for x in copied_files])
 
-        outf.require_dataset(
-            "joined_files",
-            (len(copied_files),),
-            dtype=f"S{maxlen}",
-            data=[bytes(x, "utf-8") for x in copied_files],
-        )
+        if "joined_files" not in outf:
+	        outf.require_dataset(
+	            "joined_files",
+	            (len(copied_files),),
+	            dtype=f"S{maxlen}",
+	            data=[bytes(x, "utf-8") for x in copied_files],
+	        )
 
 
 if __name__ == "__main__":
