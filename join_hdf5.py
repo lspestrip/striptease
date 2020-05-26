@@ -44,8 +44,8 @@ except:
                 file=sys.stderr,
             )
 
-        def update(self):
-            self.current += 1
+        def update(self, increment=1):
+            self.current += increment
 
             now = datetime.now()
 
