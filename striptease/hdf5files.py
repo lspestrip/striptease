@@ -328,7 +328,7 @@ class DataFile:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close_file()
 
-    def load_hk(self, group, subgroup, par):
+    def load_hk(self, group, subgroup, par, verbose=False):
         """Loads scientific data from one detector of a given polarimeter
 
         Args:
@@ -343,6 +343,8 @@ class DataFile:
 
             par (str): Name of the housekeeping parameter,
                 e.g. ``ID4_DIV``.
+
+            verbose (bool): whether to echo the HK being loaded. Default is FALSE
 
         Returns:
 
@@ -361,7 +363,8 @@ class DataFile:
         if not self.hdf5_groups:
             self.read_file_metadata()
 
-        print(f"{group.upper()}, {subgroup.upper()}, {par.upper()}")
+        if verbose:
+            print(f"{group.upper()}, {subgroup.upper()}, {par.upper()}")
         datahk = self.hdf5_file[subgroup.upper()][group.upper()][par.upper()]
         hk_time = Time(datahk["m_jd"], format="mjd")
         hk_data = datahk["value"]
