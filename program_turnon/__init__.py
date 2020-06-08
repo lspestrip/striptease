@@ -11,6 +11,7 @@ import time
 import csv
 import sys
 import pandas as pd
+import numpy as np
 from calibration import physical_units_to_adu
 from striptease import get_lna_num, get_polarimeter_index
 from striptease.biases import InstrumentBiases, BoardCalibration
@@ -29,9 +30,9 @@ def read_board_xlsx(path):
         d = {}
         pol = cal[p].transpose()
         line_count = 0
-        current_item = pd.np.nan
-        current_fit = pd.np.nan
-        current_chan = pd.np.nan
+        current_item = np.nan
+        current_fit = np.nan
+        current_chan = np.nan
         for r in pol:
             row = pol[r]
             if line_count <= 1:

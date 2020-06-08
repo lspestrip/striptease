@@ -7,6 +7,7 @@ import logging as log
 from pathlib import Path
 
 import pandas as pd
+import numpy as np
 
 from config import Config
 from striptease import (
@@ -112,9 +113,9 @@ def read_board_xlsx(path):
         cur_sheet_dict = {}
         pol = excel_file_data[cur_sheet].transpose()
         line_count = 0
-        current_item = pd.np.nan
-        current_fit = pd.np.nan
-        current_chan = pd.np.nan
+        current_item = np.nan
+        current_fit = np.nan
+        current_chan = np.nan
         for r in pol:
             row = pol[r]
             if line_count <= 1:
