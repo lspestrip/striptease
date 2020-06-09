@@ -275,16 +275,19 @@ class DataFile:
         try:
             self.datetime = parse_datetime_from_filename(self.filepath)
         except RuntimeError:
+            self.datetime = None
+
             # Maybe this file was created by "join_hdf5.py". Let's check
             # it by looking for a section containing the names of the
             # files that have been joined
             with h5py.File(self.filepath, "r") as inpf:
                 if "joined_files" in inpf and len(inpf["joined_files"]) > 0:
-                    self.datetime = parse_datetime_from_filename(
-                        str(inpf["joined_files"][0], encoding="utf-8")
-                    )
-                else:
-                    self.datetime = None
+                    try:
+                        self.datetime = parse_datetime_from_filename(
+                            str(inpf["joined_files"][0], encoding="utf-8")
+                        )
+                    except RuntimeError:
+                        pass
 
         self.hdf5_groups = []
         self.tags = None
