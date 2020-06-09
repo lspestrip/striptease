@@ -99,7 +99,7 @@ def get_lna_num(name):
     - An integer number, which will be returned identically
     """
 
-    if type(name) is int:
+    if type(name) is int or name in ["4A", "5A"]:
         # Assume that the index refers to the proper firmware register
         return name
     elif (len(name) == 3) and (name[0:2] in ["HA", "HB"]):
@@ -113,7 +113,7 @@ def get_lna_num(name):
             "HB3": 5,
         }
         return d[name]
-    elif (len(name) == 2) and (name[0] == "H"):
+    elif name[0] == "H":
         # UniMiB
         d = {
             "H0": 0,
@@ -121,7 +121,9 @@ def get_lna_num(name):
             "H2": 2,
             "H3": 3,
             "H4": 4,
+            "H4A": "4A",
             "H5": 5,
+            "H5A": "5A",
         }
         return d[name]
     elif (len(name) == 2) and (name[0] == "Q"):
