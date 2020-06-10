@@ -9,6 +9,9 @@ import csv
 import h5py
 import numpy as np
 from datetime import datetime
+from scipy.interpolate import interp1d
+
+from .biases import BiasConfiguration
 
 __all__ = [
     "get_hk_descriptions",
@@ -219,6 +222,35 @@ def scan_polarimeter_names(group_names: List[str]) -> Set[str]:
             result.add(curname[4:6].upper())
 
     return result
+
+
+def extract_mean_from_time_range(times, values, time_range=None):
+    """Calculate a mean value for a timeline
+
+    Both "times" and "values" must be lists of values with the same
+    length. The parameter `time_range` can either be `None` or a
+    2-element tuple specifying the range of times to consider.
+
+    """
+
+    assert len(times) == len(values)
+
+    if time_range:
+        mask = (times >= time_range[0]) & (times <= time_range[1])
+        times = times[mask]
+        values = values[mask]
+
+        if len(values) > 3:
+            average = np.mean(values)
+        else:
+            # Too few samples in the interval, interpolate
+            # between the two extrema
+            interpfn = interp1d(times, values, kind="previous")
+            average = interpfn(time_range)
+    else:
+        average = np.mean(values)
+
+    return average
 
 
 class DataFile:
@@ -449,6 +481,86 @@ class DataFile:
             column_selector = tuple([f"{data_type}{x}" for x in detector])
 
         return scitime, scidata[column_selector]
+
+    def get_average_biases(
+        self, polarimeter, time_range=None, calibration_tables=None
+    ) -> BiasConfiguration:
+        """Return a :class:`BiasConfiguration` object containing the average
+values of biases for a polarimeter.
+
+        The parameter `polarimeter` must be a string containing the
+        name of the polarimeter, e.g., ``Y0``. The parameter
+        `time_range`, if specified, is a 2-element tuple containing
+        the start and end MJDs to consider in the average. If
+        `calibration_tables` is specified, it must be an instance of
+        the :class:`.CalibrationTables` class.
+
+        The return value of this function is a :class:`BiasConfiguration` object
+
+        If `calibration_tables` is specified, the values returned by
+        this method are calibrated to physical units; otherwise, they
+        are expressed in ADUs.
+
+        """
+        result = {}
+
+        hk_name_to_parameter = {
+            "VPIN": "vphsw",
+            "IPIN": "iphsw",
+        }
+        for param_name in hk_name_to_parameter.keys():
+            for phsw_pin in (0, 1, 2, 3):
+                times, values = self.load_hk(
+                    group="BIAS",
+                    subgroup=f"POL_{polarimeter}",
+                    par=f"{param_name}{phsw_pin}_HK",
+                )
+
+                average = extract_mean_from_time_range(times, values, time_range)
+
+                if calibration_tables:
+                    average = calibration_tables.adu_to_physical_units(
+                        polarimeter=polarimeter,
+                        hk=hk_name_to_parameter[param_name],
+                        component=phsw_pin,
+                        value=average,
+                    )
+
+                x = f"{param_name}{phsw_pin}".lower()
+                result[x] = average
+
+        parameter_to_hk_name = {
+            "vgate": "vg",
+            "vdrain": "vd",
+            "idrain": "id",
+        }
+        for parameter in parameter_to_hk_name.keys():
+            for amplifier in ["0", "1", "2", "3", "4", "4A", "5", "5A"]:
+                try:
+                    times, values = self.load_hk(
+                        group="BIAS",
+                        subgroup=f"POL_{polarimeter}",
+                        par=f"{parameter_to_hk_name[parameter]}{amplifier}_HK",
+                    )
+                except KeyError:
+                    # This usually happens with names like "VD4A_HK";
+                    # we simply ignore them
+                    continue
+
+                average = extract_mean_from_time_range(times, values, time_range)
+
+                if calibration_tables:
+                    average = calibration_tables.adu_to_physical_units(
+                        polarimeter=polarimeter,
+                        hk=parameter,
+                        component=f"H{amplifier}",
+                        value=average,
+                    )
+
+                x = f"{parameter_to_hk_name[parameter]}{amplifier}".lower()
+                result[x] = average
+
+        return BiasConfiguration(**result)
 
 
 def scan_data_path(path: Union[str, Path]) -> List[DataFile]:

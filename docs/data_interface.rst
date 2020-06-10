@@ -35,6 +35,9 @@ class provides two methods:
 - :meth:`.DataFile.load_hk`
 - :meth:`.DataFile.load_sci`
 
+Moreover, a method :meth:`.DataFile.get_average_biases` can be used
+to retrieve the average level of biases within some time frame.
+  
 Information about housekeeping parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
