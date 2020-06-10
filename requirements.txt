@@ -13,3 +13,4 @@ pyqtgraph
 pytest
 black
 tqdm
+scipy
