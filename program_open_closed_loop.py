@@ -14,6 +14,8 @@ from calibration import CalibrationTables
 from striptease import (
     STRIP_BOARD_NAMES,
     BOARD_TO_W_BAND_POL,
+    OPEN_LOOP_MODE,
+    CLOSED_LOOP_MODE,
     StripTag,
     normalize_polarimeter_name,
 )
@@ -151,6 +153,11 @@ class OpenClosedLoopProcedure(StripProcedure):
         # open-loop and closed-loop tests
 
         for cur_pol in polarimeters:
+            if test_name == "OPEN_LOOP":
+                self.conn.set_pol_mode(cur_pol, OPEN_LOOP_MODE)
+            else:
+                self.conn.set_pol_mode(cur_pol, CLOSED_LOOP_MODE)
+
             cur_biases = biases_per_pol[cur_pol]._asdict()
             self.used_biases.append(
                 {
