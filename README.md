@@ -57,6 +57,11 @@ c = Connection()
 c.login()
 ```
 
+## Contributing
+
+See file
+[CONTRIBUTING.md](https://github.com/lspestrip/striptease/blob/master/CONTRIBUTING.md).
+
 ## Running long scripts
 
 Programs like `program_turnon.py` generate JSON files that can be fed
