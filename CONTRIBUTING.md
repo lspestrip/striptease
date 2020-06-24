@@ -20,6 +20,10 @@ procedure:
     git checkout -b compute_spectra
     ```
     
+    **Please use branches and pull requests, and resist the temptation
+    to do commits to `master`, unless they are really trivial! The
+    procedure outlined here has several benefits!**
+
 -   Now feel free to change files, create new ones, and make commits.
     Please make as many commits as necessary: it's better to have many
     small commits than one huge commit!
@@ -41,12 +45,16 @@ procedure:
     ```
     
 -   The command `git` will produce a message, saying that you must
-    visit a specific URL to open a «pull request». Open the URL
-    displayed by `git` on the terminal and create the pull request.
-    Use a short title to describe the content of the PR, and the
-    «comment» field to be more specific. A good title would be «Enable
-    the computation of spectra» (<40 characters is perfect!), while
-    the comments can be (and should be) longer.
+    visit a specific URL to open a «pull request», which will probably
+    be in the following form:
+    
+    https://github.com/lspestrip/striptease/pull/new/compute_spectra
+    
+    Open the URL displayed by `git` on the terminal and create the
+    pull request. Use a short title to describe the content of the PR,
+    and the «comment» field to be more specific. A good title would be
+    «Enable the computation of spectra» (<40 characters is perfect!),
+    while the comments can be (and should be) longer.
     
 -   Once you have created the pull request, you can sit and enjoy your
     time, while your colleagues are reviewing your work. If they ask
@@ -63,4 +71,3 @@ procedure:
     ```
     
     and you will be back to the `master` branch.
-
