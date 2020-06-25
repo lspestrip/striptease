@@ -26,6 +26,8 @@ from program_turnon import TurnOnOffProcedure
 # Used to look for tags in HDF5 files
 DEFAULT_TAG_TEMPLATE = "OPEN_LOOP_TEST_ACQUISITION_{polarimeter}"
 
+DEFAULT_WAIT_TIME_S = 80
+
 
 def instrument_biases_to_dict(
     polarimeters: List[str], biases: InstrumentBiases
@@ -122,21 +124,18 @@ class OpenClosedLoopProcedure(StripProcedure):
         # This is used when the user specifies the switch --print-biases
         self.used_biases = []
 
-    def turn_on_board(self, board):
-        log.info(f"Turnon of board {board}")
+    def turn_on_polarimeters(self, polarimeters):
+        log.info(
+            f"Turnon of polarimeters {0}".format(
+                ", ".join([str(x) for x in polarimeters])
+            )
+        )
         turnon_proc = TurnOnOffProcedure(waittime_s=1.0, turnon=True)
 
-        for cur_horn_idx in range(8):
-            if board == "I" and cur_horn_idx == 7:
-                continue
-
-            if cur_horn_idx != 7:
-                polname = f"{board}{cur_horn_idx}"
-            else:
-                polname = BOARD_TO_W_BAND_POL[board]
-
+        for cur_polarimeter in polarimeters:
+            board = normalize_polarimeter_name(cur_polarimeter)[0]
             turnon_proc.set_board_horn_polarimeter(
-                new_board=board, new_horn=polname, new_pol=None,
+                new_board=board, new_horn=cur_polarimeter, new_pol=None,
             )
             turnon_proc.run()
 
@@ -152,7 +151,14 @@ class OpenClosedLoopProcedure(StripProcedure):
         # This method is used internally to implement both the
         # open-loop and closed-loop tests
 
+        # Wait a while after having turned on the polarimeters
+        self.wait(seconds=5)
+
         for cur_pol in polarimeters:
+            # Append the sequence of commands to turnon all the polarimeters
+            # to the JSON commands
+            self.command_emitter.command_list += self.turn_on_polarimeters([cur_pol])
+
             if test_name == "OPEN_LOOP":
                 self.conn.set_pol_mode(cur_pol, OPEN_LOOP_MODE)
             else:
@@ -201,7 +207,7 @@ class OpenClosedLoopProcedure(StripProcedure):
                 name=f"{test_name}_TEST_ACQUISITION_{cur_pol}",
                 comment=f"Stable acquisition",
             ):
-                self.conn.wait(seconds=80)
+                self.conn.wait(seconds=self.args.wait_time_s)
 
     def run_open_loop_test(
         self, polarimeters, biases_per_pol: Dict[str, BiasConfiguration]
@@ -403,6 +409,15 @@ Usage examples:
         "write a JSON containing the calibrated values of the biases to be set "
         "during the test. This is always printed to 'stdout', regardless of the "
         "--output flag, and it's useful for debugging.",
+    )
+    parser.add_argument(
+        "--wait-time-s",
+        default=DEFAULT_WAIT_TIME_S,
+        type=int,
+        help=(
+            "Number of seconds to wait after the polarimeter's biases have been "
+            "set up (default: {0} s)"
+        ).format(DEFAULT_WAIT_TIME_S),
     )
 
     args = parser.parse_args()
