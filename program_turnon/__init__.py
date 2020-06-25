@@ -635,6 +635,9 @@ class TurnOnOffProcedure(StripProcedure):
                     ):
                         self.wait(seconds=self.waittime_s)
 
+        board_setup.setup_VG(self.horn, "4A", step=1.0)
+        board_setup.setup_VG(self.horn, "5A", step=1.0)
+
         if stable_acquisition_time_s > 0:
             board_setup.log(
                 f"Horn {self.horn} has been turned on, stable acquisition for {stable_acquisition_time_s} s begins here"
@@ -695,6 +698,9 @@ class TurnOnOffProcedure(StripProcedure):
 
                 if self.waittime_s > 0:
                     self.wait(seconds=self.waittime_s)
+
+        board_setup.setup_VG(self.horn, "4A", step=1.0)
+        board_setup.setup_VG(self.horn, "5A", step=1.0)
 
         # 2
         with StripTag(
