@@ -188,6 +188,7 @@ class SetupBoard(object):
                 break
 
         cmd["base_addr"] = "PRE_EN"
+        cmd["pol"] = polarimeter
         cmd["type"] = "DAQ"
         cmd["data"] = [1]
 
