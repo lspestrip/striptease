@@ -151,23 +151,33 @@ class SetupBoard(object):
     def enable_electronics(self, polarimeter, delay_sec=0.5, mode=5):
         url = self.conf.get_rest_base() + "/slo"
 
+        {
+            "board": "R",
+            "type": "DAQ",
+            "pol": "BOARD",
+            "base_addr": "CLK_REF",
+            "method": "GET",
+            "size": 1,
+            "timeout": 500,
+        }
+
         cmd = {}
         cmd["board"] = self.board
-        cmd["type"] = "BIAS"
         cmd["method"] = "SET"
         cmd["timeout"] = 500
 
-        cmd["pol"] = polarimeter
-        cmd["type"] = "BIAS"
         for c in [
-            ("POL_PWR", 1),
-            ("DAC_REF", 1),
-            ("POL_MODE", mode),
-            ("CLK_REF", 0),
-            ("PHASE_SRC", 0),
+            ("POL_PWR", 1, "BIAS", polarimeter),
+            ("DAC_REF", 1, "BIAS", polarimeter),
+            ("POL_MODE", mode, "BIAS", polarimeter),
+            ("CLK_REF", 0, "DAQ", "BOARD"),
+            ("PHASE_SRC", 0, "BIAS", "BOARD"),
         ]:
-            cmd["base_addr"] = c[0]
-            cmd["data"] = [c[1]]
+            base_addr, data, typeof, pol = c
+            cmd["base_addr"] = base_addr
+            cmd["data"] = data
+            cmd["type"] = typeof
+            cmd["pol"] = pol
 
             if not self.post_command(url, cmd):
                 print(
