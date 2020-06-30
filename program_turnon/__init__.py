@@ -175,7 +175,7 @@ class SetupBoard(object):
         ]:
             base_addr, data, typeof, pol = c
             cmd["base_addr"] = base_addr
-            cmd["data"] = data
+            cmd["data"] = [data]
             cmd["type"] = typeof
             cmd["pol"] = pol
 
