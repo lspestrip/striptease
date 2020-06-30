@@ -530,7 +530,7 @@ class TurnOnOffProcedure(StripProcedure):
         if self.turnon:
             self.run_turnon(stable_acquisition_time_s=self.stable_acquisition_time_s)
         else:
-            self.run_turnoff(stable_acquisition_time_s=self.stable_acquisition_time_s)
+            self.run_turnoff()
 
     def run_turnon(self, turn_on_board=True, stable_acquisition_time_s=120):
         """Execute a turn-on procedure for the horn specified in `self.horn`.
