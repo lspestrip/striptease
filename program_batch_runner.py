@@ -12,8 +12,12 @@ args = None
 DEFAULT_WAIT_TIME_S = 0.5
 
 
+warnings = []
+
+
 def warning(stdscr, msg):
     stdscr.addstr(msg + "\n", curses.color_pair(1))
+    warnings.append(msg)
     stdscr.refresh()
 
 
@@ -138,9 +142,8 @@ def main(stdscr):
                 indent_level_incr = 4
             else:
                 if not cmddict["tag"] in open_tags:
-                    warning(
-                        f"Tag {cmddict['tag']} is being closed, but the tags currently open are {', '.join(open_tags)}"
-                    )
+                    msg = f"Tag {cmddict['tag']} is being closed, but the tags currently open are {', '.join(open_tags)}"
+                    warning(stdscr, msg)
                 else:
                     open_tags.discard(cmddict["tag"])
 
@@ -188,11 +191,8 @@ def main(stdscr):
                     stdscr, f"Error while submitting tag {cmddict['tag']}, ignoring it"
                 )
             else:
-                warning(stdscr, f"Error in \"{cur_command['kind']}\" command: {e}")
-                prompt(stdscr, "Press q to quit, any other key to continue")
-                choice = readkey(stdscr)
-                if choice.upper() == "Q":
-                    return
+                warning_msg = f"Error in \"{cur_command['kind']}\" command: {e}"
+                warning(stdscr, warning_msg)
 
         indent_level += indent_level_incr
         if indent_level < 0:
@@ -237,6 +237,11 @@ def main(stdscr):
             conn.round_all_files()
 
         conn.logout()
+
+    if warnings:
+        print("Here are the warning messages produced during the execution:")
+        for msg in warnings:
+            print(msg)
 
 
 if __name__ == "__main__":
