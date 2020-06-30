@@ -510,12 +510,13 @@ def biases_to_str(biases):
 
 
 class TurnOnOffProcedure(StripProcedure):
-    def __init__(self, waittime_s=5, turnon=True):
+    def __init__(self, waittime_s=5, stable_acquisition_time_s=120, turnon=True):
         super(TurnOnOffProcedure, self).__init__()
         self.board = None
         self.horn = None
         self.polarimeter = None
         self.waittime_s = waittime_s
+        self.stable_acquisition_time_s = stable_acquisition_time_s
         self.turnon = turnon
 
     def set_board_horn_polarimeter(self, new_board, new_horn, new_pol=None):
@@ -526,9 +527,9 @@ class TurnOnOffProcedure(StripProcedure):
     def run(self):
         "Depending on `self.turnon`, execute a turn-on or turn-off procedure for `self.horn`."
         if self.turnon:
-            self.run_turnon()
+            self.run_turnon(stable_acquisition_time_s=self.stable_acquisition_time_s)
         else:
-            self.run_turnoff()
+            self.run_turnoff(stable_acquisition_time_s=self.stable_acquisition_time_s)
 
     def run_turnon(self, turn_on_board=True, stable_acquisition_time_s=120):
         """Execute a turn-on procedure for the horn specified in `self.horn`.

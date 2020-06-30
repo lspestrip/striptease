@@ -130,7 +130,9 @@ class OpenClosedLoopProcedure(StripProcedure):
                 ", ".join([str(x) for x in polarimeters])
             )
         )
-        turnon_proc = TurnOnOffProcedure(waittime_s=1.0, turnon=True)
+        turnon_proc = TurnOnOffProcedure(
+            waittime_s=1.0, stable_acquisition_time_s=1.0, turnon=True
+        )
 
         for cur_polarimeter in polarimeters:
             board = normalize_polarimeter_name(cur_polarimeter)[0]
