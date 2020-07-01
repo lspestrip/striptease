@@ -236,7 +236,8 @@ def extract_mean_from_time_range(times, values, time_range=None):
     assert len(times) == len(values)
 
     if time_range:
-        mask = (times >= time_range[0]) & (times <= time_range[1])
+        mjd_times = times.mjd
+        mask = (mjd_times >= time_range[0]) & (mjd_times <= time_range[1])
         times = times[mask]
         values = values[mask]
 
