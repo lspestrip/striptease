@@ -295,9 +295,9 @@ class OpenClosedLoopProcedure(StripProcedure):
         # Closed loop test
         if self.args.closed_loop_filename:
             biases_per_pol = self.read_biases_per_pol(
-                self.args.open_loop_filename, "CLOSED_LOOP"
+                self.args.closed_loop_filename, "CLOSED_LOOP"
             )
-            self.run_closed_loop_test(self.args.polarimeters, biases)
+            self.run_closed_loop_test(self.args.polarimeters, biases_per_pol)
 
     def output_biases(self):
         print(json.dumps(self.used_biases, indent=4))
