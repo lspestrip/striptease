@@ -10,6 +10,7 @@ from urllib.parse import urljoin
 
 import numpy as np
 
+import astropy.time
 from calibration import CalibrationTables
 from striptease import (
     STRIP_BOARD_NAMES,
@@ -56,14 +57,24 @@ def retrieve_biases_from_hdf5(
             if len(tag) == 0:
                 raise RuntimeError(f'no "{tagname}" tag found in file {filename}')
             if len(tag) > 1:
-                raise RuntimeError(
-                    f'{len(tag)} tags with name "{tagname}" found in file {filename}'
+                log.warning(
+                    f'{len(tag)} tags with name "{tagname}" found in file {filename}, using the last one'
                 )
+            tag = tag[-1]
 
-            tag = tag[0]
+            start_date = astropy.time.Time(tag.mjd_start, format="mjd").to_datetime()
+            end_date = astropy.time.Time(tag.mjd_end, format="mjd").to_datetime()
+            log.info(
+                "Retrieving biases for %s starting from %s and lasting %s",
+                cur_pol,
+                str(start_date),
+                str(end_date - start_date),
+            )
             cur_pol_fullname = f"POL_{cur_pol}"
             result[cur_pol] = inpf.get_average_biases(
-                polarimeter=cur_pol, time_range=(), calibration_tables=calibr
+                polarimeter=cur_pol,
+                time_range=(tag.mjd_start, tag.mjd_end),
+                calibration_tables=calibr,
             )
 
     return result
