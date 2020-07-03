@@ -2,6 +2,7 @@
 # -*- encoding: utf-8 -*-
 
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
+import sqlite3
 import astropy.time
 import numpy as np
 from pathlib import Path
@@ -74,6 +75,41 @@ except:
 
 DEFAULT_OUTPUT_FILENAME = "joined.h5"
 
+# This is the structure of the "tag_data" table in the HDF5 file
+TAGS_TABLE_DTYPE = np.dtype(
+    [
+        ("id", "i8"),
+        ("mjd_start", "f8"),
+        ("mjd_end", "f8"),
+        ("tag", "a32"),
+        ("start_comment", "a4096"),
+        ("end_comment", "a4096"),
+    ]
+)
+
+
+def create_tag_database(db):
+    curs = db.cursor()
+
+    curs.execute(
+        """
+CREATE TABLE tags(
+    mjd_start REAL, 
+    mjd_end REAL, 
+    tag TEXT, 
+    start_comment TEXT, 
+    end_comment TEXT
+)
+"""
+    )
+
+    db.commit()
+
+
+# This will be filled with all the tags from the files
+tag_database = sqlite3.connect(":memory:")
+create_tag_database(tag_database)
+
 
 def parse_datetime(s):
     if s is None:
@@ -102,10 +138,40 @@ def copy_dataset(
     if isinstance(objtype, h5py.Group):
         dest.require_group(name)
     elif isinstance(objtype, h5py.Dataset):
-
         # Caution! The code assumes that all the datasets are one-dimensional!
-
         source_dataset = source[name]
+
+        mask = np.ones(source_dataset.shape[0], dtype=bool)
+        if (
+            (source_dataset.dtype.fields)
+            and ("m_jd" in source_dataset.dtype.fields)
+            and (len(source_dataset) > 0)
+            and (start_time or end_time)
+        ):
+            if start_time:
+                mask = mask & (source_dataset["m_jd"] >= start_time)
+            if end_time:
+                mask = mask & (source_dataset["m_jd"] <= end_time)
+
+        num_of_elements = source_dataset[mask].shape[0]
+
+        if name == "TAGS/tag_data":
+            curs = tag_database.cursor()
+            # We neglect the first column ("id"), as we're going to regenerate them
+            curs.executemany(
+                "INSERT INTO tags VALUES (?, ?, ?, ?, ?)",
+                [
+                    (
+                        x[1],
+                        x[2],
+                        bytes(x[3]).decode("utf-8"),
+                        bytes(x[4]).decode("utf-8"),
+                        bytes(x[5]).decode("utf-8"),
+                    )
+                    for x in source_dataset[mask][:]
+                ],
+            )
+            return source_dataset.shape[0]
 
         try:
             dataset = dest.require_dataset(
@@ -123,20 +189,6 @@ def copy_dataset(
             # above (0 elements). In this case, just append the data
             dataset = dest[name]
 
-        mask = np.ones(source_dataset.shape[0], dtype=bool)
-        if (
-            (source_dataset.dtype.fields)
-            and ("m_jd" in source_dataset.dtype.fields)
-            and (len(source_dataset) > 0)
-            and (start_time or end_time)
-        ):
-            if start_time:
-                mask = mask & (source_dataset["m_jd"] >= start_time)
-            if end_time:
-                mask = mask & (source_dataset["m_jd"] <= end_time)
-
-        num_of_elements = source_dataset[mask].shape[0]
-
         if num_of_elements > 0:
             dataset.resize(dataset.shape[0] + num_of_elements, axis=0)
             dataset[-num_of_elements:] = source_dataset[mask]
@@ -148,6 +200,37 @@ def copy_dataset(
         pass
 
     return 0  # No rows have been visited during this iteration
+
+
+def merge_consecutive_tags(db):
+    # The problem we're going to solve here is the merging of tables
+    # that were opened while one HDF5 file was active but were closed
+    # in the next HDF5 file. In this case, there are *two* copies of
+    # the tag: the first one is in the first file, and has a MJD end
+    # date equal to -1, and the second one is in the next file. We're
+    # going to merge them to produce one tag.
+
+    curs = db.cursor()
+
+    # Find all the tags that are not closed
+    curs.execute("SELECT tag, mjd_start FROM tags WHERE (mjd_end < 0)")
+    unclosed_tags = curs.fetchall()
+
+    for (tag_name, mjd_start) in unclosed_tags:
+        # For any unclosed tag, is there some tag with the same name that was properly closed?
+        curs.execute(
+            "SELECT FROM tags WHERE mjd_end > mjd_start AND tag = ? AND mjd_start = ?",
+            (tag_name, mjd_start),
+        )
+        matches = curs.fetchall()
+        if len(matches) > 0:
+            # If it's so, then delete every unclosed instance of this tag
+            curs.execute(
+                "DELETE FROM tags WHERE tag = ? AND mjd_start = ? AND mjd_end < 0",
+                (tag_name, mjd_start,),
+            )
+
+    db.commit()
 
 
 def copy_hdf5(source, dest, start_time=None, end_time=None, compression_level=4):
@@ -177,6 +260,26 @@ def copy_hdf5(source, dest, start_time=None, end_time=None, compression_level=4)
             progress_bar.update(num_of_rows)
 
         source.visititems(visit_function)
+
+    # Now merge tags and write them
+    merge_consecutive_tags(tag_database)
+
+    curs = tag_database.cursor()
+    curs.execute(
+        "SELECT tag, mjd_start, mjd_end, start_comment, end_comment FROM tags ORDER BY mjd_start"
+    )
+    rows = curs.fetchall()
+    complete_tag_list = np.empty(len(rows), dtype=TAGS_TABLE_DTYPE)
+    complete_tag_list["id"] = np.arange(len(rows))
+
+    for (idx, colname) in enumerate(
+        ["tag", "mjd_start", "mjd_end", "start_comment", "end_comment"]
+    ):
+        complete_tag_list[colname] = [x[idx] for x in rows]
+
+    tags_dset = dest.create_dataset(
+        "/TAGS/tag_data", dtype=TAGS_TABLE_DTYPE, data=complete_tag_list,
+    )
 
 
 def parse_args():
