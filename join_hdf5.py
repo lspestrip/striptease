@@ -243,6 +243,9 @@ def copy_hdf5(source, dest, start_time=None, end_time=None, compression_level=4)
     ):
         complete_tag_list[colname] = [x[idx] for x in rows]
 
+    if "/TAGS/tag_data" in dest:
+        del dest["/TAGS/tag_data"]
+
     tags_dset = dest.create_dataset(
         "/TAGS/tag_data", dtype=TAGS_TABLE_DTYPE, data=complete_tag_list,
     )
