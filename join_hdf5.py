@@ -94,6 +94,7 @@ def create_tag_database(db):
     curs.execute(
         """
 CREATE TABLE tags(
+    id INTEGER PRIMARY KEY,
     mjd_start REAL, 
     mjd_end REAL, 
     tag TEXT, 
@@ -157,13 +158,13 @@ def copy_dataset(
 
         if name == "TAGS/tag_data":
             curs = tag_database.cursor()
-            # We neglect the first column ("id"), as we're going to regenerate them
             curs.executemany(
-                "INSERT INTO tags VALUES (?, ?, ?, ?, ?)",
+                "INSERT OR REPLACE INTO tags VALUES (?, ?, ?, ?, ?, ?)",
                 [
                     (
-                        x[1],
-                        x[2],
+                        int(x[0]),
+                        float(x[1]),
+                        float(x[2]),
                         bytes(x[3]).decode("utf-8"),
                         bytes(x[4]).decode("utf-8"),
                         bytes(x[5]).decode("utf-8"),
@@ -202,37 +203,6 @@ def copy_dataset(
     return 0  # No rows have been visited during this iteration
 
 
-def merge_consecutive_tags(db):
-    # The problem we're going to solve here is the merging of tables
-    # that were opened while one HDF5 file was active but were closed
-    # in the next HDF5 file. In this case, there are *two* copies of
-    # the tag: the first one is in the first file, and has a MJD end
-    # date equal to -1, and the second one is in the next file. We're
-    # going to merge them to produce one tag.
-
-    curs = db.cursor()
-
-    # Find all the tags that are not closed
-    curs.execute("SELECT tag, mjd_start FROM tags WHERE (mjd_end < 0)")
-    unclosed_tags = curs.fetchall()
-
-    for (tag_name, mjd_start) in unclosed_tags:
-        # For any unclosed tag, is there some tag with the same name that was properly closed?
-        curs.execute(
-            "SELECT FROM tags WHERE mjd_end > mjd_start AND tag = ? AND mjd_start = ?",
-            (tag_name, mjd_start),
-        )
-        matches = curs.fetchall()
-        if len(matches) > 0:
-            # If it's so, then delete every unclosed instance of this tag
-            curs.execute(
-                "DELETE FROM tags WHERE tag = ? AND mjd_start = ? AND mjd_end < 0",
-                (tag_name, mjd_start,),
-            )
-
-    db.commit()
-
-
 def copy_hdf5(source, dest, start_time=None, end_time=None, compression_level=4):
     class Counter:
         counter = 0
@@ -261,19 +231,15 @@ def copy_hdf5(source, dest, start_time=None, end_time=None, compression_level=4)
 
         source.visititems(visit_function)
 
-    # Now merge tags and write them
-    merge_consecutive_tags(tag_database)
-
     curs = tag_database.cursor()
     curs.execute(
-        "SELECT tag, mjd_start, mjd_end, start_comment, end_comment FROM tags ORDER BY mjd_start"
+        "SELECT id, tag, mjd_start, mjd_end, start_comment, end_comment FROM tags ORDER BY mjd_start"
     )
     rows = curs.fetchall()
     complete_tag_list = np.empty(len(rows), dtype=TAGS_TABLE_DTYPE)
-    complete_tag_list["id"] = np.arange(len(rows))
 
     for (idx, colname) in enumerate(
-        ["tag", "mjd_start", "mjd_end", "start_comment", "end_comment"]
+        ["id", "tag", "mjd_start", "mjd_end", "start_comment", "end_comment"]
     ):
         complete_tag_list[colname] = [x[idx] for x in rows]
 
