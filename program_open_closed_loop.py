@@ -164,9 +164,6 @@ class OpenClosedLoopProcedure(StripProcedure):
         # This method is used internally to implement both the
         # open-loop and closed-loop tests
 
-        # Wait a while after having turned on the polarimeters
-        self.wait(seconds=5)
-
         for cur_pol in polarimeters:
             # Append the sequence of commands to turnon all the polarimeters
             # to the JSON commands
@@ -215,10 +212,21 @@ class OpenClosedLoopProcedure(StripProcedure):
                     elif key == "vgate":
                         self.conn.set_vg(**params)
 
+            if not self.args.acquisition_at_end:
+                with StripTag(
+                    conn=self.command_emitter,
+                    name=f"{test_name}_TEST_ACQUISITION_{cur_pol}",
+                    comment=f"Stable acquisition for polarimeter {cur_pol}",
+                ):
+                    self.conn.wait(seconds=self.args.wait_time_s)
+
+        if self.args.acquisition_at_end:
             with StripTag(
                 conn=self.command_emitter,
-                name=f"{test_name}_TEST_ACQUISITION_{cur_pol}",
-                comment=f"Stable acquisition",
+                name=f"{test_name}_TEST_ACQUISITION",
+                comment="Stable acquisition with polarimeters {pols}".format(
+                    pols=", ".join(polarimeters)
+                ),
             ):
                 self.conn.wait(seconds=self.args.wait_time_s)
 
@@ -431,6 +439,13 @@ Usage examples:
             "Number of seconds to wait after the polarimeter's biases have been "
             "set up (default: {0} s)"
         ).format(DEFAULT_WAIT_TIME_S),
+    )
+    parser.add_argument(
+        "--acquisition-at-end",
+        default=False,
+        action="store_true",
+        help="""Make just one acquisition when all the polarimeters have been set
+up, instead of running one acquisition for each polarimeter.""",
     )
 
     args = parser.parse_args()
