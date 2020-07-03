@@ -145,12 +145,16 @@ class OpenClosedLoopProcedure(StripProcedure):
             waittime_s=1.0, stable_acquisition_time_s=1.0, turnon=True
         )
 
+        turn_on_board = True
         for cur_polarimeter in polarimeters:
             board = normalize_polarimeter_name(cur_polarimeter)[0]
             turnon_proc.set_board_horn_polarimeter(
                 new_board=board, new_horn=cur_polarimeter, new_pol=None,
             )
-            turnon_proc.run()
+            turnon_proc.run_turnon(
+                stable_acquisition_time_s=1.0, turn_on_board=turn_on_board
+            )
+            turn_on_board = False
 
         return turnon_proc.get_command_list()
 
