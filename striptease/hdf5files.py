@@ -17,6 +17,7 @@ __all__ = [
     "get_hk_descriptions",
     "HkDescriptionList",
     "DataFile",
+    "Tag",
     "scan_data_path",
 ]
 
