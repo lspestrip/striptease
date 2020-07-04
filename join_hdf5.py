@@ -121,7 +121,7 @@ def parse_datetime(s):
         jd = float(s)
     except ValueError:
         # If we reach this point, it surely is not a JD
-        jd = astropy.time.Time(s).mjd
+        jd = float(astropy.time.Time(s).mjd)
 
     return jd
 
@@ -232,6 +232,13 @@ def copy_hdf5(source, dest, start_time=None, end_time=None, compression_level=4)
         source.visititems(visit_function)
 
     curs = tag_database.cursor()
+    if start_time:
+        curs.execute("DELETE FROM tags WHERE mjd_start < ?", (start_time,))
+        tag_database.commit()
+    if end_time:
+        curs.execute("DELETE FROM tags WHERE mjd_end > ?", (end_time,))
+        tag_database.commit()
+
     curs.execute(
         "SELECT id, tag, mjd_start, mjd_end, start_comment, end_comment FROM tags ORDER BY mjd_start"
     )
@@ -247,7 +254,7 @@ def copy_hdf5(source, dest, start_time=None, end_time=None, compression_level=4)
         del dest["/TAGS/tag_data"]
 
     tags_dset = dest.create_dataset(
-        "/TAGS/tag_data", dtype=TAGS_TABLE_DTYPE, data=complete_tag_list,
+        "/TAGS/tag_data", dtype=TAGS_TABLE_DTYPE, data=complete_tag_list
     )
 
 
