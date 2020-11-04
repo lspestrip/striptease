@@ -17,8 +17,7 @@ from copy import deepcopy
 
 
 class PolMplCanvas(MplCanvas):
-    """QtWidget for polarimer data plot
-    """
+    """QtWidget for polarimer data plot"""
 
     def __init__(self, *args, **kwargs):
         MplCanvas.__init__(self, *args, **kwargs)
@@ -29,14 +28,14 @@ class PolMplCanvas(MplCanvas):
 
     def add_plot(self, table, hk):
         """add an housekeeping to the plot
-          :param str hk: housekeeping or scientific parameter name
+        :param str hk: housekeeping or scientific parameter name
         """
         self.items[table].add(hk)
         self.replot()
 
     def del_plot(self, table, hk):
         """remove an housekeeping to the plot
-          :param str hk: housekeeping or scientific parameter name
+        :param str hk: housekeeping or scientific parameter name
         """
         self.items[table].remove(hk)
         self.replot()
@@ -44,13 +43,13 @@ class PolMplCanvas(MplCanvas):
     def start(self, conn, pol, window_sec=300, items={}, refresh=0.09):
         """starts the stream listening and plot in a dedicated thread.
 
-           :param web.rest.base.Connection conn: the backend http connection
-           :param str pol: the polarimer name
-           :param float window_sec: the time interval in seconds to display. default=30.0
-           :param {str:{str,str}} items: the dictionary (table: set of hk names) of housekeeping to display from the start. Default is scientific data only.
-           :param float refresh: choose the number of seconds to wait between one plot and the next one. If you experience
-            poor performance, think about increase this number. Please note that the data acquisition continues even if the
-            graph is not redrawn. Default value is 0.33
+        :param web.rest.base.Connection conn: the backend http connection
+        :param str pol: the polarimer name
+        :param float window_sec: the time interval in seconds to display. default=30.0
+        :param {str:{str,str}} items: the dictionary (table: set of hk names) of housekeeping to display from the start. Default is scientific data only.
+        :param float refresh: choose the number of seconds to wait between one plot and the next one. If you experience
+         poor performance, think about increase this number. Please note that the data acquisition continues even if the
+         graph is not redrawn. Default value is 0.33
         """
         self.url = self.conf.get_wamp_url()
         self.pol = pol
@@ -73,7 +72,7 @@ class PolMplCanvas(MplCanvas):
 
     def stop(self):
         """Stops to listen to the data stream, closes websocket connection, stops the worker thread
-           and clears the plot data.
+        and clears the plot data.
         """
         self.wamp.leave()
         self.wamp = None

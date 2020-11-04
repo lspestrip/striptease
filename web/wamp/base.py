@@ -10,12 +10,10 @@ from threading import Thread
 
 
 class WampBase(object):
-    """Base class for websocket streaming
-    """
+    """Base class for websocket streaming"""
 
     def __init__(self, con):
-        """:param web.rest.base.Connection con: the base http connection
-        """
+        """:param web.rest.base.Connection con: the base http connection"""
         self.conn = con
         self.runner = None
         self.url = None
@@ -25,7 +23,7 @@ class WampBase(object):
 
     def connect(self, url, realm):
         """connect to websocket
-           :param str url: url to which connect
+        :param str url: url to which connect
         """
         self.url = url
         if self.conn.id is None:

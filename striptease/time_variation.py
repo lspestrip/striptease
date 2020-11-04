@@ -19,27 +19,27 @@ polarimeterXY.extend(["POL_W" + npol for npol in np.arange(1, 7).astype(str)])
 
 def lookfor_timevariation(vtime, step_ref=1.5, silent=True):
     """
-	This function analyzes the time variation, which looks for
-	the ups and downs to identify: forwards, backwards and hat
-	jumps in the time vector.
-	
-	--Parameters
-	vtime : sci time string (astropy.time.Time object).
+    This function analyzes the time variation, which looks for
+    the ups and downs to identify: forwards, backwards and hat
+    jumps in the time vector.
 
-	step_ref : reference factor to define the threshold used
-	in the jumps and downs. This value is multiply to the
-	median of the first ten delta time string. The delta time
-	string is defined as the subtraction of two consecutive
-	time step.
+    --Parameters
+    vtime : sci time string (astropy.time.Time object).
 
-	silent : True by default.
-	
-	--Return
-	report : dictionary with all ups and downs (index and time),
-			and features clasified as: hat, forward and backward 
-			(index and time). In hat case, the start and end (indices
-			and time) are saved as list (e.g. [index_start,index_end]).
-	"""
+    step_ref : reference factor to define the threshold used
+    in the jumps and downs. This value is multiply to the
+    median of the first ten delta time string. The delta time
+    string is defined as the subtraction of two consecutive
+    time step.
+
+    silent : True by default.
+
+    --Return
+    report : dictionary with all ups and downs (index and time),
+                    and features clasified as: hat, forward and backward
+                    (index and time). In hat case, the start and end (indices
+                    and time) are saved as list (e.g. [index_start,index_end]).
+    """
     delt = vtime[1:].value.astype(float) - vtime[0:-1].value.astype(float)
     vmedian = np.median(delt[0:10])
     dd_ref = step_ref * vmedian
@@ -140,29 +140,29 @@ def lookfor_timevariation(vtime, step_ref=1.5, silent=True):
 
 def get_statistic(vtime, report, idfigout=None):
     """
-	For one polarimeter, this function compares the time position of hats,
-	forwards and backwards to obtain the time separation for each type case.
+    For one polarimeter, this function compares the time position of hats,
+    forwards and backwards to obtain the time separation for each type case.
 
-	--Parameter
-	vtime  : time string (astropy.time.Time object as obtained from DataFile).
+    --Parameter
+    vtime  : time string (astropy.time.Time object as obtained from DataFile).
 
-	report : dictionary of one polarimeter (in format of lookfor_timevariation
-		ouput), which includes the hat, forward and backward indices.
+    report : dictionary of one polarimeter (in format of lookfor_timevariation
+            ouput), which includes the hat, forward and backward indices.
 
-	idfigout : string with the identification name to be used. If a string name
-		is input the function plot the separation time for each type jump
-		(two methods).
+    idfigout : string with the identification name to be used. If a string name
+            is input the function plot the separation time for each type jump
+            (two methods).
 
-	--Return
-	rep_out : dictionary with time separation of each hat/forward/backward
-	using two approches:
-	*) time comparison between two consecutive hat/forward/backward
-	(named '_separation_').
-	*) time comparison with respect to the first hat/forward/backward
-	(named '_separationrel_').
-	
-	Also, this contains the indices used (i.e., 'hat_separationrel_index')
-	"""
+    --Return
+    rep_out : dictionary with time separation of each hat/forward/backward
+    using two approches:
+    *) time comparison between two consecutive hat/forward/backward
+    (named '_separation_').
+    *) time comparison with respect to the first hat/forward/backward
+    (named '_separationrel_').
+
+    Also, this contains the indices used (i.e., 'hat_separationrel_index')
+    """
     rep_out = dict()
 
     jump_type = ["hat", "forward", "backward"]
@@ -235,41 +235,41 @@ class timevariation:
 
     def savePickle(self, filename):
         """
-		This function saves, in a pickle file, the dictionary
-		with the sci time analysis.
+        This function saves, in a pickle file, the dictionary
+        with the sci time analysis.
 
-		--Note: This function saves self.scitime.
+        --Note: This function saves self.scitime.
 
-		--Parameters
-		filename : string file name.
-		"""
+        --Parameters
+        filename : string file name.
+        """
         ff = open(filename, "wb")
         pickle.dump(self.scitime, ff)
         ff.close()
 
     def query_timevariation(self, tile=None, silent=True, data_type="PWR"):
         """
-		This function carry out the sci time variation analysis.
+        This function carry out the sci time variation analysis.
 
-		--Notes: This computes self.scitime
+        --Notes: This computes self.scitime
 
-		--Parameters
-		tile  : string with the tile to be analyzed (by default
-		all tiles are studied)
-	
-		--Return
-		report_changes: ditionary with sci time analysis, whose
-		keys identify the polarimeter, e.g.:
-		    report_changes['POL_R0'].
+        --Parameters
+        tile  : string with the tile to be analyzed (by default
+        all tiles are studied)
 
-			For each, a dictionary saves the numbers of 'jumps'
-			and 'downs' in sci time, and the features clasified
-			as 'hat', 'forwards' and 'backwards'. Note that the
-			indices and times are sorted in '_index' and '_time'
-			keys. In hat case, the start and end indices
-			(or time) are saved as list (e.g. [index0,index2]).
-			Also the reference delta time ('delta_ref') is saved.
-		"""
+        --Return
+        report_changes: ditionary with sci time analysis, whose
+        keys identify the polarimeter, e.g.:
+            report_changes['POL_R0'].
+
+                For each, a dictionary saves the numbers of 'jumps'
+                and 'downs' in sci time, and the features clasified
+                as 'hat', 'forwards' and 'backwards'. Note that the
+                indices and times are sorted in '_index' and '_time'
+                keys. In hat case, the start and end indices
+                (or time) are saved as list (e.g. [index0,index2]).
+                Also the reference delta time ('delta_ref') is saved.
+        """
         if tile is not None:
             pol = [pp for pp in polarimeterXY if "POL_" + tile in pp]
         else:
@@ -287,19 +287,19 @@ class timevariation:
         self, idcase="plot_sciTimeStatus", select=None, data_type="PWR"
     ):
         """
-		This function plots and saves the sci time status of all
-		polarimeter sorted in self.scitime(). This plot the time
-		status, hat, forward and backward for all polarimeters or
-		a subsection using the select option. 
+        This function plots and saves the sci time status of all
+        polarimeter sorted in self.scitime(). This plot the time
+        status, hat, forward and backward for all polarimeters or
+        a subsection using the select option.
 
-		--Parameters
-		idcase : string with the identification name to be used
-			(default: "plot_sciTimeStatus").
+        --Parameters
+        idcase : string with the identification name to be used
+                (default: "plot_sciTimeStatus").
 
-		select : list with the polarimeter names to be plotted,
-		e.g. ['R0', 'B1']. The number of polarimeter is also
-		supported, e.g. ['0','3']
-		"""
+        select : list with the polarimeter names to be plotted,
+        e.g. ['R0', 'B1']. The number of polarimeter is also
+        supported, e.g. ['0','3']
+        """
         kcases = [kk for kk in self.scitime]
 
         if select is not None:
@@ -405,23 +405,23 @@ class timevariation:
         self, idname="NumberCount_statistic", latex=False, csv=False, silent=False
     ):
         """
-		This function counts the number of jumps and downs and
-		the hat, forward and backward jumps type.
+        This function counts the number of jumps and downs and
+        the hat, forward and backward jumps type.
 
-		--Parameters
-		idname : string with the identification name to be used
-			(default: "plotStatusparam").
+        --Parameters
+        idname : string with the identification name to be used
+                (default: "plotStatusparam").
 
-		latex : If True the number count is saved in the table
-		latex format (default: True). 
+        latex : If True the number count is saved in the table
+        latex format (default: True).
 
-		csv   : If True the number count is saved in the CSV
-		format (default: True). 
+        csv   : If True the number count is saved in the CSV
+        format (default: True).
 
-		--Return
-		count : list with the number count of jumps and downs and
-		the hat, forward and backward jumps type.
-		"""
+        --Return
+        count : list with the number count of jumps and downs and
+        the hat, forward and backward jumps type.
+        """
         count = [("Polarimeter", "Jumps", "Downs", "Hats", "Forwards", "Backwards")]
         for kk in self.scitime.keys():
             rep = self.scitime[kk]
@@ -456,23 +456,23 @@ class timevariation:
 
     def grouping(self, idname="NumberCount_group", latex=True, csv=True, silent=False):
         """
-		This function groups the polarimeter according to the
-		number of jumps, downs, hats, forwards and backwards.
+        This function groups the polarimeter according to the
+        number of jumps, downs, hats, forwards and backwards.
 
-		--Parameters
-		idname : string with the identification name to be used
-			(default: "plotStatusparam").
+        --Parameters
+        idname : string with the identification name to be used
+                (default: "plotStatusparam").
 
-		latex : If True the number count is saved in the table
-		latex format (default: True). 
+        latex : If True the number count is saved in the table
+        latex format (default: True).
 
-		csv   : If True the number count is saved in the CSV
-		format (default: True). 
+        csv   : If True the number count is saved in the CSV
+        format (default: True).
 
-		--Returns
-		group : list with the polarimeter grouped by number of jumps
-		downs, hats, forwards and backwards
-		"""
+        --Returns
+        group : list with the polarimeter grouped by number of jumps
+        downs, hats, forwards and backwards
+        """
         count = self.counting(self, latex=False, csv=False, silent=True)[1:]
         newc = np.array(
             [
@@ -503,28 +503,28 @@ class timevariation:
 
     def timeseparation(self, silent=False, idname=None):
         """
-		This function compares the time position of hat, forward and backward
-		to obtain the time separation in each type case.
+        This function compares the time position of hat, forward and backward
+        to obtain the time separation in each type case.
 
-		Note: This function updates the self.scitime adding new keys with
-		the time separation of each hat/forward/backward using two approches:
-		*) time comparison between to consecutive time step
-			(named '_separation_').
-		*) time copmarison with respecto to the firsttime step
-			(named '_separationrel_').
-		Also, this includes the indices used (i.e., 'hat_separation_index')
+        Note: This function updates the self.scitime adding new keys with
+        the time separation of each hat/forward/backward using two approches:
+        *) time comparison between to consecutive time step
+                (named '_separation_').
+        *) time copmarison with respecto to the firsttime step
+                (named '_separationrel_').
+        Also, this includes the indices used (i.e., 'hat_separation_index')
 
-		
-		--Parameter
-		idname  : string with the identification name to be used. If a string name
-		is input the function plot the separation time (two methods).
 
-		silent  : True by default
+        --Parameter
+        idname  : string with the identification name to be used. If a string name
+        is input the function plot the separation time (two methods).
 
-		--Return
-		rep_out : dictionary with time separation of each hat/forward/backward
-		using the two approches and indices used.
-		"""
+        silent  : True by default
+
+        --Return
+        rep_out : dictionary with time separation of each hat/forward/backward
+        using the two approches and indices used.
+        """
         for kk in self.scitime.keys():
             time0, _ = self.dfile.load_sci(kk, "PWR")
             rr = self.scitime[kk]

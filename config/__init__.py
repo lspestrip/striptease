@@ -8,10 +8,10 @@ import os
 
 class Config(object):
     """the Config class parses the configuration file and provides shortcuts for
-       common functionalities.
+    common functionalities.
 
-       Attributes:
-          conf     dictionary with all the configuration settings
+    Attributes:
+       conf     dictionary with all the configuration settings
     """
 
     def __init__(self):
@@ -44,8 +44,8 @@ class Config(object):
     def load(self, con):
         """requests the instrument configuration from the server and populates the attributes boards, board_addr, addr_str, addr_int
 
-           :param web.rest.base.Connection con: the backend http connection
-           :return str: 'OK' if the request went fine, "ERROR_XX" otherwise
+        :param web.rest.base.Connection con: the backend http connection
+        :return str: 'OK' if the request went fine, "ERROR_XX" otherwise
         """
         res = con.get(self.get_rest_base() + "/config")
 
@@ -91,13 +91,13 @@ class Config(object):
 
     def get_user(self):
         """returns the username. It looks first in the STRIP_USER env variable,
-           and then in the user config file. Returns None if no user is found
+        and then in the user config file. Returns None if no user is found
         """
         return self.user
 
     def get_password(self):
         """returns the password for the user. It looks first in the STRIP_PASSWORD env variable,
-           and then in the user config file. Returns None if no password is found
+        and then in the user config file. Returns None if no password is found
         """
         return self.password
 

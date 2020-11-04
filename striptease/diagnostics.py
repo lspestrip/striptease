@@ -71,7 +71,7 @@ def plot_tagevents(
     timeformatter=None,
 ):
     """Draw a timetable of turnon times for a list of polarimeters.
-    
+
     Arguments:
       - `tagevent_list`: a list of objects of type ``TagEvent``, typically
                          created using `striptease.script_to_tagevents`
@@ -81,7 +81,7 @@ def plot_tagevents(
                         include every polarimeter appearing in
                         `tagevent_list`
       - `colors`: a dictionary associating polarimeter names with RGB colors
-      
+
     Optional keywords:
 
       - `global_line`: include one row for global events, not belonging to
@@ -93,7 +93,7 @@ def plot_tagevents(
       - `timeformatter`: function that produces a tick label (string)
                          from a time (MJD). Used if `timelabels` is not provided
     Example:
-    
+
     ```python
     import matplotlib.pylab
     fig, ax = matplotlib.pylab.subplots(1)

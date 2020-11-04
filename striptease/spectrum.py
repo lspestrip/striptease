@@ -7,7 +7,7 @@ class Spectrum:
         *KEYWORDS*
 
         +-------------------+------------+-----------------------------------------+---------------+
-        | Name              | Type       | Description                             | Default value |            
+        | Name              | Type       | Description                             | Default value |
         +===================+============+=========================================+===============+
         | ``lowfreq``   `   | Double     | Minimum frequency to be considered in   | 1e-3          |
         |                   | precision  | Welch windowing and segmenting. It is   |               |
@@ -74,8 +74,8 @@ class Spectrum:
     # METHODS
 
     def parameters(self):
-        """ Prints the attributes of the class, corresponding to the values of
-        the spectrum calculation parameters """
+        """Prints the attributes of the class, corresponding to the values of
+        the spectrum calculation parameters"""
 
         items = list(self.__dict__.items())
         CRED = "\033[91m"
@@ -87,26 +87,26 @@ class Spectrum:
     def fft_calculate(self, array2, sampfreq):
 
         """Low-level function for amplitude or power spectrum calculation.
-        
-        Determine the amplitude or power spectrum of the data stream in *array2*.
-        The parameter *sampfreq* specifies the sampling frequency of *array2*. 
 
-        fft_parameters DICT parameters for fft calculation. Default values defined in __init__ 
+        Determine the amplitude or power spectrum of the data stream in *array2*.
+        The parameter *sampfreq* specifies the sampling frequency of *array2*.
+
+        fft_parameters DICT parameters for fft calculation. Default values defined in __init__
         function
 
         .. note::
-        
+
         The implementation is based on the functions ``nps.pro``, ``psq.pro``
         and ``lresid.pro`` initially developed by M. Seiffert.
-        
+
         In this version the following options have been added:
-        
+
         * Possibility to choose whether to add a welch windowing function or not.
         * Possibility to choose whether to display the amplitude or the power
         spectrum.
         * Possibility to choose whether to calculate the absolute
         spectrum or the spectral density (i.e. amp/rt Hz or pw/rtHz).
-        
+
         Original version by Michael Seiffert, implemented in LIFE by A. Mennella
         and ported to Python by A. Mennella."""
 
@@ -325,18 +325,18 @@ class Spectrum:
 
         This function calculates the spectrum of a timestream. It can calculate
         four different types of spectra:
-        
+
         * Amplitude spectrum (AS)
         * Power spectrum (PS)
         * Amplitude spectral density (ASD)
         * Power spectral density (PSD)
-        
+
         *CALL*
-        
+
         ``result = spectrum(self, toi, sampfreq)
-        
+
         *INPUTS*
-        
+
         +-------------------------+------------------+-----------------------------------+
         | Name                    | Type             | Description                       |
         +=========================+==================+===================================+
@@ -345,10 +345,10 @@ class Spectrum:
         +-------------------------+------------------+-----------------------------------+
         | ``sampfreq``            | Double precision | Sampling frequency in Hz          |
         +-------------------------+------------------+-----------------------------------+
-        
-        
+
+
         *OUTPUT*
-        
+
         +-------------------------+------------------+-----------------------------------+
         | Name                    | Type             | Description                       |
         +=========================+==================+===================================+
@@ -572,7 +572,7 @@ class Spectrum:
     def get_noise_parameters(self, spectrum):
 
         """
-        Function to calculate the noise parameters from a spectrum. It assumes that 
+        Function to calculate the noise parameters from a spectrum. It assumes that
         the input spectrum is a power spectrum, but the function can work with any kind
         of spectrum
 
@@ -614,10 +614,10 @@ class Spectrum:
     class FitNoise:
         """
         Class that fits a noise spectrum to extract the noise parameters. There are two methods:
-        
+
         linear_fit - fits the 1/f part with a straight line in log-log space and finds the slope
         and frequency where the 1/f part equals white noise
-        
+
         full_fit - fits the whole spectrum with a 3 parameters model
         """
 
@@ -630,7 +630,7 @@ class Spectrum:
 
         def fit(self, spectrum):
             """
-            This function is a wrapper to linear_fit or full_fit. The choice is done by checking spectrum['welch']. 
+            This function is a wrapper to linear_fit or full_fit. The choice is done by checking spectrum['welch'].
             If windowing is used (welch = True) then the full_fit is called, otherwise the linear_fit is used
             *CALL*
 

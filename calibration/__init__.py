@@ -48,7 +48,14 @@ __all__ = [
 #:    Integer value for the additive offset of the calibration curve
 #:
 CalibrationCurve = namedtuple(
-    "CalibrationCurve", ["slope", "intercept", "mul", "div", "add",]
+    "CalibrationCurve",
+    [
+        "slope",
+        "intercept",
+        "mul",
+        "div",
+        "add",
+    ],
 )
 
 
@@ -154,7 +161,7 @@ def pol_name_to_dict_key(name: str):
 
 class CalibrationTables(object):
     """Calibration tables used to convert HK ADUs into physical units and back
-    
+
     This class loads the calibration tables for housekeeping parameters from
     a set of Excel files.
 
@@ -168,7 +175,7 @@ class CalibrationTables(object):
         with StripConnection() as conn:
             conf = Config()
             conf.load(conn)
-    
+
         cal_tables = CalibrationTables(conf)
 
     """
@@ -224,13 +231,13 @@ class CalibrationTables(object):
             hk (str): one of the following strings:
 
                 - ``vdrain``: drain voltage
-        
+
                 - ``idrain``: drain current
-        
+
                 - ``vgate``: gate voltage
-        
+
                 - ``vphsw``: voltage pin for a phase switch
-        
+
                 - ``iphsw``: current pin for a phase switch
 
             component (str): name of the component within the

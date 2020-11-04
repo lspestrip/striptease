@@ -55,10 +55,10 @@ class Connection(object):
 
     def login(self, user=None, password=None):
         """login function, if user or password are not provided, it tries to
-            find login credentials from Config class.
-            On succesful login it sets the sessiondid self.id
+        find login credentials from Config class.
+        On succesful login it sets the sessiondid self.id
 
-            :raises HTTPError: any error that occours while communicating with the server.
+        :raises HTTPError: any error that occours while communicating with the server.
         """
         if user is None or password is None:
             user = self.conf.get_user()
@@ -79,7 +79,7 @@ class Connection(object):
     def logout(self):
         """logout the user and delete the sessionid.
 
-            :raises HTTPError: any error that occours while communicating with the server.
+        :raises HTTPError: any error that occours while communicating with the server.
         """
         response = self.session.post(self.conf.get_logout(), data=json.dumps({}))
         if response.status_code != 200:
@@ -89,12 +89,12 @@ class Connection(object):
 
     def post(self, url, message, retry_count=10, retry_delay_s=None):
         """encode the message in json format and send it using POST http method.
-           :param str url: url to send the message.
-           :param message: dictionary or list to send.
-           :param retry_count: number of times to retry the command if error 503 happens
-           :param retry_delay_s: time to wait before retrying to send the command
-           :return: dictionary of the decoded json response.
-           :raises HTTPError: any error that occours while communicating with the server.
+        :param str url: url to send the message.
+        :param message: dictionary or list to send.
+        :param retry_count: number of times to retry the command if error 503 happens
+        :param retry_delay_s: time to wait before retrying to send the command
+        :return: dictionary of the decoded json response.
+        :raises HTTPError: any error that occours while communicating with the server.
         """
         pkt = json.dumps(message)
         count = 1
@@ -126,10 +126,10 @@ class Connection(object):
 
     def put(self, url, message):
         """encode the message in json format and send it using PUT http method.
-           :param str url: url to send the message.
-           :param message: dictionary or list to send.
-           :return: dictionary of the decoded json response.
-           :raises HTTPError: any error that occours while communicating with the server.
+        :param str url: url to send the message.
+        :param message: dictionary or list to send.
+        :return: dictionary of the decoded json response.
+        :raises HTTPError: any error that occours while communicating with the server.
         """
         pkt = json.dumps(message)
         response = self.session.put(url, data=pkt)
@@ -144,9 +144,9 @@ class Connection(object):
 
     def delete(self, url):
         """send a delete request to the url using DELETE http method.
-           :param str url: url to send the message.
-           :return: dictionary of the decoded json response.
-           :raises HTTPError: any error that occours while communicating with the server.
+        :param str url: url to send the message.
+        :return: dictionary of the decoded json response.
+        :raises HTTPError: any error that occours while communicating with the server.
         """
         response = self.session.delete(url)
         if response.status_code != 200:
@@ -160,9 +160,9 @@ class Connection(object):
 
     def get(self, url):
         """send a get request to the url using GET http method.
-           :param str url: url to send the message.
-           :return: dictionary of the decoded json response.
-           :raises HTTPError: any error that occours while communicating with the server.
+        :param str url: url to send the message.
+        :return: dictionary of the decoded json response.
+        :raises HTTPError: any error that occours while communicating with the server.
         """
         response = self.session.get(url)
         if response.status_code != 200:

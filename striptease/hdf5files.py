@@ -36,7 +36,15 @@ VALID_DATA_TYPES = ["PWR", "DEM"]
 #: - ``start_comment``: comment put at the start
 #: - ``end_comment``: comment put at the end
 Tag = namedtuple(
-    "Tag", ["id", "mjd_start", "mjd_end", "name", "start_comment", "end_comment",]
+    "Tag",
+    [
+        "id",
+        "mjd_start",
+        "mjd_end",
+        "name",
+        "start_comment",
+        "end_comment",
+    ],
 )
 
 
@@ -56,7 +64,10 @@ def hk_list_file_name(group, subgroup):
     return (
         Path(__file__).parent.parent
         / "data"
-        / "hk_pars_{}_{}.csv".format(subgroup.upper(), group.upper(),)
+        / "hk_pars_{}_{}.csv".format(
+            subgroup.upper(),
+            group.upper(),
+        )
     )
 
 
@@ -271,9 +282,9 @@ class DataFile:
 
     - :meth:`load_hk`
     - :meth:`load_sci`
-    
+
     You can access these class fields directly:
-    
+
     - ``filepath``: a ``Path`` object containing the full path of the
           HDF5 file
 
@@ -369,7 +380,7 @@ class DataFile:
         """Loads scientific data from one detector of a given polarimeter
 
         Args:
-        
+
             group (str): Either ``BIAS`` or ``DAQ``
 
             subgroup (str): Name of the housekeeping group. It can either
@@ -488,20 +499,20 @@ class DataFile:
         self, polarimeter, time_range=None, calibration_tables=None
     ) -> BiasConfiguration:
         """Return a :class:`BiasConfiguration` object containing the average
-values of biases for a polarimeter.
+        values of biases for a polarimeter.
 
-        The parameter `polarimeter` must be a string containing the
-        name of the polarimeter, e.g., ``Y0``. The parameter
-        `time_range`, if specified, is a 2-element tuple containing
-        the start and end MJDs to consider in the average. If
-        `calibration_tables` is specified, it must be an instance of
-        the :class:`.CalibrationTables` class.
+                The parameter `polarimeter` must be a string containing the
+                name of the polarimeter, e.g., ``Y0``. The parameter
+                `time_range`, if specified, is a 2-element tuple containing
+                the start and end MJDs to consider in the average. If
+                `calibration_tables` is specified, it must be an instance of
+                the :class:`.CalibrationTables` class.
 
-        The return value of this function is a :class:`BiasConfiguration` object
+                The return value of this function is a :class:`BiasConfiguration` object
 
-        If `calibration_tables` is specified, the values returned by
-        this method are calibrated to physical units; otherwise, they
-        are expressed in ADUs.
+                If `calibration_tables` is specified, the values returned by
+                this method are calibrated to physical units; otherwise, they
+                are expressed in ADUs.
 
         """
         result = {}

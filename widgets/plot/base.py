@@ -20,8 +20,7 @@ obj = {"label": "legend label", "mjd": 580000, "val": 56.34}
 
 
 class BaseMplCanvas(MplCanvas):
-    """QtWidget for data plot
-    """
+    """QtWidget for data plot"""
 
     def __init__(self, *args, **kwargs):
         MplCanvas.__init__(self, *args, **kwargs)
