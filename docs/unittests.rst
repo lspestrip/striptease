@@ -27,15 +27,14 @@ Here is an example that shows how to use these functionalities::
   # Output:
   # <class 'striptease.unittests.UnitTest'>
   
-  print(f"{test.url} for {test.polarimeter_name}")
+  print(f"{test.url}, {test.polarimeter_name}")
   # Output:
-  # https://striptest.fisica.unimi.it/unittests/tests/354 for STRIP02
+  # https://striptest.fisica.unimi.it/unittests/tests/354, STRIP02
 
   # The "test" variable only contains metadata about the test.
   # To actually load the datasets, use "u.load_unit_test_data".
-  # It returns a collection of attributes taken from the HDF5 file,
-  # and the actual data from the HDF5 file itself.
-  attrs, data = u.load_unit_test_data(test)
+  # It returns the actual data from the HDF5 file itself.
+  data = u.load_unit_test_data(test)
 
   # The type of "data" depends on the test; it can either be a
   # "UnitTestDC" class or a "UnitTestTimestream" class.
@@ -65,10 +64,10 @@ Single-component tests
 ----------------------
 
 Single-component tests, also known as «DC tests», are represented by
-an instance of the class :class:`UnitTestDC`. The class provides the
+an instance of the class :class:`.UnitTestDC`. The class provides the
 data measured while exercising each of the components in the
 ``components`` field, which is an instance of the class
-:class:`UnitTestDCCurves`. You can think of both classes as wrappers
+:class:`.UnitTestDCCurves`. You can think of both classes as wrappers
 to ``dict`` types.
 
 Here is an example, using test `#354
@@ -113,7 +112,7 @@ Polarimetric tests (timelines)
 ------------------------------
 
 Timeline data acquired during a Strip unit test is stored in objects
-of type :class:`UnitTestTimestream`. The following example shows how
+of type :class:`.UnitTestTimestream`. The following example shows how
 to plot the demodulated data acquired during test `#355
 <https://striptest.fisica.unimi.it/unittests/tests/355>`_ (STRIP02)::
 
