@@ -106,7 +106,8 @@ def unit_test_download_url(test_num: int, server=DEFAULT_UNIT_TEST_SERVER) -> st
 
 
 def __unit_test_file_local_path(
-    test_num: int, local_cache=DEFAULT_UNIT_TEST_CACHE_PATH,
+    test_num: int,
+    local_cache=DEFAULT_UNIT_TEST_CACHE_PATH,
 ):
     return local_cache.parent / f"{test_num:05d}.h5"
 
@@ -144,7 +145,11 @@ FROM tests WHERE url = ?""",
     if not entry:
         return None
 
-    (_, metadata_str, hdf5_file_path,) = entry
+    (
+        _,
+        metadata_str,
+        hdf5_file_path,
+    ) = entry
 
     metadata = json.loads(metadata_str)
     return UnitTest(url=url, metadata=metadata, hdf5_file_path=Path(hdf5_file_path))
@@ -427,13 +432,23 @@ def __load_unit_test_timestream(h5_file):
         demodulated=np.vstack(
             [
                 dataset[x].astype(np.float)
-                for x in ("dem_Q1_ADU", "dem_U1_ADU", "dem_U2_ADU", "dem_Q2_ADU",)
+                for x in (
+                    "dem_Q1_ADU",
+                    "dem_U1_ADU",
+                    "dem_U2_ADU",
+                    "dem_Q2_ADU",
+                )
             ]
         ).transpose(),
         power=np.vstack(
             [
                 dataset[x].astype(np.float)
-                for x in ("pwr_Q1_ADU", "pwr_U1_ADU", "pwr_U2_ADU", "pwr_Q2_ADU",)
+                for x in (
+                    "pwr_Q1_ADU",
+                    "pwr_U1_ADU",
+                    "pwr_U2_ADU",
+                    "pwr_Q2_ADU",
+                )
             ]
         ).transpose(),
         rfpower_db=dataset["rfpower_dB"].astype(np.float),

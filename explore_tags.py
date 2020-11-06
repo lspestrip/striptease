@@ -88,7 +88,9 @@ DEFAULT_OUTPUT_FORMAT = "tsv"
 
 
 def parse_arguments():
-    parser = ArgumentParser(description="Inspect the tags saved in a Strip HDF5 file",)
+    parser = ArgumentParser(
+        description="Inspect the tags saved in a Strip HDF5 file",
+    )
 
     parser.add_argument(
         "--format",

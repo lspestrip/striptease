@@ -36,7 +36,15 @@ VALID_DATA_TYPES = ["PWR", "DEM"]
 #: - ``start_comment``: comment put at the start
 #: - ``end_comment``: comment put at the end
 Tag = namedtuple(
-    "Tag", ["id", "mjd_start", "mjd_end", "name", "start_comment", "end_comment",],
+    "Tag",
+    [
+        "id",
+        "mjd_start",
+        "mjd_end",
+        "name",
+        "start_comment",
+        "end_comment",
+    ],
 )
 
 
@@ -56,7 +64,10 @@ def hk_list_file_name(group, subgroup):
     return (
         Path(__file__).parent.parent
         / "data"
-        / "hk_pars_{}_{}.csv".format(subgroup.upper(), group.upper(),)
+        / "hk_pars_{}_{}.csv".format(
+            subgroup.upper(),
+            group.upper(),
+        )
     )
 
 
