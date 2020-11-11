@@ -32,9 +32,7 @@ class PinchOffProcedure(StripProcedure):
                 polname = BOARD_TO_W_BAND_POL[board]
 
             turnon_proc.set_board_horn_polarimeter(
-                new_board=board,
-                new_horn=polname,
-                new_pol=None,
+                new_board=board, new_horn=polname, new_pol=None,
             )
             turnon_proc.run()
 
@@ -53,16 +51,14 @@ class PinchOffProcedure(StripProcedure):
 
         # Verification step
         with StripTag(
-            conn=self.command_emitter,
-            name=f"PINCHOFF_VERIFICATION_1",
+            conn=self.command_emitter, name=f"PINCHOFF_VERIFICATION_1",
         ):
             self.wait(seconds=300)
 
         for cur_board in STRIP_BOARD_NAMES:
             # Now run the pinch-off procedure for each board
             with StripTag(
-                conn=self.command_emitter,
-                name=f"PINCHOFF_TILE_{cur_board}",
+                conn=self.command_emitter, name=f"PINCHOFF_TILE_{cur_board}",
             ):
                 for cur_horn_idx in range(8):
                     if cur_board == "I" and cur_horn_idx == 7:

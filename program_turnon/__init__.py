@@ -18,14 +18,7 @@ from striptease.biases import InstrumentBiases, BoardCalibration
 from striptease.procedures import StripProcedure
 
 CalibrationCurve = namedtuple(
-    "CalibrationCurve",
-    [
-        "slope",
-        "intercept",
-        "mul",
-        "div",
-        "add",
-    ],
+    "CalibrationCurve", ["slope", "intercept", "mul", "div", "add",],
 )
 
 
