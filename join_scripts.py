@@ -6,8 +6,16 @@ import sys
 
 
 def main():
-    if len(sys.argv) == 1:
-        print("Usage: join_scripts.py JSON_FILE1...")
+    if (len(sys.argv) < 2) or sys.argv[1] == "--help":
+        print(
+            """"Usage: join_scripts.py JSON_FILE1...
+
+Example:
+
+  join_scripts.py script1.json script2.json > joined_file.json
+"""
+        )
+
         sys.exit(1)
 
     filenames = sys.argv[1:]

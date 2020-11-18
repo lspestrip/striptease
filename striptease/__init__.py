@@ -445,7 +445,6 @@ class StripConnection(Connection):
             "base_addr": base_addr,
             "type": kind,
             "method": method,
-            "size": 1,
             "timeout": timeout_ms,
         }
 

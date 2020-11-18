@@ -17,8 +17,7 @@ import os
 
 
 class CheckBoxCallBack(object):
-    """CheckBox callback container
-    """
+    """CheckBox callback container"""
 
     def __init__(self, plot, table, hk):
         self.plot = plot
@@ -26,8 +25,7 @@ class CheckBoxCallBack(object):
         self.hk = hk
 
     def callback(self, val):
-        """called when the registred checkbox changes status
-        """
+        """called when the registred checkbox changes status"""
         # print(self.hk,val)
         if val == 0:
             self.plot.del_plot(self.table, self.hk)
@@ -104,8 +102,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def polChanged(self, i):
         """callback for polarimer change on the dropdown list.
-           stops the current polatimeter streaming and starts a new streaming
-           for the selected polarimeter.
+        stops the current polatimeter streaming and starts a new streaming
+        for the selected polarimeter.
         """
         pol = self.ui.polList.currentText()
         hkdict = {}

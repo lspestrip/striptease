@@ -10,10 +10,13 @@ from urllib.parse import urljoin
 
 import numpy as np
 
+import astropy.time
 from calibration import CalibrationTables
 from striptease import (
     STRIP_BOARD_NAMES,
     BOARD_TO_W_BAND_POL,
+    OPEN_LOOP_MODE,
+    CLOSED_LOOP_MODE,
     StripTag,
     normalize_polarimeter_name,
 )
@@ -23,6 +26,8 @@ from program_turnon import TurnOnOffProcedure
 
 # Used to look for tags in HDF5 files
 DEFAULT_TAG_TEMPLATE = "OPEN_LOOP_TEST_ACQUISITION_{polarimeter}"
+
+DEFAULT_WAIT_TIME_S = 80
 
 
 def instrument_biases_to_dict(
@@ -52,14 +57,24 @@ def retrieve_biases_from_hdf5(
             if len(tag) == 0:
                 raise RuntimeError(f'no "{tagname}" tag found in file {filename}')
             if len(tag) > 1:
-                raise RuntimeError(
-                    f'{len(tag)} tags with name "{tagname}" found in file {filename}'
+                log.warning(
+                    f'{len(tag)} tags with name "{tagname}" found in file {filename}, using the last one'
                 )
+            tag = tag[-1]
 
-            tag = tag[0]
+            start_date = astropy.time.Time(tag.mjd_start, format="mjd").to_datetime()
+            end_date = astropy.time.Time(tag.mjd_end, format="mjd").to_datetime()
+            log.info(
+                "Retrieving biases for %s starting from %s and lasting %s",
+                cur_pol,
+                str(start_date),
+                str(end_date - start_date),
+            )
             cur_pol_fullname = f"POL_{cur_pol}"
             result[cur_pol] = inpf.get_average_biases(
-                polarimeter=cur_pol, time_range=(), calibration_tables=calibr
+                polarimeter=cur_pol,
+                time_range=(tag.mjd_start, tag.mjd_end),
+                calibration_tables=calibr,
             )
 
     return result
@@ -120,23 +135,26 @@ class OpenClosedLoopProcedure(StripProcedure):
         # This is used when the user specifies the switch --print-biases
         self.used_biases = []
 
-    def turn_on_board(self, board):
-        log.info(f"Turnon of board {board}")
-        turnon_proc = TurnOnOffProcedure(waittime_s=1.0, turnon=True)
-
-        for cur_horn_idx in range(8):
-            if board == "I" and cur_horn_idx == 7:
-                continue
-
-            if cur_horn_idx != 7:
-                polname = f"{board}{cur_horn_idx}"
-            else:
-                polname = BOARD_TO_W_BAND_POL[board]
-
-            turnon_proc.set_board_horn_polarimeter(
-                new_board=board, new_horn=polname, new_pol=None,
+    def turn_on_polarimeters(self, polarimeters):
+        log.info(
+            f"Turnon of polarimeters {0}".format(
+                ", ".join([str(x) for x in polarimeters])
             )
-            turnon_proc.run()
+        )
+        turnon_proc = TurnOnOffProcedure(
+            waittime_s=1.0, stable_acquisition_time_s=1.0, turnon=True
+        )
+
+        turn_on_board = True
+        for cur_polarimeter in polarimeters:
+            board = normalize_polarimeter_name(cur_polarimeter)[0]
+            turnon_proc.set_board_horn_polarimeter(
+                new_board=board, new_horn=cur_polarimeter, new_pol=None,
+            )
+            turnon_proc.run_turnon(
+                stable_acquisition_time_s=1.0, turn_on_board=turn_on_board
+            )
+            turn_on_board = False
 
         return turnon_proc.get_command_list()
 
@@ -151,6 +169,15 @@ class OpenClosedLoopProcedure(StripProcedure):
         # open-loop and closed-loop tests
 
         for cur_pol in polarimeters:
+            # Append the sequence of commands to turnon all the polarimeters
+            # to the JSON commands
+            self.command_emitter.command_list += self.turn_on_polarimeters([cur_pol])
+
+            if test_name == "OPEN_LOOP":
+                self.conn.set_pol_mode(cur_pol, OPEN_LOOP_MODE)
+            else:
+                self.conn.set_pol_mode(cur_pol, CLOSED_LOOP_MODE)
+
             cur_biases = biases_per_pol[cur_pol]._asdict()
             self.used_biases.append(
                 {
@@ -189,12 +216,23 @@ class OpenClosedLoopProcedure(StripProcedure):
                     elif key == "vgate":
                         self.conn.set_vg(**params)
 
+            if not self.args.acquisition_at_end:
+                with StripTag(
+                    conn=self.command_emitter,
+                    name=f"{test_name}_TEST_ACQUISITION_{cur_pol}",
+                    comment=f"Stable acquisition for polarimeter {cur_pol}",
+                ):
+                    self.conn.wait(seconds=self.args.wait_time_s)
+
+        if self.args.acquisition_at_end:
             with StripTag(
                 conn=self.command_emitter,
-                name=f"{test_name}_TEST_ACQUISITION_{cur_pol}",
-                comment=f"Stable acquisition",
+                name=f"{test_name}_TEST_ACQUISITION",
+                comment="Stable acquisition with polarimeters {pols}".format(
+                    pols=", ".join(polarimeters)
+                ),
             ):
-                self.conn.wait(seconds=80)
+                self.conn.wait(seconds=self.args.wait_time_s)
 
     def run_open_loop_test(
         self, polarimeters, biases_per_pol: Dict[str, BiasConfiguration]
@@ -280,9 +318,9 @@ class OpenClosedLoopProcedure(StripProcedure):
         # Closed loop test
         if self.args.closed_loop_filename:
             biases_per_pol = self.read_biases_per_pol(
-                self.args.open_loop_filename, "CLOSED_LOOP"
+                self.args.closed_loop_filename, "CLOSED_LOOP"
             )
-            self.run_closed_loop_test(self.args.polarimeters, biases)
+            self.run_closed_loop_test(self.args.polarimeters, biases_per_pol)
 
     def output_biases(self):
         print(json.dumps(self.used_biases, indent=4))
@@ -396,6 +434,22 @@ Usage examples:
         "write a JSON containing the calibrated values of the biases to be set "
         "during the test. This is always printed to 'stdout', regardless of the "
         "--output flag, and it's useful for debugging.",
+    )
+    parser.add_argument(
+        "--wait-time-s",
+        default=DEFAULT_WAIT_TIME_S,
+        type=int,
+        help=(
+            "Number of seconds to wait after the polarimeter's biases have been "
+            "set up (default: {0} s)"
+        ).format(DEFAULT_WAIT_TIME_S),
+    )
+    parser.add_argument(
+        "--acquisition-at-end",
+        default=False,
+        action="store_true",
+        help="""Make just one acquisition when all the polarimeters have been set
+up, instead of running one acquisition for each polarimeter.""",
     )
 
     args = parser.parse_args()

@@ -47,6 +47,29 @@ entered ``R`` at the prompt:
 Polarimeter names
 -----------------
 
+Switching between modules and polarimeters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each «module» (e.g., I0) is associated with a «polarimeter»
+(``STRIP34``), and it is often the case that procedures and data
+analysis codes need to jump from one representation to another.
+
+The association is stored in the file
+``data/default_biases_warm.xlsx``, and it can be accessed using the
+class :class:`.InstrumentBiases`::
+
+  from striptease.biases import InstrumentBiases
+
+  biases = InstrumentBiases()
+  print(biases.module_name_to_polarimeter("W3"))
+  # Output:
+  # STRIP70
+
+  print(biases.polarimeter_to_module_name("STRIP34"))
+  # Output:
+  # I0
+
+
 W-band polarimeters
 ~~~~~~~~~~~~~~~~~~~
 

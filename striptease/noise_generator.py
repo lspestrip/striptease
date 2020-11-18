@@ -2,8 +2,8 @@
 
 
 class NoiseGenerator:
-    """ This class generates noise datastreams characterized by white_noise only or 
-        white_noise + 1/f spectrum"""
+    """This class generates noise datastreams characterized by white_noise only or
+    white_noise + 1/f spectrum"""
 
     def __init__(self):
 
@@ -48,8 +48,8 @@ class NoiseGenerator:
     # METHODS
 
     def parameters(self):
-        """ Prints the attributes of the class, corresponding to the values of
-        the spectrum calculation parameters """
+        """Prints the attributes of the class, corresponding to the values of
+        the spectrum calculation parameters"""
 
         items = list(self.__dict__.items())
         CRED = "\033[91m"
@@ -65,20 +65,20 @@ class NoiseGenerator:
         self, frequency, bandwidth, parameters, slope, samp_freq, time_length
     ):
         """
-        This pogram generates a white noise + 1/f stream according to 
+        This pogram generates a white noise + 1/f stream according to
         the code of Maino and Burigana it is tailored to simulate a noise
         data stream from a total power receiver. So the parameters are not
         defined in terms of white noise and 1/f characteristics, but in terms
         of the amplifier characteristics
         ;
         CALL
-        generate_total_power_noise(frequency, bandwidth, T_signal, T_noise, 
+        generate_total_power_noise(frequency, bandwidth, T_signal, T_noise,
         slope, samp_freq, time_length)
         ;
         INPUTS
         frequency (channel frequency in GHz)
         bandwidth (bandwidth in GHz)
-        parameters: 
+        parameters:
             if self.mode == total_power  => parameters = [Tsignal, Tnoise]
             if self.mode == differential => parameters = [wn_level, fknee]
         T_noise (noise temperature)

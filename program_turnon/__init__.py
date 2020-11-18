@@ -18,7 +18,7 @@ from striptease.biases import InstrumentBiases, BoardCalibration
 from striptease.procedures import StripProcedure
 
 CalibrationCurve = namedtuple(
-    "CalibrationCurve", ["slope", "intercept", "mul", "div", "add",]
+    "CalibrationCurve", ["slope", "intercept", "mul", "div", "add",],
 )
 
 
@@ -151,23 +151,33 @@ class SetupBoard(object):
     def enable_electronics(self, polarimeter, delay_sec=0.5, mode=5):
         url = self.conf.get_rest_base() + "/slo"
 
+        {
+            "board": "R",
+            "type": "DAQ",
+            "pol": "BOARD",
+            "base_addr": "CLK_REF",
+            "method": "GET",
+            "size": 1,
+            "timeout": 500,
+        }
+
         cmd = {}
         cmd["board"] = self.board
-        cmd["type"] = "BIAS"
         cmd["method"] = "SET"
         cmd["timeout"] = 500
 
-        cmd["pol"] = polarimeter
-        cmd["type"] = "BIAS"
         for c in [
-            ("POL_PWR", 1),
-            ("DAC_REF", 1),
-            ("POL_MODE", mode),
-            ("CLK_REF", 0),
-            ("PHASE_SRC", 0),
+            ("POL_PWR", 1, "BIAS", polarimeter),
+            ("DAC_REF", 1, "BIAS", polarimeter),
+            ("POL_MODE", mode, "BIAS", polarimeter),
+            ("CLK_REF", 0, "DAQ", "BOARD"),
+            ("PHASE_SRC", 0, "BIAS", "BOARD"),
         ]:
-            cmd["base_addr"] = c[0]
-            cmd["data"] = [c[1]]
+            base_addr, data, typeof, pol = c
+            cmd["base_addr"] = base_addr
+            cmd["data"] = [data]
+            cmd["type"] = typeof
+            cmd["pol"] = pol
 
             if not self.post_command(url, cmd):
                 print(
@@ -178,6 +188,7 @@ class SetupBoard(object):
                 break
 
         cmd["base_addr"] = "PRE_EN"
+        cmd["pol"] = polarimeter
         cmd["type"] = "DAQ"
         cmd["data"] = [1]
 
@@ -500,12 +511,13 @@ def biases_to_str(biases):
 
 
 class TurnOnOffProcedure(StripProcedure):
-    def __init__(self, waittime_s=5, turnon=True):
+    def __init__(self, waittime_s=5, stable_acquisition_time_s=120, turnon=True):
         super(TurnOnOffProcedure, self).__init__()
         self.board = None
         self.horn = None
         self.polarimeter = None
         self.waittime_s = waittime_s
+        self.stable_acquisition_time_s = stable_acquisition_time_s
         self.turnon = turnon
 
     def set_board_horn_polarimeter(self, new_board, new_horn, new_pol=None):
@@ -516,7 +528,7 @@ class TurnOnOffProcedure(StripProcedure):
     def run(self):
         "Depending on `self.turnon`, execute a turn-on or turn-off procedure for `self.horn`."
         if self.turnon:
-            self.run_turnon()
+            self.run_turnon(stable_acquisition_time_s=self.stable_acquisition_time_s)
         else:
             self.run_turnoff()
 
@@ -598,8 +610,8 @@ class TurnOnOffProcedure(StripProcedure):
                     comment=f"Setting biases for PH/SW {index} in {self.horn}",
                 ):
                     board_setup.set_phsw_bias(self.horn, index, vpin, ipin)
-            except:
-                log.warning(f"Unable to set bias for detector #{index}")
+            except Exception as exc:
+                log.warning(f"Unable to set bias for detector #{index} ({exc})")
 
         # 5
         for idx in (0, 1, 2, 3):
@@ -634,6 +646,9 @@ class TurnOnOffProcedure(StripProcedure):
                         comment=f"Acquiring some data after VD_SET_{lna}",
                     ):
                         self.wait(seconds=self.waittime_s)
+
+        board_setup.setup_VG(self.horn, "4A", step=1.0)
+        board_setup.setup_VG(self.horn, "5A", step=1.0)
 
         if stable_acquisition_time_s > 0:
             board_setup.log(
@@ -695,6 +710,9 @@ class TurnOnOffProcedure(StripProcedure):
 
                 if self.waittime_s > 0:
                     self.wait(seconds=self.waittime_s)
+
+        board_setup.setup_VG(self.horn, "4A", step=1.0)
+        board_setup.setup_VG(self.horn, "5A", step=1.0)
 
         # 2
         with StripTag(

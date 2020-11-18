@@ -128,6 +128,35 @@ class InstrumentBiases:
         self.biases = sheets["Biases"]
         self.modules = sheets["Modules"]
 
+    def module_name_to_polarimeter(self, module_name: str) -> str:
+        """Given a module name like ``V0``, return the name of the polarimeter (e.g., ``STRIP04``)
+
+        See also :meth:`.module_name_to_polarimeter_number`.
+        """
+        return self.modules["Polarimeter"][module_name]
+
+    def module_name_to_polarimeter_number(self, module_name: str) -> str:
+        """Given a module name like ``V0``, return the number of the polarimeter (e.g., 4)
+
+        See also :meth:`.module_name_to_polarimeter`.
+        """
+        return self.modules["Polarimeter"][module_name]
+
+    def polarimeter_to_module_name(self, polarimeter_name: str) -> str:
+        """Given a polarimeter name like ``STRIP04``, return the module name (e.g., ``V0``)
+
+        See also :meth:`.polarimeter_number_to_module_name`."""
+        mask = self.modules["Polarimeter"] == polarimeter_name
+        entries = self.modules[mask].index.values
+        assert len(entries) == 1
+        return entries[0]
+
+    def polarimeter_number_to_module_name(self, polarimeter_num: int) -> str:
+        """Given a polarimeter name like 4 (for ``STRIP04``), return the module name (e.g., ``V0``)
+
+        See also :meth:`.polarimeter_to_module_name`."""
+        return self.polarimeter_to_module_name(f"STRIP{polarimeter_num:02d}")
+
     def get_biases(self, module_name=None, polarimeter_name=None):
         """Return the biases needed to turn on a polarimeter.
 
@@ -145,7 +174,7 @@ class InstrumentBiases:
             )
 
         if module_name:
-            polarimeter_name = self.modules["Polarimeter"][module_name]
+            polarimeter_name = self.module_name_to_polarimeter(module_name)
 
         if not (polarimeter_name in self.biases):
             valid_names = ", ".join(['"{0}"'.format(x) for x in self.biases.keys()])

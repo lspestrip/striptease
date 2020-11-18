@@ -12,8 +12,7 @@ import asyncio
 
 class WsWarning(object):
     def __init__(self, con, loop=None):
-        """:param web.rest.base.Connection con: the base http connection
-        """
+        """:param web.rest.base.Connection con: the base http connection"""
         self.conn = con
         conf = Config()
         self.ws = None
@@ -140,8 +139,8 @@ class WsWarning(object):
             self.__current["id"] = res["id"]
 
     async def recv(self):
-        """ waits for warning packet and decodes it from json string
-           :return: dictionary of the decoded json.
+        """waits for warning packet and decodes it from json string
+        :return: dictionary of the decoded json.
         """
         pkt = await self.ws.recv()
         return pkt
