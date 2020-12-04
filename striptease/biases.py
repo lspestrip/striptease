@@ -226,7 +226,7 @@ class BoardCalibration:
     the calibration of one channel.
     """
 
-    def __init__(self, filename):
+    def __init__(self, filename=""):
         pass
 
     def get_channel_calibration(self, channel_no=None, channel_name=None):
