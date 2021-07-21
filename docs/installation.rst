@@ -39,17 +39,6 @@ If you are a developer (point 2 above), use these commands:
     cd striptease
     python -m pip install -e .
 
-Striptease includes a C++ program used to send long sequence of
-commands to the Strip electronics. You do not need to compile this
-code, if you do not have the rights to command the hardware. This
-program is written in C++ and requires you have a C++ compiler. Run
-the following commands within the ``striptease`` directory:
-
-.. code-block:: bash
-                
-    cd TestRunner
-    qmake TestRunner.pro && make
-
 Once the code is installed, you can use it in IPython, Jupyter, or
 Python scripts, using the following ``import``::
 
@@ -58,6 +47,24 @@ Python scripts, using the following ``import``::
 However, if you need to access the instrument in real-time, you must
 first set up the authentication system. To learn how to do it,
 continue reading, otherwise you can stop here.
+
+
+C++ GUI
+-------
+
+Striptease included a C++ program used to send long sequence of
+commands to the Strip electronics. This program is no longer
+supported, as the script `program_batch_runner.py` is now the
+officially-supported way of running automatic scripts.
+
+If you are curious and want to compile it, you must have a C++
+compiler and the `Qt libraries <https://www.qt.io/>`_ installed. Run
+the following commands within the ``striptease`` directory:
+
+.. code-block:: bash
+                
+    cd TestRunner
+    qmake TestRunner.pro && make
 
   
 Authentication
