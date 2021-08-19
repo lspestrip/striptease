@@ -12,26 +12,7 @@ To install Striptease, you need the following tools:
 Installing the code
 -------------------
 
-You have two choices to install this program:
-
-1. Install and use it as any other Python package; good if you are not
-   a Python expert but just want to control the Strip instrument;
-
-2. Install it with the aim to develop and improve it; good if you know
-   some Python and do not want to prevent yourself from patching the
-   code.
-   
-If you want to follow the first route, use the following commands
-(possibly after having `created a virtual environment
-<https://docs.python.org/3/library/venv.html>`_):
-
-.. code-block:: bash
-                
-    git clone git@github.com:lspestrip/striptease.git
-    cd striptease
-    python setup.py install
-
-If you are a developer (point 2 above), use these commands:
+To build the program, use the following commands:
 
 .. code-block:: bash
                 
@@ -43,6 +24,10 @@ Once the code is installed, you can use it in IPython, Jupyter, or
 Python scripts, using the following ``import``::
 
   import striptease
+
+Be sure to run your source codes and Jupyter notebooks within the
+``striptease`` directory, otherwise calibration tables and other
+important data files won't be visible.
 
 However, if you need to access the instrument in real-time, you must
 first set up the authentication system. To learn how to do it,
