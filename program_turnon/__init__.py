@@ -611,7 +611,7 @@ class TurnOnOffProcedure(StripProcedure):
                 ):
                     board_setup.set_phsw_bias(self.horn, index, vpin, ipin)
             except Exception as exc:
-                log.warning(f"Unable to set bias for detector #{index} ({exc})")
+                log.warning(f"Unable to set bias for detector #{index} ({type(exc)}: {exc})")
 
         # 5
         for idx in (0, 1, 2, 3):
