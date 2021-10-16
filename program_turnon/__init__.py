@@ -1,14 +1,9 @@
 import os.path
 from web.rest.base import Connection
-from config import Config
-from copy import deepcopy
 from collections import namedtuple
 from datetime import datetime
 from striptease import StripTag
 import logging as log
-import re
-import time
-import csv
 import sys
 import pandas as pd
 import numpy as np
@@ -32,7 +27,6 @@ def read_board_xlsx(path):
         line_count = 0
         current_item = np.nan
         current_fit = np.nan
-        current_chan = np.nan
         for r in pol:
             row = pol[r]
             if line_count <= 1:
@@ -281,7 +275,6 @@ class SetupBoard(object):
         cmd["method"] = "SET"
         cmd["timeout"] = 500
 
-        bc = self.ib.get_biases(module_name=polarimeter)
         calib = self.bc[f"Pol{get_polarimeter_index(polarimeter) + 1}"]
 
         cmd["pol"] = polarimeter

@@ -136,7 +136,7 @@ class Connection(object):
         if response.status_code != 200:
             try:
                 print(response.json())
-            except:
+            except AttributeError:
                 pass
             response.raise_for_status()
         else:
@@ -153,7 +153,7 @@ class Connection(object):
             response.raise_for_status()
             try:
                 print(response.json())
-            except:
+            except AttributeError:
                 pass
         else:
             return response.json()
@@ -168,7 +168,7 @@ class Connection(object):
         if response.status_code != 200:
             try:
                 print(response.json())
-            except:
+            except AttributeError:
                 pass
             response.raise_for_status()
         else:

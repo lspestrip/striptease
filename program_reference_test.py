@@ -57,7 +57,7 @@ class ReferenceTestProcedure(StripProcedure):
 
         with StripTag(
             conn=self.command_emitter,
-            name=f"PHSW_STATUS_EXPLICIT",
+            name="PHSW_STATUS_EXPLICIT",
             comment=f"Setting status for phase switches in {self.horn}",
         ):
             for idx, status in [(0, 1), (1, 3), (2, 2), (3, 4)]:
@@ -68,7 +68,7 @@ class ReferenceTestProcedure(StripProcedure):
 
         with StripTag(
             conn=self.command_emitter,
-            name=f"PHSW_STATUS_EXPLICIT_INVERSE",
+            name="PHSW_STATUS_EXPLICIT_INVERSE",
             comment=f"Setting status for phase switches in {self.horn}",
         ):
             for idx, status in [(0, 3), (1, 1), (2, 4), (3, 2)]:

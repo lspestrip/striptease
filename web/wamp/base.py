@@ -1,10 +1,7 @@
 # web/ws/base.py --- Base websocket handling
 #
 # Copyright (C) 2018 Stefano Sartor - stefano.sartor@inaf.it
-import websockets
-import json
 import asyncio
-from web.rest.base import Connection
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 from threading import Thread
 

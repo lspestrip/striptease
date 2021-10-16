@@ -180,7 +180,6 @@ def parse_datetime_from_filename(filename):
 
     basename = Path(filename).name
     try:
-        assert len(basename) == 22
         return datetime(
             year=int(basename[0:4]),
             month=int(basename[5:7]),
@@ -189,7 +188,7 @@ def parse_datetime_from_filename(filename):
             minute=int(basename[14:16]),
             second=int(basename[17:19]),
         )
-    except:
+    except ValueError:
         raise RuntimeError(f"Invalid HDF5 filename: {filename}")
 
 
