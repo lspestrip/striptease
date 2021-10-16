@@ -21,7 +21,7 @@ from program_turnon import TurnOnOffProcedure
 
 
 class IVProcedure(StripProcedure):
-    def __init__(self, args,waittime_perconf_s=1.8):
+    def __init__(self, args, waittime_perconf_s=1.8):
         super(IVProcedure, self).__init__()
         self.args = args
         self.waittime_perconf_s = waittime_perconf_s
@@ -40,12 +40,13 @@ class IVProcedure(StripProcedure):
                 polname = BOARD_TO_W_BAND_POL[board]
 
             turnon_proc.set_board_horn_polarimeter(
-                new_board=board, new_horn=polname, new_pol=None,
+                new_board=board,
+                new_horn=polname,
+                new_pol=None,
             )
             turnon_proc.run()
 
         return turnon_proc.get_command_list()
-
 
     def run(self):
         # Turn on the polarimeter(s)
@@ -57,7 +58,8 @@ class IVProcedure(StripProcedure):
 
         # Verification step
         with StripTag(
-            conn=self.command_emitter, name="IVTEST_VERIFICATION_TURNON",
+            conn=self.command_emitter,
+            name="IVTEST_VERIFICATION_TURNON",
         ):
             # Wait a while after having turned on all the boards
             self.wait(seconds=10)
@@ -86,17 +88,17 @@ class IVProcedure(StripProcedure):
             self.bicocca_test.polarimeter_name,
             module_name,
         )
-        
+
         calibr = CalibrationTables()
         defaultBias = InstrumentBiases()
         lna_list = get_lna_list(pol_name=self.bicocca_test.polarimeter_name)
 
-        #--> First test: ID vs VD --> For each VG, we used VD curves
+        # --> First test: ID vs VD --> For each VG, we used VD curves
         self.conn.tag_start(name=f"IVTEST_IDVD_{module_name}")
 
         for lna in lna_list:
             lna_number = get_lna_num(lna)
-            #Read default configuration
+            # Read default configuration
             with StripTag(
                 conn=self.command_emitter,
                 name=f"{module_name}_{lna}_READDEFAULT_VGVD",
@@ -104,29 +106,30 @@ class IVProcedure(StripProcedure):
                 # read bias in mV
                 default_vg_adu = calibr.physical_units_to_adu(
                     polarimeter=module_name,
-                    hk="vgate",component=lna,
-                    value=defaultBias.get_biases(module_name,
-                        param_hk=f"VG{lna_number}"
+                    hk="vgate",
+                    component=lna,
+                    value=defaultBias.get_biases(
+                        module_name, param_hk=f"VG{lna_number}"
                     ),
                 )
 
                 # read bias in mV
                 default_vd_adu = calibr.physical_units_to_adu(
                     polarimeter=module_name,
-                    hk="vdrain",component=lna,
-                    value =defaultBias.get_biases(module_name,
-                        param_hk=f"VD{lna_number}"
+                    hk="vdrain",
+                    component=lna,
+                    value=defaultBias.get_biases(
+                        module_name, param_hk=f"VD{lna_number}"
                     ),
                 )
 
-            #Get the data matrix and the Gate Voltage vector.
+            # Get the data matrix and the Gate Voltage vector.
             matrixIDVD = self.bicocca_data.components[lna].curves["IDVD"]
 
-            #from V to mV
-            vgate = np.mean(matrixIDVD["GateV"], axis=0)*1000
+            # from V to mV
+            vgate = np.mean(matrixIDVD["GateV"], axis=0) * 1000
             selvg = vgate >= -360
             vgate = vgate[selvg]
-
 
             # For each Vg, we have several curves varing Vd
             for vg_idx, vg in enumerate(vgate):
@@ -142,10 +145,10 @@ class IVProcedure(StripProcedure):
                     value_adu=vg_adu,
                 )
 
-                #from V to mV
-                curve_vdrain = matrixIDVD["DrainV"][:,vg_idx]*1000
+                # from V to mV
+                curve_vdrain = matrixIDVD["DrainV"][:, vg_idx] * 1000
 
-                for vd_idx,vd in enumerate(curve_vdrain):
+                for vd_idx, vd in enumerate(curve_vdrain):
                     vd_adu = calibr.physical_units_to_adu(
                         polarimeter=module_name,
                         hk="vdrain",
@@ -153,7 +156,8 @@ class IVProcedure(StripProcedure):
                         value=vd,
                     )
                     self.conn.set_vd(
-                        polarimeter=module_name, lna=lna,
+                        polarimeter=module_name,
+                        lna=lna,
                         value_adu=vd_adu,
                     )
 
@@ -171,11 +175,13 @@ class IVProcedure(StripProcedure):
                 name=f"{module_name}_{lna}_BACK2DEFAULT_VGVD",
             ):
                 self.conn.set_vg(
-                    polarimeter=module_name,lna=lna,
+                    polarimeter=module_name,
+                    lna=lna,
                     value_adu=default_vg_adu,
                 )
                 self.conn.set_vd(
-                    polarimeter=module_name, lna=lna,
+                    polarimeter=module_name,
+                    lna=lna,
                     value_adu=default_vd_adu,
                 )
                 self.conn.wait(self.waittime_perconf_s)
@@ -183,13 +189,13 @@ class IVProcedure(StripProcedure):
         self.conn.tag_stop(name=f"IVTEST_IDVD_{module_name}")
 
         #
-        #--> Second test: ID vs VG --> For each VD, we used VG curves
+        # --> Second test: ID vs VG --> For each VD, we used VG curves
 
         self.conn.tag_start(name=f"IVTEST_IDVG_{module_name}")
 
         for lna in lna_list:
             lna_number = get_lna_num(lna)
-            #Read default configuration
+            # Read default configuration
             with StripTag(
                 conn=self.command_emitter,
                 name=f"{module_name}_{lna}_READDEFAULT_VDVG",
@@ -197,28 +203,30 @@ class IVProcedure(StripProcedure):
                 # read bias in mV
                 default_vg_adu = calibr.physical_units_to_adu(
                     polarimeter=module_name,
-                    hk="vgate",component=lna,
-                    value=defaultBias.get_biases(module_name,
-                        param_hk=f"VG{lna_number}"
+                    hk="vgate",
+                    component=lna,
+                    value=defaultBias.get_biases(
+                        module_name, param_hk=f"VG{lna_number}"
                     ),
                 )
 
                 # read bias in mV
                 default_vd_adu = calibr.physical_units_to_adu(
                     polarimeter=module_name,
-                    hk="vdrain",component=lna,
-                    value =defaultBias.get_biases(module_name,
-                        param_hk=f"VD{lna_number}"
+                    hk="vdrain",
+                    component=lna,
+                    value=defaultBias.get_biases(
+                        module_name, param_hk=f"VD{lna_number}"
                     ),
                 )
-            #Get the data matrix and the Gate Voltage vector.
+            # Get the data matrix and the Gate Voltage vector.
             matrixIDVG = self.bicocca_data.components[lna].curves["IDVG"]
 
-            #from V to mV
-            vdrain = np.mean(matrixIDVG["DrainV"],axis=0)*1000
+            # from V to mV
+            vdrain = np.mean(matrixIDVG["DrainV"], axis=0) * 1000
 
             # For each Vd, we have several curves varing Vg
-            for vd_idx,vd in enumerate(vdrain):
+            for vd_idx, vd in enumerate(vdrain):
                 vd_adu = calibr.physical_units_to_adu(
                     polarimeter=module_name,
                     hk="vdrain",
@@ -231,12 +239,12 @@ class IVProcedure(StripProcedure):
                     value_adu=vd_adu,
                 )
 
-                #from V to mV
-                curve_vgate = matrixIDVG["GateV"][:, vd_idx]*1000.
+                # from V to mV
+                curve_vgate = matrixIDVG["GateV"][:, vd_idx] * 1000.0
                 selcurvg = curve_vgate >= -360
                 curve_vgate = vgate[selvg]
 
-                for vg_idx,vg in enumerate(curve_vgate):
+                for vg_idx, vg in enumerate(curve_vgate):
                     vg_adu = calibr.physical_units_to_adu(
                         polarimeter=module_name,
                         hk="vgate",
@@ -263,14 +271,16 @@ class IVProcedure(StripProcedure):
                 name=f"IVTEST_IDVG_{module_name}_{lna}_BACK2DEFAULT_VDVG",
             ):
                 self.conn.set_vg(
-                    polarimeter=module_name,lna=lna,
+                    polarimeter=module_name,
+                    lna=lna,
                     value_adu=default_vg_adu,
                 )
                 self.conn.set_vd(
-                    polarimeter=module_name, lna=lna,
+                    polarimeter=module_name,
+                    lna=lna,
                     value_adu=default_vd_adu,
                 )
-                
+
                 self.conn.wait(self.waittime_perconf_s)
 
         self.conn.tag_stop(name=f"IVTEST_IDVG_{module_name}")

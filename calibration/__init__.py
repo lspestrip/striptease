@@ -48,7 +48,14 @@ __all__ = [
 #:    Integer value for the additive offset of the calibration curve
 #:
 CalibrationCurve = namedtuple(
-    "CalibrationCurve", ["slope", "intercept", "mul", "div", "add",],
+    "CalibrationCurve",
+    [
+        "slope",
+        "intercept",
+        "mul",
+        "div",
+        "add",
+    ],
 )
 
 

@@ -18,7 +18,14 @@ from striptease.biases import InstrumentBiases, BoardCalibration
 from striptease.procedures import StripProcedure
 
 CalibrationCurve = namedtuple(
-    "CalibrationCurve", ["slope", "intercept", "mul", "div", "add",],
+    "CalibrationCurve",
+    [
+        "slope",
+        "intercept",
+        "mul",
+        "div",
+        "add",
+    ],
 )
 
 
@@ -285,7 +292,7 @@ class SetupBoard(object):
         cmd["timeout"] = 500
 
         bc = self.ib.get_biases(module_name=polarimeter)
-        calib = self.bc[f"Pol{get_polarimeter_index(polarimeter)}"]
+        calib = self.bc[f"Pol{get_polarimeter_index(polarimeter) + 1}"]
 
         cmd["pol"] = polarimeter
         cmd["base_addr"] = f"VPIN{index}_SET"
@@ -611,7 +618,9 @@ class TurnOnOffProcedure(StripProcedure):
                 ):
                     board_setup.set_phsw_bias(self.horn, index, vpin, ipin)
             except Exception as exc:
-                log.warning(f"Unable to set bias for detector #{index} ({exc})")
+                log.warning(
+                    f"Unable to set bias for phsw diode #{index} ({type(exc)}: {exc})"
+                )
 
         # 5
         for idx in (0, 1, 2, 3):
