@@ -4,15 +4,9 @@
 from widgets.plot import MplCanvas
 from web.wamp.base import WampBase
 from config import Config
-import asyncio
-from threading import Thread
 import numpy as np
 import time
 import astropy.time as at
-import datetime as dt
-import time
-import gc
-import matplotlib.pyplot as plt
 from copy import deepcopy
 
 

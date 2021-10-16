@@ -34,7 +34,6 @@ class F1Procedure(TurnOnOffProcedure):
 
 
 if __name__ == "__main__":
-    import sys
     from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
     parser = ArgumentParser(

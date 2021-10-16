@@ -1,11 +1,10 @@
 import sys
-import os
 import asyncio
 from program_polview.worker import Worker
 from web.rest.base import Connection
 from widgets.login import LoginWidget
 from config import Config
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtWidgets
 from threading import Thread
 import subprocess as sp
 import json
@@ -47,7 +46,7 @@ class UnixProtocolR(asyncio.Protocol):
                     del self.workers[pol]
 
             # print('json',a)
-        except json.JSONDecodeError as e:
+        except json.JSONDecodeError:
             print("STDOUT:", str(data, encoding="utf-8"), "END")
             # pass
 

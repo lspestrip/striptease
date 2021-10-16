@@ -8,13 +8,9 @@ import requests
 from typing import Dict, List, Union
 from urllib.parse import urljoin
 
-import numpy as np
-
 import astropy.time
 from calibration import CalibrationTables
 from striptease import (
-    STRIP_BOARD_NAMES,
-    BOARD_TO_W_BAND_POL,
     OPEN_LOOP_MODE,
     CLOSED_LOOP_MODE,
     StripTag,
@@ -70,7 +66,6 @@ def retrieve_biases_from_hdf5(
                 str(start_date),
                 str(end_date - start_date),
             )
-            cur_pol_fullname = f"POL_{cur_pol}"
             result[cur_pol] = inpf.get_average_biases(
                 polarimeter=cur_pol,
                 time_range=(tag.mjd_start, tag.mjd_end),
@@ -306,8 +301,6 @@ class OpenClosedLoopProcedure(StripProcedure):
         return biases_per_pol
 
     def run(self):
-        calibr = CalibrationTables()
-
         # Open loop test
         if self.args.open_loop_filename:
             biases_per_pol = self.read_biases_per_pol(
@@ -337,8 +330,7 @@ if __name__ == "__main__":
 Usage examples:
 
     # Test the open-loop mode for polarimeter Y6, reading the biases
-    # from an Excel file. For an example, see 
-    # "{data_file_path}"
+    # from an Excel file. For an example, see "{data_file_path}"
     python3 program_open_closed_loop.py \\
         --open-loop=biases.xlsx \\
         Y6 > my_test.json

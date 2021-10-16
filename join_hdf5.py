@@ -13,7 +13,7 @@ DEFAULT_COMPRESSION_LEVEL = 4
 
 try:
     from tqdm import tqdm
-except:
+except ModuleNotFoundError:
     ERASE_EOL = "\033[K"
 
     # If the awesome tqdm library is not available, fall back to some
@@ -95,10 +95,10 @@ def create_tag_database(db):
         """
 CREATE TABLE tags(
     id INTEGER PRIMARY KEY,
-    mjd_start REAL, 
-    mjd_end REAL, 
-    tag TEXT, 
-    start_comment TEXT, 
+    mjd_start REAL,
+    mjd_end REAL,
+    tag TEXT,
+    start_comment TEXT,
     end_comment TEXT
 )
 """
@@ -253,10 +253,6 @@ def copy_hdf5(source, dest, start_time=None, end_time=None, compression_level=4)
     if "/TAGS/tag_data" in dest:
         del dest["/TAGS/tag_data"]
 
-    tags_dset = dest.create_dataset(
-        "/TAGS/tag_data", dtype=TAGS_TABLE_DTYPE, data=complete_tag_list
-    )
-
 
 def parse_args():
     parser = ArgumentParser(
@@ -284,7 +280,7 @@ def parse_args():
         help="""Time of the first sample to save in the
 result. If not specified, the first sample in the output will
 be the first sample in the first input file. The value of TIME
-can either be a datetime in the format YYYY-MM-DDTHH:MM:SS 
+can either be a datetime in the format YYYY-MM-DDTHH:MM:SS
 (e.g., "2020-05-06T18:33:21") or a Julian Date.""",
     )
 

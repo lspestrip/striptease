@@ -4,7 +4,7 @@
 from typing import List
 from pathlib import Path
 
-from PyQt5 import QtCore, QtWidgets, uic
+from PyQt5 import QtCore, QtWidgets
 from postmortem_viewer.ui import Ui_mainWindow
 import striptease as st
 

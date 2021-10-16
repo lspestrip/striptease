@@ -111,11 +111,6 @@ class Spectrum:
         and ported to Python by A. Mennella."""
 
         import numpy as np
-        import cmath as cm
-        import math as m
-        import string as strg
-        import logging as log
-        import scipy as sc
 
         arr = np.array(array2)
         nel = len(arr)
@@ -134,7 +129,7 @@ class Spectrum:
 
         else:
             if self.fast[0]:
-                nel = long(2.0 ** (np.floor(np.log(nel) / np.log(2.0))))
+                nel = int(2.0 ** (np.floor(np.log(nel) / np.log(2.0))))
                 arr = np.array(array2[0:nel])
 
             # 1.2 is a normalisation factor to make the fft level similar
@@ -218,10 +213,6 @@ class Spectrum:
         lowestfreq = sampfreq / nlow
         # log.debug('using lowest freq of %f' % lowestfreq)
         nlow = int(nlow)
-        retsamp = 1.0 / sampfreq
-        tlow = 1.0 / lowestfreq
-        i = 0
-        count = 1
         j = np.arange(nlow)
         welch_window = (
             1 - ((j - (nlow / 2.0)) / (nlow / 2.0)) ** 2
@@ -282,10 +273,7 @@ class Spectrum:
         z[:, 1] = self.cshift(spec, -n21)
         z[:, 0] = self.cshift(f, -n21)
 
-        upper_x = 10.0 ** (int(np.log10(sampfreq / 2.0)))
         duration = n / sampfreq  # duration of data in seconds
-        sfactor = 10.0  # smoothing
-        lower_x = 10.0 ** (int(np.log10(1.0 / (duration))))
 
         norm = n * (1.0 / (sampfreq / 2.0))  # this is the power normalization
 
@@ -747,7 +735,7 @@ class Spectrum:
 
             """
             This function calculates noise properties using a three parameters fit of the input
-            spectrum against a function \sigma(1+ (fk/f)^(-slope)). This function is used only
+            spectrum against a function σ(1+ (fk/f)^(-slope)). This function is used only
             if windowing was used in the spectrum computation. In case welch = 0 the linear_fit
             is called instead
 
@@ -785,7 +773,6 @@ class Spectrum:
             +-------------------------+------------------+-----------------------------------+
             """
 
-            import numpy as np
             from scipy.optimize import curve_fit
 
             # Check if windowing was used. Otherwise fall back on linear_fit

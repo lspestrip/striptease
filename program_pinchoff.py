@@ -4,12 +4,7 @@
 import logging as log
 
 from calibration import CalibrationTables
-from striptease import (
-    STRIP_BOARD_NAMES,
-    BOARD_TO_W_BAND_POL,
-    StripTag,
-    normalize_polarimeter_name,
-)
+from striptease import STRIP_BOARD_NAMES, BOARD_TO_W_BAND_POL, StripTag
 from striptease.procedures import StripProcedure
 from program_turnon import TurnOnOffProcedure
 

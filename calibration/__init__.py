@@ -13,7 +13,6 @@ from config import Config
 from striptease import (
     StripConnection,
     normalize_polarimeter_name,
-    get_polarimeter_index,
     get_lna_num,
 )
 
@@ -115,7 +114,6 @@ def read_board_xlsx(path):
         line_count = 0
         current_item = np.nan
         current_fit = np.nan
-        current_chan = np.nan
         for r in pol:
             row = pol[r]
             if line_count <= 1:
