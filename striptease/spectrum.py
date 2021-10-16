@@ -261,7 +261,7 @@ class Spectrum:
 
     def psq(self, array1, sampfreq):
 
-        """ Unused - function used by the old implementation of nps function """
+        """Unused - function used by the old implementation of nps function"""
 
         import numpy as np
 

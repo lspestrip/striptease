@@ -103,7 +103,7 @@ class IVProcedure(StripProcedure):
         # each LNA for each polarimeter
         count_conf = 0
         for pol_name in self.polarimeters:
-            module_name = self.inputBiasIV['Module'][pol_name]
+            module_name = self.inputBiasIV["Module"][pol_name]
             log.info(
                 "-->Polarimeter %s (%s)",
                 pol_name,

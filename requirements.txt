@@ -15,4 +15,4 @@ black
 tqdm
 scipy
 dataclasses
-
+flake8

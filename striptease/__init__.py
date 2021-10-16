@@ -140,7 +140,8 @@ def get_lna_num(name):
     else:
         raise ValueError(f"Invalid amplifier name '{name}'")
 
-def get_lna_list(pol_name=None,module_name=None):
+
+def get_lna_list(pol_name=None, module_name=None):
     """
     Return the LNA list of one polarimeter.
     In particular, W polarimeters have two type of LNA configurations.
@@ -158,21 +159,22 @@ def get_lna_list(pol_name=None,module_name=None):
         if module_name[0].upper() in STRIP_BOARD_NAMES:
             lnaList = ("HA3", "HB3", "HA2", "HB2", "HA1", "HB1")
         elif module_name[0].upper() == "W":
-            if module_name[1] in ['2','4']:
+            if module_name[1] in ["2", "4"]:
                 lnaList = ("HA2", "HB2", "HA1", "HB1")
-            if module_name[1] in ['1','3','5','6']:
+            if module_name[1] in ["1", "3", "5", "6"]:
                 lnaList = ("HA3", "HB3", "HA2", "HB2", "HA1", "HB1")
         else:
             raise ValueError(f"Invalid polarimeter name '{rgb_name}'")
 
     if pol_name is not None:
         lnaList = ("HA3", "HB3", "HA2", "HB2", "HA1", "HB1")
-        if pol_name in ['STRIP71','STRIP73']:
+        if pol_name in ["STRIP71", "STRIP73"]:
             lnaList = ("HA2", "HB2", "HA1", "HB1")
-        elif pol_name in ['STRIP76','STRIP78','STRIP81','STRIP82']:
+        elif pol_name in ["STRIP76", "STRIP78", "STRIP81", "STRIP82"]:
             lnaList = ("HA2", "HB2", "HA1", "HB1")
 
-    return lnaList 
+    return lnaList
+
 
 def get_lna_list(pol_name=None, module_name=None):
     """
@@ -893,9 +895,7 @@ class StripConnection(Connection):
             value_adu (int): drain voltage in ADU
 
         """
-        return self.__get_lna_bias(
-            polarimeter=polarimeter, lna=lna, param_name="VD"
-            )
+        return self.__get_lna_bias(polarimeter=polarimeter, lna=lna, param_name="VD")
 
     def get_vg(self, polarimeter, lna):
         """Retrieves the gate voltage of an amplifier.
@@ -915,9 +915,7 @@ class StripConnection(Connection):
             value_adu (int): gate voltage in ADU
 
         """
-        self.__get_lna_bias(
-            polarimeter=polarimeter, lna=lna, param_name="VG"
-            )
+        self.__get_lna_bias(polarimeter=polarimeter, lna=lna, param_name="VG")
 
     def get_id(self, polarimeter, lna):
         """Retrieves the drain current of an amplifier.
@@ -937,27 +935,24 @@ class StripConnection(Connection):
             value_adu (int): drain current in ADU
 
         """
-        return self.__get_lna_bias(
-            polarimeter=polarimeter, lna=lna, param_name="ID"
-        )
+        return self.__get_lna_bias(polarimeter=polarimeter, lna=lna, param_name="ID")
 
-    def __set_hk_scan(self,board,time_ms):
+    def __set_hk_scan(self, board, time_ms):
         dic = {
             "board": board,
-            "pol":"BOARD",
-            "base_addr":"HK_SCAN",
+            "pol": "BOARD",
+            "base_addr": "HK_SCAN",
             "type": "BIAS",
             "method": "SET",
             "timeout": time_ms,
-            "data":[23295],
+            "data": [23295],
         }
         self.last_response = self.post("rest/slo", dic)
         assert len(self.last_response["data"]) == 1
 
         return self.last_response["data"][0]
 
-
-    def set_hk_scan(self,boards=None,allboards=False,time_ms=200):
+    def set_hk_scan(self, boards=None, allboards=False, time_ms=200):
         """
         Send a command to read and record the all House
         Keeping values for all LNA of the polarimeters
@@ -979,12 +974,12 @@ class StripConnection(Connection):
         """
         if allboards:
             for bb in STRIP_BOARD_NAMES:
-                self.__set_hk_scan(bb,time_ms)
+                self.__set_hk_scan(bb, time_ms)
         else:
             if type(boards) is str:
                 boards = [boards]
             for bb in boards:
-                self.__set_hk_scan(bb,time_ms)
+                self.__set_hk_scan(bb, time_ms)
 
     def set_pol_mode(self, polarimeter, mode):
         """Send a POL_MODE command to a polarimeter
