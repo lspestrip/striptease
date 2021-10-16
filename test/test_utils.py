@@ -16,7 +16,7 @@ def test_get_polarimeter_index():
 
 
 def test_get_lna_num():
-    for lnaidx, lnaname in enumerate(["HA1", "HA2", "HA3", "HB1", "HB2", "HB3"]):
+    for lnaidx, lnaname in enumerate(["HA1", "HA2", "HA3", "HB3", "HB2", "HB1"]):
         assert get_lna_num(lnaname) == lnaidx
 
     for lnaidx, lnaname in enumerate(["H0", "H1", "H2", "H3", "H4", "H5"]):
