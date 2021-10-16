@@ -174,6 +174,41 @@ def get_lna_list(pol_name=None,module_name=None):
 
     return lnaList 
 
+def get_lna_list(pol_name=None, module_name=None):
+    """
+    Return the LNA list of one polarimeter.
+    In particular, W polarimeters have two type of LNA configurations.
+
+    Args
+    ----
+    rgb_name (str): RGB name of the polarimeter, like ``STRIP02``
+    pol_name (str): Name of the polarimeter, like ``R0`` or ``W3``
+
+    Return
+    ------
+    lnaList (tuple): list of LNA in the pol_name poilarimeter
+    """
+    if module_name is not None:
+        if module_name[0].upper() in STRIP_BOARD_NAMES:
+            lnaList = ("HA3", "HB3", "HA2", "HB2", "HA1", "HB1")
+        elif module_name[0].upper() == "W":
+            if module_name[1] in ["2", "4"]:
+                lnaList = ("HA2", "HB2", "HA1", "HB1")
+            if module_name[1] in ["1", "3", "5", "6"]:
+                lnaList = ("HA3", "HB3", "HA2", "HB2", "HA1", "HB1")
+        else:
+            raise ValueError(f"Invalid polarimeter name '{rgb_name}'")
+
+    if pol_name is not None:
+        lnaList = ("HA3", "HB3", "HA2", "HB2", "HA1", "HB1")
+        if pol_name in ["STRIP71", "STRIP73"]:
+            lnaList = ("HA2", "HB2", "HA1", "HB1")
+        elif pol_name in ["STRIP76", "STRIP78", "STRIP81", "STRIP82"]:
+            lnaList = ("HA2", "HB2", "HA1", "HB1")
+
+    return lnaList
+
+
 class StripConnection(Connection):
     """Connection to the Strip instrument
 
