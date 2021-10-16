@@ -957,11 +957,9 @@ class PinchOffAnalysis:
                 for row1 in [0, 1, 2, 3]:
                     for col1 in [0, 1]:
                         key = keys1[row1][col1]
-                        for (
-                            x,
-                            y,
-                            t,
-                        ) in zip(newtime[key][row][col], data[key][row][col], tags):
+                        for (x, y, t) in zip(
+                            newtime[key][row][col], data[key][row][col], tags
+                        ):
                             axes[row1, col1].plot(x, y, label=t)
                             axes[row1, col1].set_title(key)
 

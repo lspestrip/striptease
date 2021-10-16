@@ -40,9 +40,7 @@ class IVProcedure(StripProcedure):
                 polname = BOARD_TO_W_BAND_POL[board]
 
             turnon_proc.set_board_horn_polarimeter(
-                new_board=board,
-                new_horn=polname,
-                new_pol=None,
+                new_board=board, new_horn=polname, new_pol=None
             )
             turnon_proc.run()
 
@@ -57,10 +55,7 @@ class IVProcedure(StripProcedure):
             pass
 
         # Verification step
-        with StripTag(
-            conn=self.command_emitter,
-            name="IVTEST_VERIFICATION_TURNON",
-        ):
+        with StripTag(conn=self.command_emitter, name="IVTEST_VERIFICATION_TURNON"):
             # Wait a while after having turned on all the boards
             self.wait(seconds=10)
 
@@ -100,8 +95,7 @@ class IVProcedure(StripProcedure):
             lna_number = get_lna_num(lna)
             # Read default configuration
             with StripTag(
-                conn=self.command_emitter,
-                name=f"{module_name}_{lna}_READDEFAULT_VGVD",
+                conn=self.command_emitter, name=f"{module_name}_{lna}_READDEFAULT_VGVD"
             ):
                 # read bias in mV
                 default_vg_adu = calibr.physical_units_to_adu(
@@ -134,32 +128,18 @@ class IVProcedure(StripProcedure):
             # For each Vg, we have several curves varing Vd
             for vg_idx, vg in enumerate(vgate):
                 vg_adu = calibr.physical_units_to_adu(
-                    polarimeter=module_name,
-                    hk="vgate",
-                    component=lna,
-                    value=vg,
+                    polarimeter=module_name, hk="vgate", component=lna, value=vg
                 )
-                self.conn.set_vg(
-                    polarimeter=module_name,
-                    lna=lna,
-                    value_adu=vg_adu,
-                )
+                self.conn.set_vg(polarimeter=module_name, lna=lna, value_adu=vg_adu)
 
                 # from V to mV
                 curve_vdrain = matrixIDVD["DrainV"][:, vg_idx] * 1000
 
                 for vd_idx, vd in enumerate(curve_vdrain):
                     vd_adu = calibr.physical_units_to_adu(
-                        polarimeter=module_name,
-                        hk="vdrain",
-                        component=lna,
-                        value=vd,
+                        polarimeter=module_name, hk="vdrain", component=lna, value=vd
                     )
-                    self.conn.set_vd(
-                        polarimeter=module_name,
-                        lna=lna,
-                        value_adu=vd_adu,
-                    )
+                    self.conn.set_vd(polarimeter=module_name, lna=lna, value_adu=vd_adu)
 
                     with StripTag(
                         conn=self.command_emitter,
@@ -171,18 +151,13 @@ class IVProcedure(StripProcedure):
 
             # Back to the default values of vd and vg (for each LNA)
             with StripTag(
-                conn=self.command_emitter,
-                name=f"{module_name}_{lna}_BACK2DEFAULT_VGVD",
+                conn=self.command_emitter, name=f"{module_name}_{lna}_BACK2DEFAULT_VGVD"
             ):
                 self.conn.set_vg(
-                    polarimeter=module_name,
-                    lna=lna,
-                    value_adu=default_vg_adu,
+                    polarimeter=module_name, lna=lna, value_adu=default_vg_adu
                 )
                 self.conn.set_vd(
-                    polarimeter=module_name,
-                    lna=lna,
-                    value_adu=default_vd_adu,
+                    polarimeter=module_name, lna=lna, value_adu=default_vd_adu
                 )
                 self.conn.wait(self.waittime_perconf_s)
 
@@ -197,8 +172,7 @@ class IVProcedure(StripProcedure):
             lna_number = get_lna_num(lna)
             # Read default configuration
             with StripTag(
-                conn=self.command_emitter,
-                name=f"{module_name}_{lna}_READDEFAULT_VDVG",
+                conn=self.command_emitter, name=f"{module_name}_{lna}_READDEFAULT_VDVG"
             ):
                 # read bias in mV
                 default_vg_adu = calibr.physical_units_to_adu(
@@ -228,16 +202,9 @@ class IVProcedure(StripProcedure):
             # For each Vd, we have several curves varing Vg
             for vd_idx, vd in enumerate(vdrain):
                 vd_adu = calibr.physical_units_to_adu(
-                    polarimeter=module_name,
-                    hk="vdrain",
-                    component=lna,
-                    value=vd,
+                    polarimeter=module_name, hk="vdrain", component=lna, value=vd
                 )
-                self.conn.set_vg(
-                    polarimeter=module_name,
-                    lna=lna,
-                    value_adu=vd_adu,
-                )
+                self.conn.set_vg(polarimeter=module_name, lna=lna, value_adu=vd_adu)
 
                 # from V to mV
                 curve_vgate = matrixIDVG["GateV"][:, vd_idx] * 1000.0
@@ -246,16 +213,9 @@ class IVProcedure(StripProcedure):
 
                 for vg_idx, vg in enumerate(curve_vgate):
                     vg_adu = calibr.physical_units_to_adu(
-                        polarimeter=module_name,
-                        hk="vgate",
-                        component=lna,
-                        value=vg,
+                        polarimeter=module_name, hk="vgate", component=lna, value=vg
                     )
-                    self.conn.set_vd(
-                        polarimeter=module_name,
-                        lna=lna,
-                        value_adu=vg_adu,
-                    )
+                    self.conn.set_vd(polarimeter=module_name, lna=lna, value_adu=vg_adu)
 
                     with StripTag(
                         conn=self.command_emitter,
@@ -271,14 +231,10 @@ class IVProcedure(StripProcedure):
                 name=f"IVTEST_IDVG_{module_name}_{lna}_BACK2DEFAULT_VDVG",
             ):
                 self.conn.set_vg(
-                    polarimeter=module_name,
-                    lna=lna,
-                    value_adu=default_vg_adu,
+                    polarimeter=module_name, lna=lna, value_adu=default_vg_adu
                 )
                 self.conn.set_vd(
-                    polarimeter=module_name,
-                    lna=lna,
-                    value_adu=default_vd_adu,
+                    polarimeter=module_name, lna=lna, value_adu=default_vd_adu
                 )
 
                 self.conn.wait(self.waittime_perconf_s)

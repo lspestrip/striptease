@@ -66,12 +66,7 @@ class ReferenceTestProcedure(StripProcedure):
             name=f"PHSW_STATUS_EXPLICIT",
             comment=f"Setting status for phase switches in {self.horn}",
         ):
-            for idx, status in [
-                (0, 1),
-                (1, 3),
-                (2, 2),
-                (3, 4),
-            ]:
+            for idx, status in [(0, 1), (1, 3), (2, 2), (3, 4)]:
                 board_setup.set_phsw_status(self.horn, idx, status=status)
 
             if self.waittime_s > 0:
@@ -82,12 +77,7 @@ class ReferenceTestProcedure(StripProcedure):
             name=f"PHSW_STATUS_EXPLICIT_INVERSE",
             comment=f"Setting status for phase switches in {self.horn}",
         ):
-            for idx, status in [
-                (0, 3),
-                (1, 1),
-                (2, 4),
-                (3, 2),
-            ]:
+            for idx, status in [(0, 3), (1, 1), (2, 4), (3, 2)]:
                 board_setup.set_phsw_status(self.horn, idx, status=status)
 
             if self.waittime_s > 0:
@@ -98,12 +88,7 @@ class ReferenceTestProcedure(StripProcedure):
             name="PHSW_STATUS_NOSWITCH_1010",
             comment=f"Setting status for phase switches in {self.horn}",
         ):
-            for idx, status in [
-                (0, 5),
-                (1, 6),
-                (2, 5),
-                (3, 6),
-            ]:
+            for idx, status in [(0, 5), (1, 6), (2, 5), (3, 6)]:
                 board_setup.set_phsw_status(self.horn, idx, status=status)
 
             if self.waittime_s > 0:
@@ -114,12 +99,7 @@ class ReferenceTestProcedure(StripProcedure):
             name="PHSW_STATUS_NOSWITCH_0101",
             comment=f"Setting status for phase switches in {self.horn}",
         ):
-            for idx, status in [
-                (0, 6),
-                (1, 5),
-                (2, 6),
-                (3, 5),
-            ]:
+            for idx, status in [(0, 6), (1, 5), (2, 6), (3, 5)]:
                 board_setup.set_phsw_status(self.horn, idx, status=status)
 
             if self.waittime_s > 0:
@@ -130,12 +110,7 @@ class ReferenceTestProcedure(StripProcedure):
             name="PHSW_STATUS_NOSWITCH_0110",
             comment=f"Setting status for phase switches in {self.horn}",
         ):
-            for idx, status in [
-                (0, 6),
-                (1, 5),
-                (2, 5),
-                (3, 6),
-            ]:
+            for idx, status in [(0, 6), (1, 5), (2, 5), (3, 6)]:
                 board_setup.set_phsw_status(self.horn, idx, status=status)
 
             if self.waittime_s > 0:
@@ -146,12 +121,7 @@ class ReferenceTestProcedure(StripProcedure):
             name="PHSW_STATUS_NOSWITCH_1001",
             comment=f"Setting status for phase switches in {self.horn}",
         ):
-            for idx, status in [
-                (0, 5),
-                (1, 6),
-                (2, 6),
-                (3, 5),
-            ]:
+            for idx, status in [(0, 5), (1, 6), (2, 6), (3, 5)]:
                 board_setup.set_phsw_status(self.horn, idx, status=status)
 
             if self.waittime_s > 0:

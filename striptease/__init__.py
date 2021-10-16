@@ -104,14 +104,7 @@ def get_lna_num(name):
         return name
     elif (len(name) == 3) and (name[0:2] in ["HA", "HB"]):
         # Official names
-        d = {
-            "HA1": 0,
-            "HA2": 1,
-            "HA3": 2,
-            "HB1": 5,
-            "HB2": 4,
-            "HB3": 3,
-        }
+        d = {"HA1": 0, "HA2": 1, "HA3": 2, "HB1": 5, "HB2": 4, "HB3": 3}
         return d[name]
     elif name[0] == "H":
         # UniMiB
@@ -128,14 +121,7 @@ def get_lna_num(name):
         return d[name]
     elif (len(name) == 2) and (name[0] == "Q"):
         # JPL
-        d = {
-            "Q1": 0,
-            "Q2": 1,
-            "Q3": 2,
-            "Q4": 3,
-            "Q5": 4,
-            "Q6": 5,
-        }
+        d = {"Q1": 0, "Q2": 1, "Q3": 2, "Q4": 3, "Q5": 4, "Q6": 5}
         return d[name]
     else:
         raise ValueError(f"Invalid amplifier name '{name}'")
@@ -503,11 +489,9 @@ class StripConnection(Connection):
 
         board, pol = self.__normalize_board_and_pol(board, pol, allow_board=True)
 
-        assert kind in [
-            "BIAS",
-            "DAQ",
-            "CRYO",
-        ], "Invalid value for 'kind=' ({})".format(kind)
+        assert kind in ["BIAS", "DAQ", "CRYO"], "Invalid value for 'kind=' ({})".format(
+            kind
+        )
 
         dic = {
             "board": board,

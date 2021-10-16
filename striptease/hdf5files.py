@@ -36,15 +36,7 @@ VALID_DATA_TYPES = ["PWR", "DEM"]
 #: - ``start_comment``: comment put at the start
 #: - ``end_comment``: comment put at the end
 Tag = namedtuple(
-    "Tag",
-    [
-        "id",
-        "mjd_start",
-        "mjd_end",
-        "name",
-        "start_comment",
-        "end_comment",
-    ],
+    "Tag", ["id", "mjd_start", "mjd_end", "name", "start_comment", "end_comment"]
 )
 
 
@@ -64,10 +56,7 @@ def hk_list_file_name(group, subgroup):
     return (
         Path(__file__).parent.parent
         / "data"
-        / "hk_pars_{}_{}.csv".format(
-            subgroup.upper(),
-            group.upper(),
-        )
+        / "hk_pars_{}_{}.csv".format(subgroup.upper(), group.upper())
     )
 
 
@@ -517,10 +506,7 @@ class DataFile:
         """
         result = {}
 
-        hk_name_to_parameter = {
-            "VPIN": "vphsw",
-            "IPIN": "iphsw",
-        }
+        hk_name_to_parameter = {"VPIN": "vphsw", "IPIN": "iphsw"}
         for param_name in hk_name_to_parameter.keys():
             for phsw_pin in (0, 1, 2, 3):
                 times, values = self.load_hk(
@@ -542,11 +528,7 @@ class DataFile:
                 x = f"{param_name}{phsw_pin}".lower()
                 result[x] = average
 
-        parameter_to_hk_name = {
-            "vgate": "vg",
-            "vdrain": "vd",
-            "idrain": "id",
-        }
+        parameter_to_hk_name = {"vgate": "vg", "vdrain": "vd", "idrain": "id"}
         for parameter in parameter_to_hk_name.keys():
             for amplifier in ["0", "1", "2", "3", "4", "4A", "5", "5A"]:
                 try:

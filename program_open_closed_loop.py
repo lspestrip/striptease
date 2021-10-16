@@ -81,8 +81,7 @@ def retrieve_biases_from_hdf5(
 
 
 def retrieve_biases_from_url(
-    polarimeter_name: str,
-    url: str,
+    polarimeter_name: str, url: str
 ) -> Dict[str, BiasConfiguration]:
 
     if (not url.endswith("json")) and not (url.endswith("json/")):
@@ -122,7 +121,7 @@ def retrieve_biases_from_url(
             id3=biases["drain_current_hb2_mA"] * 1e3,
             id4=biases["drain_current_ha3_mA"] * 1e3,
             id5=biases["drain_current_hb3_mA"] * 1e3,
-        ),
+        )
     }
     return biases_per_pol
 
@@ -150,9 +149,7 @@ class OpenClosedLoopProcedure(StripProcedure):
         for cur_polarimeter in polarimeters:
             board = normalize_polarimeter_name(cur_polarimeter)[0]
             turnon_proc.set_board_horn_polarimeter(
-                new_board=board,
-                new_horn=cur_polarimeter,
-                new_pol=None,
+                new_board=board, new_horn=cur_polarimeter, new_pol=None
             )
             turnon_proc.run_turnon(
                 stable_acquisition_time_s=1.0, turn_on_board=turn_on_board
@@ -289,8 +286,7 @@ class OpenClosedLoopProcedure(StripProcedure):
         if str(filename).startswith("http"):
             assert len(self.args.polarimeters) == 1
             biases_per_pol = retrieve_biases_from_url(
-                polarimeter_name=self.args.polarimeters[0],
-                url=str(filename),
+                polarimeter_name=self.args.polarimeters[0], url=str(filename)
             )
         else:
             if filename.suffix == ".h5":
@@ -376,7 +372,7 @@ Usage examples:
 """.format(
             data_file_path=(
                 Path(__file__).parent / "data" / "default_biases_warm.xlsx"
-            ).absolute(),
+            ).absolute()
         ),
     )
     parser.add_argument(

@@ -18,14 +18,7 @@ from striptease.biases import InstrumentBiases, BoardCalibration
 from striptease.procedures import StripProcedure
 
 CalibrationCurve = namedtuple(
-    "CalibrationCurve",
-    [
-        "slope",
-        "intercept",
-        "mul",
-        "div",
-        "add",
-    ],
+    "CalibrationCurve", ["slope", "intercept", "mul", "div", "add"]
 )
 
 
@@ -144,10 +137,7 @@ class SetupBoard(object):
         cmd["method"] = "SET"
         cmd["timeout"] = 500
 
-        for (addr, datum) in [
-            ("POL_RCL", [23295]),
-            ("CAL_RCL", [23295]),
-        ]:
+        for (addr, datum) in [("POL_RCL", [23295]), ("CAL_RCL", [23295])]:
             cmd["base_addr"] = addr
             cmd["data"] = datum
 
@@ -312,14 +302,7 @@ class SetupBoard(object):
             return
 
     def setup_bias(
-        self,
-        polarimeter,
-        index,
-        bias_dict,
-        param_name,
-        excel_entry,
-        value=None,
-        step=1,
+        self, polarimeter, index, bias_dict, param_name, excel_entry, value=None, step=1
     ):
         """Set the value of a bias to some calibrated value (e.g., μA, mV)
 
@@ -393,14 +376,7 @@ class SetupBoard(object):
         )
 
     def setup_VD(self, polarimeter, lna, value=None, step=1):
-        vd = {
-            0: "vd0",
-            1: "vd1",
-            2: "vd2",
-            3: "vd3",
-            4: "vd4",
-            5: "vd5",
-        }
+        vd = {0: "vd0", 1: "vd1", 2: "vd2", 3: "vd3", 4: "vd4", 5: "vd5"}
 
         self.setup_lna_bias(
             polarimeter=polarimeter,
@@ -435,14 +411,7 @@ class SetupBoard(object):
         )
 
     def setup_ID(self, polarimeter, lna, value=None, step=1):
-        id = {
-            0: "id0",
-            1: "id1",
-            2: "id2",
-            3: "id3",
-            4: "id4",
-            5: "id5",
-        }
+        id = {0: "id0", 1: "id1", 2: "id2", 3: "id3", 4: "id4", 5: "id5"}
 
         self.setup_lna_bias(
             polarimeter=polarimeter,

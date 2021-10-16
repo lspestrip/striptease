@@ -50,9 +50,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             start_folder = ""
 
         new_folder = QtWidgets.QFileDialog.getExistingDirectory(
-            parent=None,
-            caption="Choose the data folder",
-            directory=str(start_folder),
+            parent=None, caption="Choose the data folder", directory=str(start_folder)
         )
         if new_folder:
             self.set_data_path(new_folder)

@@ -22,14 +22,11 @@ class F1Procedure(TurnOnOffProcedure):
                     continue
 
                 self.set_board_horn_polarimeter(
-                    new_board=cur_board,
-                    new_horn=horn_name,
-                    new_pol=None,
+                    new_board=cur_board, new_horn=horn_name, new_pol=None
                 )
 
                 self.run_turnon(
-                    turn_on_board=turn_on_board,
-                    stable_acquisition_time_s=300,
+                    turn_on_board=turn_on_board, stable_acquisition_time_s=300
                 )
                 turn_on_board = False
 

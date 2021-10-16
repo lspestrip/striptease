@@ -34,11 +34,7 @@ class JSONCommandEmitter:
         else:
             path = ""
 
-        new_command = {
-            "path": path,
-            "kind": kind,
-            "command": cmd,
-        }
+        new_command = {"path": path, "kind": kind, "command": cmd}
         self.command_list.append(deepcopy(new_command))
         return {"status": "OK", "data": [0]}
 
