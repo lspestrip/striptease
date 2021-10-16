@@ -60,9 +60,9 @@ class BaseMplCanvas(MplCanvas):
         self.axes.cla()
         self.axes.set_title(self.title)
 
-        for l in self.data:
-            d = self.data[l]
-            (d["line"],) = self.axes.plot(d["mjd"], d["val"], label=l, color=d["color"])
+        for cur_data in self.data:
+            d = self.data[cur_data]
+            (d["line"],) = self.axes.plot(d["mjd"], d["val"], label=cur_data, color=d["color"])
 
         self.axes.legend(loc="upper right")
         self.axes.set_xlim([0, self.wsec])
@@ -75,8 +75,8 @@ class BaseMplCanvas(MplCanvas):
         min = np.nan
         max = np.nan
 
-        for l in self.data:
-            d = self.data[l]
+        for cur_data in self.data:
+            d = self.data[cur_data]
             if d["val"].size == 0:
                 continue
             d["line"].set_xdata(d["mjd"])

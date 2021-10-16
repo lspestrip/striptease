@@ -45,7 +45,7 @@ class PinchOffProcedure(StripProcedure):
             self.wait(seconds=5)
 
         # Verification step
-        with StripTag(conn=self.command_emitter, name=f"PINCHOFF_VERIFICATION_1"):
+        with StripTag(conn=self.command_emitter, name="PINCHOFF_VERIFICATION_1"):
             self.wait(seconds=300)
 
         for cur_board in STRIP_BOARD_NAMES:

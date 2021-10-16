@@ -391,8 +391,8 @@ Usage examples:
         type=str,
         dest="tag_template",
         default=DEFAULT_TAG_TEMPLATE,
-        help=f"Template string to be used when looking for tags in HDF5 files "
-        "(default: {DEFAULT_TAG_TEMPLATE}). You can use the placeholders "
+        help="Template string to be used when looking for tags in HDF5 files "
+        f"(default: {DEFAULT_TAG_TEMPLATE}). You can use the placeholders "
         "'{test_name}' and '{polarimeter}' instead of the strings "
         "'OPEN_LOOP'/'CLOSED_LOOP' and the polarimeter name (uppercase).",
     )

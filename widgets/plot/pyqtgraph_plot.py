@@ -59,8 +59,8 @@ class CustomWidget(pg.GraphicsWindow):
 
     def replot(self):
         self.p.clear()
-        for l in self.data:
-            d = self.data[l]
+        for cur_data in self.data:
+            d = self.data[cur_data]
             if d["mjd"].size >= 1:
                 c = (d["color"][0] * 255, d["color"][1] * 255, d["color"][2] * 255)
                 pen = pg.mkPen(pg.mkColor(c), width=2)
@@ -132,8 +132,8 @@ class QuadPlotWidget(pg.GraphicsView):
 
     def replot(self):
         self.p.clear()
-        for l in self.data:
-            d = self.data[l]
+        for cur_data in self.data:
+            d = self.data[cur_data]
             if d["mjd"].size >= 1:
                 c = (d["color"][0] * 255, d["color"][1] * 255, d["color"][2] * 255)
                 pen = pg.mkPen(pg.mkColor(c), width=2)

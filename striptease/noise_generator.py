@@ -96,8 +96,6 @@ class NoiseGenerator:
 
         freq9 = np.double(frequency * 1.0e9)
         beta9 = np.double(bandwidth * 1.0e9)
-        fmin = np.double(self.fmin[0])
-        fmax = np.double(self.fmax[0])
         iseed_1overf = int(self.iseed_1overf[0])
         iseed_wn = int(self.iseed_wn[0])
 

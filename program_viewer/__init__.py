@@ -1,8 +1,8 @@
 # program_viewer/__ini__.py --- Example program
 #
 # Copyright (C) 2018 Stefano Sartor - stefano.sartor@inaf.it
+
 from PyQt5 import QtWidgets
-import os
 from program_viewer.ui.main_window import Ui_MainWindow
 from web.rest.base import Connection
 from widgets.login import LoginWidget
