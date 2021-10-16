@@ -106,11 +106,11 @@ def get_lna_num(name):
         # Official names
         d = {
             "HA1": 0,
-            "HA2": 2,
-            "HA3": 4,
-            "HB1": 1,
-            "HB2": 3,
-            "HB3": 5,
+            "HA2": 1,
+            "HA3": 2,
+            "HB1": 5,
+            "HB2": 4,
+            "HB3": 3,
         }
         return d[name]
     elif name[0] == "H":
@@ -140,6 +140,39 @@ def get_lna_num(name):
     else:
         raise ValueError(f"Invalid amplifier name '{name}'")
 
+def get_lna_list(pol_name=None,module_name=None):
+    """
+    Return the LNA list of one polarimeter.
+    In particular, W polarimeters have two type of LNA configurations.
+
+    Args
+    ----
+    rgb_name (str): RGB name of the polarimeter, like ``STRIP02``
+    pol_name (str): Name of the polarimeter, like ``R0`` or ``W3``
+
+    Return
+    ------
+    lnaList (tuple): list of LNA in the pol_name poilarimeter
+    """
+    if module_name is not None:
+        if module_name[0].upper() in STRIP_BOARD_NAMES:
+            lnaList = ("HA3", "HB3", "HA2", "HB2", "HA1", "HB1")
+        elif module_name[0].upper() == "W":
+            if module_name[1] in ['2','4']:
+                lnaList = ("HA2", "HB2", "HA1", "HB1")
+            if module_name[1] in ['1','3','5','6']:
+                lnaList = ("HA3", "HB3", "HA2", "HB2", "HA1", "HB1")
+        else:
+            raise ValueError(f"Invalid polarimeter name '{rgb_name}'")
+
+    if pol_name is not None:
+        lnaList = ("HA3", "HB3", "HA2", "HB2", "HA1", "HB1")
+        if pol_name in ['STRIP71','STRIP73']:
+            lnaList = ("HA2", "HB2", "HA1", "HB1")
+        elif pol_name in ['STRIP76','STRIP78','STRIP81','STRIP82']:
+            lnaList = ("HA2", "HB2", "HA1", "HB1")
+
+    return lnaList 
 
 class StripConnection(Connection):
     """Connection to the Strip instrument
@@ -788,6 +821,135 @@ class StripConnection(Connection):
         self.__set_lna_bias(
             polarimeter=polarimeter, lna=lna, param_name="ID", value_adu=value_adu
         )
+
+    def __get_bias(self, polarimeter, component_index, param_name):
+        real_polarimeter = normalize_polarimeter_name(polarimeter)
+        board = real_polarimeter[0]
+        return self.slo_command(
+            method="GET",
+            board=board,
+            pol=int(real_polarimeter[1]),
+            kind="BIAS",
+            base_addr=f"{param_name}{component_index}_HK",
+        )
+
+    def __get_lna_bias(self, polarimeter, lna, param_name):
+        return self.__get_bias(
+            polarimeter=polarimeter,
+            component_index=get_lna_num(lna),
+            param_name=param_name,
+        )
+
+    def get_vd(self, polarimeter, lna):
+        """Retrieves the drain voltage of an amplifier.
+
+        If you want to use physical units for the voltage, use
+        :class:`.CalibrationTables`.
+
+        Args
+        ----
+
+            polarimeter (str): name of the polarimeter, e.g., ``I0``
+
+            lna (str): name of the amplifier, e.g., ``HA1``
+
+        Returns
+        -------
+            value_adu (int): drain voltage in ADU
+
+        """
+        return self.__get_lna_bias(
+            polarimeter=polarimeter, lna=lna, param_name="VD"
+            )
+
+    def get_vg(self, polarimeter, lna):
+        """Retrieves the gate voltage of an amplifier.
+
+        If you want to use physical units for the voltage, use
+        :class:`.CalibrationTables`.
+
+        Args
+        ----
+
+            polarimeter (str): name of the polarimeter, e.g., ``I0``
+
+            lna (str): name of the amplifier, e.g., ``HA1``
+
+        Returns
+        -------
+            value_adu (int): gate voltage in ADU
+
+        """
+        self.__get_lna_bias(
+            polarimeter=polarimeter, lna=lna, param_name="VG"
+            )
+
+    def get_id(self, polarimeter, lna):
+        """Retrieves the drain current of an amplifier.
+
+        If you want to use physical units for the voltage, use
+        :class:`.CalibrationTables`.
+
+        Args
+        ----
+
+            polarimeter (str): name of the polarimeter, e.g., ``I0``
+
+            lna (str): name of the amplifier, e.g., ``HA1``
+
+        Returns
+        -------
+            value_adu (int): drain current in ADU
+
+        """
+        return self.__get_lna_bias(
+            polarimeter=polarimeter, lna=lna, param_name="ID"
+        )
+
+    def __set_hk_scan(self,board,time_ms):
+        dic = {
+            "board": board,
+            "pol":"BOARD",
+            "base_addr":"HK_SCAN",
+            "type": "BIAS",
+            "method": "SET",
+            "timeout": time_ms,
+            "data":[23295],
+        }
+        self.last_response = self.post("rest/slo", dic)
+        assert len(self.last_response["data"]) == 1
+
+        return self.last_response["data"][0]
+
+
+    def set_hk_scan(self,boards=None,allboards=False,time_ms=200):
+        """
+        Send a command to read and record the all House
+        Keeping values for all LNA of the polarimeters
+        in a board (or boards).
+
+        Args
+        ----
+
+            boards (str or list): name of the board, (e.g. "I") or
+                a list with board names (e.g., ["R", "V", "G"])
+
+            allboards (bool): if true all boards (STRIP_BOARD_NAMES)
+                are consided.
+
+            timeout (int) : time in ms. The default of 200ms is
+                becasuse the command SET takes at least 200ms to
+                update and save all the HK.
+
+        """
+        if allboards:
+            for bb in STRIP_BOARD_NAMES:
+                self.__set_hk_scan(bb,time_ms)
+        else:
+            if type(boards) is str:
+                boards = [boards]
+            for bb in boards:
+                self.__set_hk_scan(bb,time_ms)
 
     def set_pol_mode(self, polarimeter, mode):
         """Send a POL_MODE command to a polarimeter

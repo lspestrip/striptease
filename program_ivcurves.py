@@ -4,6 +4,8 @@
 import logging as log
 
 import numpy as np
+from pathlib import Path
+import pandas as pd
 
 from calibration import CalibrationTables
 from striptease import (
@@ -11,6 +13,8 @@ from striptease import (
     BOARD_TO_W_BAND_POL,
     StripTag,
     normalize_polarimeter_name,
+    get_lna_num,
+    get_lna_list,
 )
 from striptease.biases import InstrumentBiases
 from striptease.procedures import StripProcedure
@@ -19,9 +23,32 @@ from program_turnon import TurnOnOffProcedure
 
 
 class IVProcedure(StripProcedure):
-    def __init__(self, args):
+    def __init__(self,args,waittime_perconf_s=1.8):
         super(IVProcedure, self).__init__()
-        self.args = args
+        #
+        if args.filename is "":
+            self.filename = str(
+                Path(__file__).absolute().parent.parent
+                / "striptease"
+                / "data"
+                / "input_bias_IVtest.xlsx"
+            )
+        else:
+            self.filename = args.filename
+
+        self.inputBiasIV = pd.read_excel(self.filename,header=0,index_col=1)
+        
+        if args.polarimeters.upper() == "ALL":
+            self.polarimeters = list(self.inputBiasIV.index)
+        else:
+            self.polarimeters = args.polarimeters.split(" ")
+
+        self.hk_scan = str(args.hkscan)
+        self.waittime_perconf_s = waittime_perconf_s
+
+        print(f"hk_scan {self.hk_scan} (type: {type(self.hk_scan)})")
+        log.info("Inputs polarimeters %s (hk_scan is %s) \n Loading inputBiasIV from %s",
+            args.polarimeters,self.hk_scan,self.filename)
 
     def turn_on_board(self, board):
         log.info(f"Turnon of board {board}")
@@ -43,34 +70,16 @@ class IVProcedure(StripProcedure):
 
         return turnon_proc.get_command_list()
 
+    def get_bias_curve(self,pol_name,lna):
+        vmin = self.inputBiasIV[f"{lna}/VG0 MIN"][pol_name]
+        vmax = self.inputBiasIV[f"{lna}/VG0 MAX"][pol_name]
+        vstep = self.inputBiasIV[f"{lna}/VG0 STEP"][pol_name]
+
+        return np.arange(vmin,vmax,vstep)
+
+
     def run(self):
-        # Load the matrices of the unit-test measurements done in
-        # Bicocca and save them in "self.bicocca_data"
-        self.bicocca_test = get_unit_test(args.bicocca_test_id)
-        module_name = InstrumentBiases().polarimeter_to_module_name(
-            self.bicocca_test.polarimeter_name
-        )
-
-        log.info(
-            "Test %d for %s (%s) loaded from %s, is_cryogenic=%s",
-            args.bicocca_test_id,
-            self.bicocca_test.polarimeter_name,
-            module_name,
-            self.bicocca_test.url,
-            str(self.bicocca_test.is_cryogenic),
-        )
-
-        self.bicocca_data = load_unit_test_data(self.bicocca_test)
-        assert isinstance(self.bicocca_data, UnitTestDC)
-
-        log.info(
-            "The polarimeter %s corresponds to module %s",
-            self.bicocca_test.polarimeter_name,
-            module_name,
-        )
         # Turn on the polarimeter(s)
-        calibr = CalibrationTables()
-
         for cur_board in STRIP_BOARD_NAMES:
             # Append the sequence of commands to turnon this board to
             # the JSON object
@@ -79,64 +88,133 @@ class IVProcedure(StripProcedure):
 
         # Verification step
         with StripTag(
-            conn=self.command_emitter, name="IVTEST_VERIFICATION_1",
+            conn=self.command_emitter, name="IVTEST_VERIFICATION_TURNON",
         ):
             # Wait a while after having turned on all the boards
             self.wait(seconds=10)
 
-        # First step: for each Vd, move Vg
+        # Load the matrice with the min, max and step for
+        #each LNA for each polarimeter
+        count_conf = 0
+        for pol_name in self.polarimeters:
+            module_name = self.inputBiasIV['Module'][pol_name]
+            log.info(
+                "-->Polarimeter %s (%s)",
+                pol_name,
+                module_name,
+            )
+            calibr = CalibrationTables()
+            defaultBias = InstrumentBiases()
+            lna_list = get_lna_list(pol_name=pol_name)
 
-        # TODO: the list of LNAs must be fixed for W-band polarimeters
-        for lna in ("HA3", "HB3", "HA2", "HB2", "HA1", "HB1"):
-            matrix = self.bicocca_data.components[lna].curves["IDVD"]
-            vgate = np.mean(matrix["GateV"], axis=0)
+            #--> First test: ID vs VD --> For each VG, we used VD curves
+            self.conn.tag_start(name=f"IVTEST_{module_name}")
 
-            # Unit tests in Bicocca acquire several curves with
-            # varying Vd, each using a different value for Vg
-            for curve_idx in range(len(vgate)):
-                # Set Vg before acquiring the curve
-                self.conn.set_vg(
-                    polarimeter=module_name,
-                    lna=lna,
-                    value_adu=calibr.physical_units_to_adu(
+            for lna in lna_list:
+                lna_number = get_lna_num(lna)
+                #Read default configuration
+                with StripTag(
+                    conn=self.command_emitter,
+                    name=f"{module_name}_{lna}_READDEFAULT_VGVD",
+                ):
+                    # read bias in mV
+                    default_vg_adu = calibr.physical_units_to_adu(
+                        polarimeter=module_name,
+                        hk="vgate",component=lna,
+                        value=defaultBias.get_biases(module_name,
+                            param_hk=f"VG{lna_number}"
+                        ),
+                    )
+
+                    # read bias in mV
+                    default_vd_adu = calibr.physical_units_to_adu(
+                        polarimeter=module_name,
+                        hk="vdrain",component=lna,
+                        value =defaultBias.get_biases(module_name,
+                            param_hk=f"VD{lna_number}"
+                        ),
+                    )
+
+                #Get the data matrix and the Gate Voltage vector.
+                #in mV
+                vgate = self.get_bias_curve(pol_name,lna)
+                vdrain = np.arange(0,900,50)
+                count_conf += len(vgate) * len(vdrain)
+
+                # For each Vg, we have several curves varing Vd
+                for vg_idx, vg in enumerate(vgate):
+                    vg_adu = calibr.physical_units_to_adu(
                         polarimeter=module_name,
                         hk="vgate",
                         component=lna,
-                        value=vgate[curve_idx],
-                    ),
-                )
-
-                vdrain = matrix[:, curve_idx]["DrainV"]
-                # idrain = matrix[:, curve_idx]["DrainI"]
-                for sample_idx in range(len(vdrain)):
-                    cur_vdrain_V = calibr.physical_units_to_adu(
+                        value=vg,
+                    )
+                    self.conn.set_vg(
                         polarimeter=module_name,
-                        hk="vdrain",
-                        component=lna,
-                        value=vdrain[sample_idx],
+                        lna=lna,
+                        value_adu=vg_adu,
+                    )
+
+                    for vd_idx,vd in enumerate(vdrain):
+                        vd_adu = calibr.physical_units_to_adu(
+                            polarimeter=module_name,
+                            hk="vdrain",
+                            component=lna,
+                            value=vd,
+                        )
+                        self.conn.set_vd(
+                            polarimeter=module_name, lna=lna,
+                            value_adu=vd_adu,
+                        )
+
+                        with StripTag(
+                            conn=self.command_emitter,
+                            name=f"{module_name}_{lna}_SET_VGVD_{vg_idx}_{vd_idx}",
+                            comment=f"VG_{vg:.2f}mV_VD_{vd:.2f}mV",
+                        ):
+                            if self.hk_scan == "True":
+                                #print(f"hk_scan is {self.hk_scan}")
+                                self.conn.set_hk_scan(allboards=True)
+                            self.conn.wait(self.waittime_perconf_s)
+
+                # Back to the default values of vd and vg (for each LNA)
+                with StripTag(
+                    conn=self.command_emitter,
+                    name=f"{module_name}_{lna}_BACK2DEFAULT_VGVD",
+                ):
+                    self.conn.set_vg(
+                        polarimeter=module_name,lna=lna,
+                        value_adu=default_vg_adu,
                     )
                     self.conn.set_vd(
-                        polarimeter=module_name, lna=lna, value_adu=cur_vdrain_V,
+                        polarimeter=module_name, lna=lna,
+                        value_adu=default_vd_adu,
                     )
+                    self.conn.wait(self.waittime_perconf_s)
+                    count_conf += 1
 
-                    with StripTag(
-                        conn=self.command_emitter,
-                        name=f"IVTEST_{module_name}_{lna}_IDVD_{curve_idx:02d}_{cur_vdrain_V:.2f}V",
-                    ):
-                        self.conn.wait(6)
-
+            self.conn.tag_stop(name=f"IVTEST_IDVD_{module_name}")
+            log.info(
+                "Number of configuration and time [hrs, days]: %s  [%s, %s]\n",
+                int(count_conf),
+                np.around(count_conf*self.waittime_perconf_s/3600.,1),
+                np.around(count_conf*self.waittime_perconf_s/3600/24,3),
+            )
 
 if __name__ == "__main__":
     from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
     parser = ArgumentParser(
-        description="Produce a command sequence to run the I-V curve test on a polarimeter",
+        description="Produce a command sequence to run the I-V curve test on a polarimeter(s)",
         formatter_class=RawDescriptionHelpFormatter,
         epilog="""
 
 Usage example:
 
-    python3 program_ivcurves.py
+    python3 program_ivcurves.py "STRIP07" >> jsonFile_IVtest_strip07
+    python3 program_ivcurves.py --output jsonFile_IVtest_startChannels "STRIP07 STRIP8 STRIP13 STRIP15 STRIP61 STRIP24 STRIP36"
+    python3 program_ivcurves.py --output jsonFile_IVtest_Allpolarimeters "ALL"
+    
 """,
     )
     parser.add_argument(
@@ -150,9 +228,33 @@ Usage example:
         "If not provided, the output will be sent to stdout.",
     )
     parser.add_argument(
-        "bicocca_test_id",
-        type=int,
-        help="Number of the test acquired in Bicocca, to be used as reference",
+        "--input",
+        "-i",
+        metavar="FILENAME",
+        type=str,
+        dest="filename",
+        default="",
+        help="Name of the excel bias file to be used (in agree format)."
+        "If not provided, the input_bias_IVtest.xlsx in ./data is loaded.",
+    )
+    parser.add_argument(
+        "--hkscan",
+        "-hk",
+        metavar="False",
+        type=str,
+        dest="hkscan",
+        default="True",
+        help="Activation of the set_hk_scan"
+        "If not provided, the set_hk_scan is used",
+    )
+    parser.add_argument(
+        "polarimeters",
+        type=str,
+        default="",
+        help="String with the polarimeter name or polarimeter names. "
+        "For example, "
+        "'STRIP07 STRIP61 STRIP24' separated by one space, or "
+        "'ALL' for all polarimeters.",
     )
     args = parser.parse_args()
 

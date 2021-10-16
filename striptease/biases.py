@@ -157,7 +157,7 @@ class InstrumentBiases:
         See also :meth:`.polarimeter_to_module_name`."""
         return self.polarimeter_to_module_name(f"STRIP{polarimeter_num:02d}")
 
-    def get_biases(self, module_name=None, polarimeter_name=None):
+    def get_biases(self, module_name=None, polarimeter_name=None,param_hk=None):
         """Return the biases needed to turn on a polarimeter.
 
         The return value is an instance of `BiasConfiguration`. You can specify either the name
@@ -177,42 +177,43 @@ class InstrumentBiases:
             polarimeter_name = self.module_name_to_polarimeter(module_name)
 
         if not (polarimeter_name in self.biases):
-            valid_names = ", ".join(['"{0}"'.format(x) for x in self.biases.keys()])
+            valid_names = sorted(", ".join(['"{0}"'.format(x) for x in self.biases.keys()]))
             raise ValueError(
                 f"Unknown polarimeter '{polarimeter_name}', valid values are {valid_names}"
             )
-
-        result = BiasConfiguration(
-            vd0=self.biases[polarimeter_name]["VD0"],
-            vd1=self.biases[polarimeter_name]["VD1"],
-            vd2=self.biases[polarimeter_name]["VD2"],
-            vd3=self.biases[polarimeter_name]["VD3"],
-            vd4=self.biases[polarimeter_name]["VD4"],
-            vd5=self.biases[polarimeter_name]["VD5"],
-            vg0=self.biases[polarimeter_name]["VG0"],
-            vg1=self.biases[polarimeter_name]["VG1"],
-            vg2=self.biases[polarimeter_name]["VG2"],
-            vg3=self.biases[polarimeter_name]["VG3"],
-            vg4=self.biases[polarimeter_name]["VG4"],
-            vg5=self.biases[polarimeter_name]["VG5"],
-            vg4a=self.biases[polarimeter_name]["VG4A"],
-            vg5a=self.biases[polarimeter_name]["VG5A"],
-            vpin0=self.biases[polarimeter_name]["VPIN0"],
-            vpin1=self.biases[polarimeter_name]["VPIN1"],
-            vpin2=self.biases[polarimeter_name]["VPIN2"],
-            vpin3=self.biases[polarimeter_name]["VPIN3"],
-            ipin0=self.biases[polarimeter_name]["IPIN0"],
-            ipin1=self.biases[polarimeter_name]["IPIN1"],
-            ipin2=self.biases[polarimeter_name]["IPIN2"],
-            ipin3=self.biases[polarimeter_name]["IPIN3"],
-            id0=self.biases[polarimeter_name]["ID0"],
-            id1=self.biases[polarimeter_name]["ID1"],
-            id2=self.biases[polarimeter_name]["ID2"],
-            id3=self.biases[polarimeter_name]["ID3"],
-            id4=self.biases[polarimeter_name]["ID4"],
-            id5=self.biases[polarimeter_name]["ID5"],
+        if param_hk is not None:
+            result = self.biases[polarimeter_name][param_hk]
+        else:
+            result = BiasConfiguration(
+                vd0=self.biases[polarimeter_name]["VD0"],
+                vd1=self.biases[polarimeter_name]["VD1"],
+                vd2=self.biases[polarimeter_name]["VD2"],
+                vd3=self.biases[polarimeter_name]["VD3"],
+                vd4=self.biases[polarimeter_name]["VD4"],
+                vd5=self.biases[polarimeter_name]["VD5"],
+                vg0=self.biases[polarimeter_name]["VG0"],
+                vg1=self.biases[polarimeter_name]["VG1"],
+                vg2=self.biases[polarimeter_name]["VG2"],
+                vg3=self.biases[polarimeter_name]["VG3"],
+                vg4=self.biases[polarimeter_name]["VG4"],
+                vg5=self.biases[polarimeter_name]["VG5"],
+                vg4a=self.biases[polarimeter_name]["VG4A"],
+                vg5a=self.biases[polarimeter_name]["VG5A"],
+                vpin0=self.biases[polarimeter_name]["VPIN0"],
+                vpin1=self.biases[polarimeter_name]["VPIN1"],
+                vpin2=self.biases[polarimeter_name]["VPIN2"],
+                vpin3=self.biases[polarimeter_name]["VPIN3"],
+                ipin0=self.biases[polarimeter_name]["IPIN0"],
+                ipin1=self.biases[polarimeter_name]["IPIN1"],
+                ipin2=self.biases[polarimeter_name]["IPIN2"],
+                ipin3=self.biases[polarimeter_name]["IPIN3"],
+                id0=self.biases[polarimeter_name]["ID0"],
+                id1=self.biases[polarimeter_name]["ID1"],
+                id2=self.biases[polarimeter_name]["ID2"],
+                id3=self.biases[polarimeter_name]["ID3"],
+                id4=self.biases[polarimeter_name]["ID4"],
+                id5=self.biases[polarimeter_name]["ID5"],
         )
-
         return result
 
 
@@ -316,7 +317,7 @@ class ReferenceBiases:
         """
 
         if not (polarimeter_name in self.data):
-            values = ", ".join(self.data.keys())
+            values = sorted(", ".join(self.data.keys()))
             raise ValueError(
                 f"Unknown polarimeter {polarimeter_name}, valid values are {values}"
             )

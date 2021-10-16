@@ -1,12 +1,14 @@
 Tutorial
 ========
 
-(Before reading this part, be sure to follow the instructions in the
-page :ref:`Authentication`, otherwise the commands in this page will
-not work.)
-
 In this tutorial, we will show how to connect to the Strip webserver
 and run simple commands that drive the electronics and the instrument.
+
+(Before reading this part, be sure to follow the instructions in the
+page :ref:`Authentication`, otherwise the commands in this page will
+not work. You need to be authenticated if you are going to send
+commands to the real electronics.)
+
 
 Establising a connection with the server
 ----------------------------------------
@@ -123,14 +125,6 @@ opened and closed::
 
   conn.tag_stop("MY_TAG", comment="Another comment")
 
-It is mandatory that a tag be closed before another one is
-started. Thus, the following code will make the web server complain::
-
-  # THIS DOES NOT WORK!
-  conn.tag_start("OUTER_TAG")
-  conn.tag_start("INNER_TAG") # Error! must first close "OUTER_TAG"
-  conn.tag_stop("INNER_TAG")
-  conn.tag_stop("OUTER_TAG")
 
 To ease the use of tags, Striptease implements the
 :class:`striptease.StripTag` class, which acts as a context manager::
@@ -159,23 +153,31 @@ scripts. You can query tags using the method
 Running complex automatic scripts
 ---------------------------------
 
-To create long and complex automatic scripts, Striptease require users
-to run a two-step process:
+To run a test on the hardware, one needs to carefully plan the
+sequence of commands to be sent before the real hardware be exercised.
+Once the list of commands is prepared, they can be sent to the
+electronics and be ran automatically, one by one. Therefore, to run a
+test, Striptease require users to follow a two-step process:
 
-1. A Python script builds the sequence of commands and save it into a
-   file;
-2. The user runs the sequence of commands using a command-line or GUI
-   tool. Striptease provides the file ``program_batch_runner.py`` for
-   this purpose.
+1. A Python script builds the sequence of commands (the so-called
+   *test procedure*) and save it into a file (written in the `JSON
+   format <https://en.wikipedia.org/wiki/JSON>`_;
+2. The user runs the sequence of commands using a command-line tool.
+   Striptease provides the file ``program_batch_runner.py`` for this
+   purpose.
 
-This two-fold approach ensures reproducibility and allows the user to
-inspect the test procedure before actually running it. As the commands
-are sent through a web server that understands commands in JSON form,
-the text file saved by Python scripts is actually a JSON file
-containing an ordered list of dictionaries, each containing a command.
+This approach ensures reproducibility and allows the user to inspect
+the test procedure (in the JSON file) before actually running it.
+
+The JSON file saved by Python scripts contains an ordered list of
+dictionaries, each providing the parameters for a single command sent
+to the electronics.
 
 
 How to create test procedures
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+A *test procedure* is a sequence of commands written in a JSON file
+that can be used to automatically run a test of the Strip hardware.
 See the chapter :ref:`Writing test procedures`.

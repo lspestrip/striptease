@@ -170,6 +170,29 @@ conventions named above::
 Modes of operation
 ~~~~~~~~~~~~~~~~~~
 
+A Strip amplifier can operate either in *open loop* or *closed loop*
+mode, depending on how the gate and drain are set:
+
+1. In *open loop mode*, the drain voltage :math:`V_d` and gate voltage
+   :math:`V_g` are set by the user, while the drain current
+   :math:`I_d` is set free to adapt to the voltages.
+
+2. In *closed loop mode*, the drain current :math:`I_d` and drain
+   voltage :math:`V_d` are set by the user, and a retro-feedback
+   circuit in the electronics adapts the gate voltage :math:`V_g` to
+   make sure that the drain current $I_d$ is kept at the level
+   specified by the user.
+
+The following figure depicts the difference between the two modes,
+representing the three bias parameters :math:`I_d`, :math:`V_d`, and
+:math:`V_g` as knobs; only green knobs can be manipulated by the user,
+while the blue knob responds automatically to variations in the green
+knobs.
+   
+.. figure:: _static/open-closed-loop-mode.svg
+            :align: center
+            :alt: Open/closed loop modes
+
 The way an amplifier operates can be set using the ``POL_MODE``
 command, through the method :meth:`.StripConnection.set_pol_mode`. You
 can use the enumeration class :class:`.PolMode` to specify the flags
