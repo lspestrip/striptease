@@ -23,10 +23,6 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Install striptease
-        run: |
-          python setup.py install
-
       - name: Tests
         run: |
           black --check .
