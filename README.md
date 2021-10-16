@@ -1,7 +1,8 @@
 # StripTEASE - Strip TEst Analysis for System Evaluation
 
 [![Documentation Status](https://readthedocs.org/projects/striptease/badge/?version=latest)](https://striptease.readthedocs.io/en/latest/?badge=latest)
-[![Build Status](https://travis-ci.org/lspestrip/striptease.svg?branch=master)](https://travis-ci.org/github/lspestrip/striptease)
+[![Tests](https://github.com/lspestrip/striptease/workflows/Tests/badge.svg?branch=master&event=push)](https://github.com/lspestrip/striptease/actions?query=workflow%3ATests+branch%3Amaster)
+
 
 This repository contains the code used to perform tests and anlyze results for
 the STRIP system level tests. It uses Python 3.6.x and Qt 5.

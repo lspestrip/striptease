@@ -1,4 +1,4 @@
-condaPyQt5
+pyQt5
 numpy
 astropy
 matplotlib
