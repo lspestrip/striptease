@@ -11,6 +11,7 @@ import pickle as pkl
 import warnings
 import logging as log
 
+
 # Util functions
 def get_string_from_tag(tags_arr, idtags, relational_op="start", idx_str=1):
     """
@@ -78,7 +79,6 @@ def get_info_tag_start(tags_arr, idtags):
     out = []
     for ii, tt in enumerate(tags_arr["tag"].astype(str)):
         if tt.startswith(idtags):
-            pol = tt.split(idtags)[1]
             out.append(
                 [
                     tags_arr["id"][ii],
@@ -106,7 +106,6 @@ def get_time_tag_in(tags_arr, idtags):
     out = []
     for ii, tt in enumerate(tags_arr["tag"].astype(str)):
         if idtags in tt:
-            pol = tt.split(idtags)[1]
             out.append([tags_arr["mjd_start"][ii], tags_arr["mjd_end"][ii]])
     return out
 
@@ -127,7 +126,6 @@ def get_info_tag_in(tags_arr, idtags):
     out = []
     for ii, tt in enumerate(tags_arr["tag"].astype(str)):
         if idtags in tt:
-            pol = tt.split(idtags)[1]
             out.append(
                 [
                     tags_arr["id"][ii],
@@ -273,7 +271,7 @@ class IVcurve_analysis:
         if args.filename:
             self.file = args.filename
         else:
-            raise ValueError(f"Input file is needed")
+            raise ValueError("Input file is needed")
         self.data = h5py.File(self.file, "r")
         self.dfile = DataFile(self.file)
         #
@@ -390,7 +388,7 @@ if __name__ == "__main__":
 Usage example:
 
     python3 procanalysis_ivcurves.py 2020_12_25_19-30-04.h5 --idout 20210318_TesIVcurve_TestDec2020_25_19-30-04
-    
+
 """,
     )
 

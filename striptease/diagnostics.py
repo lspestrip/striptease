@@ -5,9 +5,6 @@ import re
 
 import numpy as np
 
-import astropy.time
-import astropy.units as u
-
 TagEvent = namedtuple("TagEvent", ["start_time", "end_time", "tag", "polarimeter"])
 
 
@@ -31,7 +28,6 @@ def script_to_tagevents(script_dict, command_delay_s=0.5):
             else:
                 assert command["type"] == "STOP"
                 assert command["tag"] == current_tag_name
-                current_end_time = current_time
 
                 # Try to extract a valid polarimeter name from the tag
                 match = pol_regexp.search(current_tag_name)
@@ -110,10 +106,7 @@ def plot_tagevents(
     # Use these imports only if this function is actually called,
     # otherwise it will import "tkinter", and this might lead to
     # nasty effects on headless servers
-    import matplotlib.pylab as plt
     from matplotlib.patches import Rectangle
-    from matplotlib.collections import PatchCollection
-    import matplotlib.transforms as transforms
 
     if polarimeters:
         true_pol_list = polarimeters

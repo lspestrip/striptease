@@ -1,19 +1,12 @@
 # program_viewer/__ini__.py --- Example program
 #
 # Copyright (C) 2018 Stefano Sartor - stefano.sartor@inaf.it
-from PyQt5 import QtCore, QtWidgets
-import sys
+from PyQt5 import QtWidgets
 import os
-import json
-import numpy as np
-import time
-import astropy.time as at
-import datetime as dt
 from program_viewer.ui.main_window import Ui_MainWindow
 from web.rest.base import Connection
 from widgets.login import LoginWidget
 from config import Config
-import os
 
 
 class CheckBoxCallBack(object):

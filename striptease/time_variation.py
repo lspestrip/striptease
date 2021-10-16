@@ -1,12 +1,10 @@
 # -*- encoding: utf-8 -*-
-import striptease as st
 from striptease.hdf5files import DataFile
 from matplotlib import pyplot as plt
 import h5py
 import pickle
 import numpy as np
 import matplotlib.patches as mpatches
-import itertools
 from astropy.time import TimeDelta
 from astropy.time import Time
 
@@ -47,10 +45,6 @@ def lookfor_timevariation(vtime, step_ref=1.5, silent=True):
     ids_up = np.where(delt > dd_ref)[0]  # Ups
     ids_down = np.where(delt < -dd_ref)[0]  # Downs
 
-    nup = len(ids_up)
-    ndown = len(ids_down)
-
-    #
     idfor, idback = [], []
     idhat, idhat_start, idhat_end = [], [], []
     time_hat, time_for, time_back = [], [], []
@@ -316,7 +310,7 @@ class timevariation:
             tt = time0.value
             xx = np.arange(len(tt))
 
-            ## Time status
+            # Time status
             plt.figure(figsize=(6.4, 4.8))
             plt.title("Polarimeter " + kk.split("_")[1])
             plt.xlabel("Time step")
@@ -344,7 +338,7 @@ class timevariation:
             )
             plt.close()
 
-            ## Type: Hats, Forwards and /or backwards
+            # Type: Hats, Forwards and /or backwards
             for jtype in ["hat", "forward", "backward"]:
                 njtype = report[jtype]  # number of hats/forwards/backwards
                 if njtype > 0:

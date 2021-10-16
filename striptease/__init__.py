@@ -185,7 +185,7 @@ def get_lna_list(pol_name=None, module_name=None):
             if module_name[1] in ["1", "3", "5", "6"]:
                 lnaList = ("HA3", "HB3", "HA2", "HB2", "HA1", "HB1")
         else:
-            raise ValueError(f"Invalid polarimeter name '{rgb_name}'")
+            raise ValueError(f"Invalid polarimeter name '{pol_name}'")
 
     if pol_name is not None:
         lnaList = ("HA3", "HB3", "HA2", "HB2", "HA1", "HB1")
@@ -375,7 +375,7 @@ class StripConnection(Connection):
                 result = super(StripConnection, self).post(url=abs_url, message=message)
                 # TODO: once the firmware is updated, remove "ERROR_TIMEOUT_GET" from here!
                 if result["status"] not in ["OK", "ERROR_TIMEOUT_GET"]:
-                    assert False, "Error in POST ({0}): '{1}'".format(result["status"])
+                    assert False, "Error in POST ({0})".format(result["status"])
             else:
                 result = {"status": "OK"}
 
