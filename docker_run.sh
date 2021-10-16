@@ -1,8 +1,11 @@
-docker run -ti -e DISPLAY\
+docker run\
+       -ti\
+       --rm\
+       -e DISPLAY\
        -v /tmp/.X11-unix:/tmp/.X11-unix\
        -v $HOME/:/home/user/:rw\
        -v $PWD:/striptease:rw\
        -w /striptease\
        -u user\
        --privileged\
-       --net=host strip/striptease bash
+       --net=host strip/striptease:20.06 bash

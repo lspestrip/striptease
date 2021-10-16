@@ -157,7 +157,7 @@ class InstrumentBiases:
         See also :meth:`.polarimeter_to_module_name`."""
         return self.polarimeter_to_module_name(f"STRIP{polarimeter_num:02d}")
 
-    def get_biases(self, module_name=None, polarimeter_name=None,param_hk=None):
+    def get_biases(self, module_name=None, polarimeter_name=None, param_hk=None):
         """Return the biases needed to turn on a polarimeter.
 
         The return value is an instance of `BiasConfiguration`. You can specify either the name
@@ -177,7 +177,9 @@ class InstrumentBiases:
             polarimeter_name = self.module_name_to_polarimeter(module_name)
 
         if not (polarimeter_name in self.biases):
-            valid_names = sorted(", ".join(['"{0}"'.format(x) for x in self.biases.keys()]))
+            valid_names = sorted(
+                ", ".join(['"{0}"'.format(x) for x in self.biases.keys()])
+            )
             raise ValueError(
                 f"Unknown polarimeter '{polarimeter_name}', valid values are {valid_names}"
             )
@@ -213,7 +215,7 @@ class InstrumentBiases:
                 id3=self.biases[polarimeter_name]["ID3"],
                 id4=self.biases[polarimeter_name]["ID4"],
                 id5=self.biases[polarimeter_name]["ID5"],
-        )
+            )
         return result
 
 

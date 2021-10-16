@@ -18,7 +18,14 @@ from striptease.biases import InstrumentBiases, BoardCalibration
 from striptease.procedures import StripProcedure
 
 CalibrationCurve = namedtuple(
-    "CalibrationCurve", ["slope", "intercept", "mul", "div", "add",],
+    "CalibrationCurve",
+    [
+        "slope",
+        "intercept",
+        "mul",
+        "div",
+        "add",
+    ],
 )
 
 
@@ -611,7 +618,9 @@ class TurnOnOffProcedure(StripProcedure):
                 ):
                     board_setup.set_phsw_bias(self.horn, index, vpin, ipin)
             except Exception as exc:
-                log.warning(f"Unable to set bias for phsw diode #{index} ({type(exc)}: {exc})")
+                log.warning(
+                    f"Unable to set bias for phsw diode #{index} ({type(exc)}: {exc})"
+                )
 
         # 5
         for idx in (0, 1, 2, 3):

@@ -23,10 +23,10 @@ from program_turnon import TurnOnOffProcedure
 
 
 class IVProcedure(StripProcedure):
-    def __init__(self,args,waittime_perconf_s=1.8):
+    def __init__(self, args, waittime_perconf_s=1.8):
         super(IVProcedure, self).__init__()
         #
-        if args.filename is "":
+        if args.filename == "":
             self.filename = str(
                 Path(__file__).absolute().parent.parent
                 / "striptease"
@@ -36,8 +36,8 @@ class IVProcedure(StripProcedure):
         else:
             self.filename = args.filename
 
-        self.inputBiasIV = pd.read_excel(self.filename,header=0,index_col=1)
-        
+        self.inputBiasIV = pd.read_excel(self.filename, header=0, index_col=1)
+
         if args.polarimeters.upper() == "ALL":
             self.polarimeters = list(self.inputBiasIV.index)
         else:
@@ -47,8 +47,12 @@ class IVProcedure(StripProcedure):
         self.waittime_perconf_s = waittime_perconf_s
 
         print(f"hk_scan {self.hk_scan} (type: {type(self.hk_scan)})")
-        log.info("Inputs polarimeters %s (hk_scan is %s) \n Loading inputBiasIV from %s",
-            args.polarimeters,self.hk_scan,self.filename)
+        log.info(
+            "Input polarimeters %s (hk_scan is %s)\n Loading inputBiasIV from %s",
+            args.polarimeters,
+            self.hk_scan,
+            self.filename,
+        )
 
     def turn_on_board(self, board):
         log.info(f"Turnon of board {board}")
@@ -64,19 +68,20 @@ class IVProcedure(StripProcedure):
                 polname = BOARD_TO_W_BAND_POL[board]
 
             turnon_proc.set_board_horn_polarimeter(
-                new_board=board, new_horn=polname, new_pol=None,
+                new_board=board,
+                new_horn=polname,
+                new_pol=None,
             )
             turnon_proc.run()
 
         return turnon_proc.get_command_list()
 
-    def get_bias_curve(self,pol_name,lna):
+    def get_bias_curve(self, pol_name, lna):
         vmin = self.inputBiasIV[f"{lna}/VG0 MIN"][pol_name]
         vmax = self.inputBiasIV[f"{lna}/VG0 MAX"][pol_name]
         vstep = self.inputBiasIV[f"{lna}/VG0 STEP"][pol_name]
 
-        return np.arange(vmin,vmax,vstep)
-
+        return np.arange(vmin, vmax, vstep)
 
     def run(self):
         # Turn on the polarimeter(s)
@@ -88,16 +93,17 @@ class IVProcedure(StripProcedure):
 
         # Verification step
         with StripTag(
-            conn=self.command_emitter, name="IVTEST_VERIFICATION_TURNON",
+            conn=self.command_emitter,
+            name="IVTEST_VERIFICATION_TURNON",
         ):
             # Wait a while after having turned on all the boards
             self.wait(seconds=10)
 
-        # Load the matrice with the min, max and step for
-        #each LNA for each polarimeter
+        # Load the matriix with the min, max and step for
+        # each LNA for each polarimeter
         count_conf = 0
         for pol_name in self.polarimeters:
-            module_name = self.inputBiasIV['Module'][pol_name]
+            module_name = self.inputBiasIV["Module"][pol_name]
             log.info(
                 "-->Polarimeter %s (%s)",
                 pol_name,
@@ -107,12 +113,12 @@ class IVProcedure(StripProcedure):
             defaultBias = InstrumentBiases()
             lna_list = get_lna_list(pol_name=pol_name)
 
-            #--> First test: ID vs VD --> For each VG, we used VD curves
+            # --> First test: ID vs VD --> For each VG, we used VD curves
             self.conn.tag_start(name=f"IVTEST_{module_name}")
 
             for lna in lna_list:
                 lna_number = get_lna_num(lna)
-                #Read default configuration
+                # Read default configuration
                 with StripTag(
                     conn=self.command_emitter,
                     name=f"{module_name}_{lna}_READDEFAULT_VGVD",
@@ -120,25 +126,27 @@ class IVProcedure(StripProcedure):
                     # read bias in mV
                     default_vg_adu = calibr.physical_units_to_adu(
                         polarimeter=module_name,
-                        hk="vgate",component=lna,
-                        value=defaultBias.get_biases(module_name,
-                            param_hk=f"VG{lna_number}"
+                        hk="vgate",
+                        component=lna,
+                        value=getattr(
+                            defaultBias.get_biases(module_name), f"vg{lna_number}"
                         ),
                     )
 
                     # read bias in mV
                     default_vd_adu = calibr.physical_units_to_adu(
                         polarimeter=module_name,
-                        hk="vdrain",component=lna,
-                        value =defaultBias.get_biases(module_name,
-                            param_hk=f"VD{lna_number}"
+                        hk="vdrain",
+                        component=lna,
+                        value=getattr(
+                            defaultBias.get_biases(module_name), f"vd{lna_number}"
                         ),
                     )
 
-                #Get the data matrix and the Gate Voltage vector.
-                #in mV
-                vgate = self.get_bias_curve(pol_name,lna)
-                vdrain = np.arange(0,900,50)
+                # Get the data matrix and the Gate Voltage vector.
+                # in mV
+                vgate = self.get_bias_curve(pol_name, lna)
+                vdrain = np.arange(0, 900, 50)
                 count_conf += len(vgate) * len(vdrain)
 
                 # For each Vg, we have several curves varing Vd
@@ -155,7 +163,7 @@ class IVProcedure(StripProcedure):
                         value_adu=vg_adu,
                     )
 
-                    for vd_idx,vd in enumerate(vdrain):
+                    for vd_idx, vd in enumerate(vdrain):
                         vd_adu = calibr.physical_units_to_adu(
                             polarimeter=module_name,
                             hk="vdrain",
@@ -163,7 +171,8 @@ class IVProcedure(StripProcedure):
                             value=vd,
                         )
                         self.conn.set_vd(
-                            polarimeter=module_name, lna=lna,
+                            polarimeter=module_name,
+                            lna=lna,
                             value_adu=vd_adu,
                         )
 
@@ -173,7 +182,7 @@ class IVProcedure(StripProcedure):
                             comment=f"VG_{vg:.2f}mV_VD_{vd:.2f}mV",
                         ):
                             if self.hk_scan == "True":
-                                #print(f"hk_scan is {self.hk_scan}")
+                                # print(f"hk_scan is {self.hk_scan}")
                                 self.conn.set_hk_scan(allboards=True)
                             self.conn.wait(self.waittime_perconf_s)
 
@@ -183,11 +192,13 @@ class IVProcedure(StripProcedure):
                     name=f"{module_name}_{lna}_BACK2DEFAULT_VGVD",
                 ):
                     self.conn.set_vg(
-                        polarimeter=module_name,lna=lna,
+                        polarimeter=module_name,
+                        lna=lna,
                         value_adu=default_vg_adu,
                     )
                     self.conn.set_vd(
-                        polarimeter=module_name, lna=lna,
+                        polarimeter=module_name,
+                        lna=lna,
                         value_adu=default_vd_adu,
                     )
                     self.conn.wait(self.waittime_perconf_s)
@@ -197,9 +208,10 @@ class IVProcedure(StripProcedure):
             log.info(
                 "Number of configuration and time [hrs, days]: %s  [%s, %s]\n",
                 int(count_conf),
-                np.around(count_conf*self.waittime_perconf_s/3600.,1),
-                np.around(count_conf*self.waittime_perconf_s/3600/24,3),
+                np.around(count_conf * self.waittime_perconf_s / 3600.0, 1),
+                np.around(count_conf * self.waittime_perconf_s / 3600 / 24, 3),
             )
+
 
 if __name__ == "__main__":
     from argparse import ArgumentParser, RawDescriptionHelpFormatter
@@ -244,8 +256,7 @@ Usage example:
         type=str,
         dest="hkscan",
         default="True",
-        help="Activation of the set_hk_scan"
-        "If not provided, the set_hk_scan is used",
+        help="Activation of the set_hk_scan. If not provided, the set_hk_scan is used",
     )
     parser.add_argument(
         "polarimeters",

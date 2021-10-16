@@ -1,4 +1,4 @@
-condaPyQt5
+pyQt5
 numpy
 astropy
 matplotlib
@@ -15,4 +15,4 @@ black
 tqdm
 scipy
 dataclasses
-
+flake8
