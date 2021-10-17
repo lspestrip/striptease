@@ -2,13 +2,8 @@ from web.rest.base import Connection
 from web.wamp.base import WampBase
 from config import Config
 import multiprocessing as mp
-import numpy as np
 import time
-import queue
-from copy import deepcopy
-import sys
 from threading import Thread
-import pipes
 import asyncio
 import os
 import json

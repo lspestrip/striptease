@@ -1,9 +1,6 @@
-import sys
 import pyqtgraph as pg
 import pyqtgraph.widgets.RemoteGraphicsView
-from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
-import time
 
 
 class CustomWidget(pg.GraphicsWindow):
@@ -43,7 +40,6 @@ class CustomWidget(pg.GraphicsWindow):
         self.data[label]["val"] = val
 
     def commit_plot(self):
-        t0 = time.time()
         for label in self.data:
             d = self.data[label]
             if d.get("line"):
@@ -55,8 +51,6 @@ class CustomWidget(pg.GraphicsWindow):
                 d["line"] = self.p.plot(
                     d["mjd"], d["val"], pen=pen, autoDownsample=True
                 )
-        t1 = time.time()
-        # print((t1-t0)*1000)
 
     def del_plot(self, label):
         if self.data.get(label):
@@ -65,8 +59,8 @@ class CustomWidget(pg.GraphicsWindow):
 
     def replot(self):
         self.p.clear()
-        for l in self.data:
-            d = self.data[l]
+        for cur_data in self.data:
+            d = self.data[cur_data]
             if d["mjd"].size >= 1:
                 c = (d["color"][0] * 255, d["color"][1] * 255, d["color"][2] * 255)
                 pen = pg.mkPen(pg.mkColor(c), width=2)
@@ -87,13 +81,13 @@ class QuadPlotWidget(pg.GraphicsView):
         self.setParent(parent)
         self.data = {}
         self.title = "None"
-        self.l = pg.GraphicsLayout()
-        self.setCentralItem(self.l)
-        self.p = self.l.addPlot()
-        self.p = self.l.addPlot()
-        self.l.nextRow()
-        self.p = self.l.addPlot()
-        self.p = self.l.addPlot()
+        self.layout = pg.GraphicsLayout()
+        self.setCentralItem(self.layout)
+        self.p = self.layout.addPlot()
+        self.p = self.layout.addPlot()
+        self.layout.nextRow()
+        self.p = self.layout.addPlot()
+        self.p = self.layout.addPlot()
         self.p.setTitle("pippo")
         # self.p.setDownsampling(auto=True,mode='peak')
 
@@ -119,7 +113,6 @@ class QuadPlotWidget(pg.GraphicsView):
         self.data[label]["val"] = val
 
     def commit_plot(self):
-        t0 = time.time()
         for label in self.data:
             d = self.data[label]
             if d.get("line"):
@@ -131,8 +124,6 @@ class QuadPlotWidget(pg.GraphicsView):
                 d["line"] = self.p.plot(
                     d["mjd"], d["val"], pen=pen, autoDownsample=True
                 )
-        t1 = time.time()
-        # print((t1-t0)*1000)
 
     def del_plot(self, label):
         if self.data.get(label):
@@ -141,8 +132,8 @@ class QuadPlotWidget(pg.GraphicsView):
 
     def replot(self):
         self.p.clear()
-        for l in self.data:
-            d = self.data[l]
+        for cur_data in self.data:
+            d = self.data[cur_data]
             if d["mjd"].size >= 1:
                 c = (d["color"][0] * 255, d["color"][1] * 255, d["color"][2] * 255)
                 pen = pg.mkPen(pg.mkColor(c), width=2)

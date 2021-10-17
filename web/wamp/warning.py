@@ -2,7 +2,6 @@
 #
 # Copyright (C) 2018 Stefano Sartor - stefano.sartor@inaf.it
 
-from web.rest.base import Connection
 from config import Config
 from calibration import Calibration
 from .base import WsBase
@@ -116,7 +115,9 @@ class WsWarning(object):
         if self.ws is not None and self.__current.get("config") is not None:
             for c in self.__current["config"]:
                 pkt = {"pol": c["pol"], "remove": c["warn"]}
-                self.loop.call_soon_threadsafe(asyncio.async, self.ws.send(pkt))
+                self.loop.call_soon_threadsafe(
+                    getattr(asyncio, "async"), self.ws.send(pkt)
+                )
         self.__current = {}
 
     def save_config(self, name=None, force_new=False):
@@ -131,10 +132,10 @@ class WsWarning(object):
         }
         res = {"status": "ERROR"}
         if self.__current.get("id") is None:  # save new config
-            res = self.conn.post(self.url, message)
+            res = self.conn.post(self.url, pkt)
         else:  # update existing conf
             url = self.url + "/" + str(self.__current["id"])
-            res = self.conn.put(self.url, pkt)
+            res = self.conn.put(url, pkt)
         if res["status"] == "OK":
             self.__current["id"] = res["id"]
 
@@ -166,4 +167,4 @@ class WsWarning(object):
                 self.__add_warning(warn)
 
     def __add_warning(self, warn):
-        self.loop.call_soon_threadsafe(asyncio.async, self.ws.send(warn))
+        self.loop.call_soon_threadsafe(getattr(asyncio, "async"), self.ws.send(warn))

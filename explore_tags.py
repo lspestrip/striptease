@@ -6,8 +6,6 @@ from collections import namedtuple, OrderedDict
 from pathlib import Path
 import sys
 
-import h5py
-
 from striptease import DataFile
 
 DEFAULT_OUTPUT_FILENAME = "-"
@@ -96,7 +94,7 @@ def parse_arguments():
         metavar="FMT",
         type=str,
         default=DEFAULT_OUTPUT_FORMAT,
-        help="""Format to be used for the output. 
+        help="""Format to be used for the output.
 Possible values are {format_list} (default is {default})
 """.format(
             format_list=", ".join(OUTPUT_FORMATS.keys()), default=DEFAULT_OUTPUT_FORMAT

@@ -12,13 +12,11 @@ from striptease import (
     STRIP_BOARD_NAMES,
     BOARD_TO_W_BAND_POL,
     StripTag,
-    normalize_polarimeter_name,
     get_lna_num,
     get_lna_list,
 )
 from striptease.biases import InstrumentBiases
 from striptease.procedures import StripProcedure
-from striptease.unittests import get_unit_test, load_unit_test_data, UnitTestDC
 from program_turnon import TurnOnOffProcedure
 
 
@@ -204,7 +202,7 @@ Usage example:
     python3 program_ivcurves.py "STRIP07" >> jsonFile_IVtest_strip07
     python3 program_ivcurves.py --output jsonFile_IVtest_startChannels "STRIP07 STRIP8 STRIP13 STRIP15 STRIP61 STRIP24 STRIP36"
     python3 program_ivcurves.py --output jsonFile_IVtest_Allpolarimeters "ALL"
-    
+
 """,
     )
     parser.add_argument(

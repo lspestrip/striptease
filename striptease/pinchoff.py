@@ -3,7 +3,7 @@ class PinchOffAnalysis:
         data.read_file_metadata()
         self.data = data
         self.tags = data.tags
-        self.amps = ["H%s%s" % (l, n) for l in ["A", "B"] for n in ["1", "2", "3"]]
+        self.amps = ["H%s%s" % (leg, n) for leg in ["A", "B"] for n in ["1", "2", "3"]]
         self.verification_tags = self.get_subtags(
             "PINCHOFF_VERIFICATION_1"
         ) + self.get_subtags("PINCHOFF_IDSET")
@@ -117,35 +117,33 @@ class PinchOffAnalysis:
     #########################################
     def plot_IV(self, polarimeters="All", filename=None, image="png"):
         import striptease
-        import pylab as pl
         import numpy as np
         from scipy.optimize import curve_fit
         import pickle
         from datetime import datetime
-        import numpy as np
 
         """
-        This function plots IV curves given a certain configuration stored into self.configuration. 
-        If self.configuration is empty the function first extracts the configuration for all tested 
+        This function plots IV curves given a certain configuration stored into self.configuration.
+        If self.configuration is empty the function first extracts the configuration for all tested
         polarimeters
-        
+
         It also fits the IV curves with quadratic and linear functions
-        
+
         Inputs
-        polarimeters  STRING or LIST of strings. If polarimeters = 'All' (default)  then all the 
-                                                 polarimeter are tested. Otherwise it contains a 
-                                                 list of strings identifying the polarimeters to 
+        polarimeters  STRING or LIST of strings. If polarimeters = 'All' (default)  then all the
+                                                 polarimeter are tested. Otherwise it contains a
+                                                 list of strings identifying the polarimeters to
                                                  be tested
-                                                 
+
 
         filename      STRING  The filename where to save the output dictionary in a pickle file
                               It defaults to None. In this case the filename is generated automatically
 
         image         STRING  The format of the saved plots ('png' (Default), 'pdf', 'svg')
-        
+
         Output
         output   DICT   a dictionary containing the results of the linear and quadradic fits
-        
+
         """
         if len(self.configuration) == 0:
             print("Generating instrument configuration")
@@ -250,7 +248,7 @@ class PinchOffAnalysis:
                         rsquared2[row][col] = self.rsquare(
                             dumv, dumi, fitquad[row][col], self.quad
                         )
-                    except:
+                    except KeyError:
                         fitquad[row][col] = None
                         rsquared2[row][col] = None
 
@@ -259,7 +257,7 @@ class PinchOffAnalysis:
                         rsquared[row][col] = self.rsquare(
                             dumv, dumi, fitlin[row][col], self.lin
                         )
-                    except:
+                    except KeyError:
                         fitlin[row][col] = None
                         rsquared[row][col] = None
 
@@ -288,7 +286,7 @@ class PinchOffAnalysis:
                 image,
             )
 
-        if filename == None:
+        if not filename:
             now = str(datetime.now())
             filename = self.output_folder + "strip_pinchoff_analysis_" + now + ".pickle"
 
@@ -312,7 +310,7 @@ class PinchOffAnalysis:
 
         """
         This function makes a IV plot for a single polarimeter
-        
+
         Inputs
         polarimeter STRING      the id of the polarimeter
         V           FLOAT ARRAY an array of floats containing the voltage values
@@ -324,7 +322,7 @@ class PinchOffAnalysis:
         highlight   MIXED       indicates if one or more points need be highlighted
                                 with a different color. In this case highlight contains
                                 two 2x3 lists: the first one is the list of indices of the points
-                                to be highlighted, the second one is a list of descriptions 
+                                to be highlighted, the second one is a list of descriptions
                                 appearing in a legend
         image       STRING      Image format for the plots ('png', 'svg', 'pdf')
         """
@@ -346,7 +344,7 @@ class PinchOffAnalysis:
                 # Plot fits
                 if fitquad[row][col] is not None:
                     equation = (
-                        "$y = %3.4f\,x^2 + %3.4f\,x + %3.4f\,\,\, r^2 = %3.4f$"
+                        r"$y = %3.4f\,x^2 + %3.4f\,x + %3.4f\,\,\, r^2 = %3.4f$"
                         % (
                             fitquad[row][col][0][0],
                             fitquad[row][col][0][1],
@@ -359,7 +357,7 @@ class PinchOffAnalysis:
                     )
 
                 if fitlin[row][col] is not None:
-                    equation = "$y = %3.4f\,x + %3.4f\,\,\, r^2 = %3.4f$" % (
+                    equation = r"$y = %3.4f\,x + %3.4f\,\,\, r^2 = %3.4f$" % (
                         fitlin[row][col][0][0],
                         fitlin[row][col][0][1],
                         rlin[row][col],
@@ -370,10 +368,10 @@ class PinchOffAnalysis:
 
                 # Labels
                 axes[row, col].set(
-                    xlabel="Gate voltage [mV]", ylabel="Drain current [$\mu$A]"
+                    xlabel="Gate voltage [mV]", ylabel="Drain current [µA]"
                 )
 
-                if highlight != False:
+                if highlight:
                     indices = highlight[0][row][col]
                     labels = highlight[1][row][col]
                     j = -1
@@ -407,25 +405,20 @@ class PinchOffAnalysis:
 
     def bias_plot(self, polarimeters="All", image="png"):
         import striptease
-        import pylab as pl
         import numpy as np
-        from scipy.optimize import curve_fit
-        import pickle
-        from datetime import datetime
-        import matplotlib.colors as mcolors
 
         """
-        This function plots Vg and Id versus time given a certain configuration stored into self.configuration. 
-        If self.configuration is empty the function first extracts the configuration for all tested 
+        This function plots Vg and Id versus time given a certain configuration stored into self.configuration.
+        If self.configuration is empty the function first extracts the configuration for all tested
         polarimeters
-        
+
         Inputs
         polarimeters LIST of STRING values  List of polarimeters to plot ('All' plots all polarimeters)
         image        STRING         the format of the output plot ('svg, 'png', 'pdf')
-        
+
         Output
         None (plots are saved as pdf files)
-        
+
         """
         vg_col = {
             "black": "#000000",
@@ -562,8 +555,6 @@ class PinchOffAnalysis:
 
         amps = np.reshape(self.amps, (2, 3))
 
-        output = {}
-
         for pol in polarimeters:
 
             # Initialize matrices
@@ -685,12 +676,11 @@ class PinchOffAnalysis:
 
         matplotlib.use("Agg")
         import matplotlib.pyplot as pl
-        import matplotlib.colors as mcolors
         import numpy as np
 
         """
         This function plots a given bias parameter versus time for a single polarimeter
-        
+
         Inputs
         polarimeter STRING  the id of the polarimeter
         vgate       TUPLE   vgate[0] - FLOAT ARRAY an array of floats containing the time values
@@ -700,8 +690,6 @@ class PinchOffAnalysis:
         tags        LIST    list of strings itentifying the various steps
         image       STRING  the format of the output plot ('svg', 'pdf', 'png')
         """
-
-        colors = list(mcolors.CSS4_COLORS.values())
 
         amps = np.reshape(self.amps, (2, 3))
         fig, axes = pl.subplots(2, 3, figsize=(35, 30))
@@ -764,30 +752,24 @@ class PinchOffAnalysis:
     #########################################
 
     def sci_plot(self, polarimeters="All", image="png"):
-        import striptease
-        import pylab as pl
         import numpy as np
-        from scipy.optimize import curve_fit
-        import pickle
-        from datetime import datetime
-        import matplotlib.colors as mcolors
 
         """
-        This function plots scientific data versus time given a certain configuration stored into self.configuration. 
-        If self.configuration is empty the function first extracts the configuration for all tested 
+        This function plots scientific data versus time given a certain configuration stored into self.configuration.
+        If self.configuration is empty the function first extracts the configuration for all tested
         polarimeters
-        
+
         Inputs
         polarimeters LIST of STRING values  List of polarimeters to plot ('All' plots all polarimeters)
         image        STRING         the format of the output plot ('svg, 'png', 'pdf')
-        
+
         Output
         None (plots are saved as files)
-        
+
         Notes
-        The procedure produces for each polarimeter and for each tested amplifers one plot with 
-        eight subplots four for PWR data and four for DEM data. 
-        
+        The procedure produces for each polarimeter and for each tested amplifers one plot with
+        eight subplots four for PWR data and four for DEM data.
+
         """
 
         diodes = ["Q1", "Q2", "U1", "U2"]
@@ -805,8 +787,6 @@ class PinchOffAnalysis:
             polarimeters = self.get_tested_polarimeters(tags=main_tags)
 
         amps = np.reshape(self.amps, (2, 3))
-
-        output = {}
 
         for pol in polarimeters:
 
@@ -836,9 +816,6 @@ class PinchOffAnalysis:
                             key = "%s_%s" % (diode, data_type)
                             dumv[key] = []
                             dumt[key] = []
-
-                    # Add first point from configuration
-                    amp_id = self.amp_tag_translation[amps[row, col]]
 
                     cur_tag = "PINCHOFF_VERIFICATION_1"
                     tags = []
@@ -918,12 +895,11 @@ class PinchOffAnalysis:
 
         matplotlib.use("Agg")
         import matplotlib.pyplot as pl
-        import matplotlib.colors as mcolors
         import numpy as np
 
         """
         This function plots a given bias parameter versus time for a single polarimeter
-        
+
         Inputs
         polarimeter STRING  the id of the polarimeter
         time       DICT with FLOAT arrays containing the time values
@@ -992,15 +968,15 @@ class PinchOffAnalysis:
         """
         This function retrieves the configuration of a given set of polarimeters at the various
         verification points indicated by the tags
-        The configuration is given by: start_time, end_time and the average value of 
+        The configuration is given by: start_time, end_time and the average value of
         ID_SET, VD_set, Vd_hk, Vg_hk, Id_hk in each time window
-        
+
         Inputs
         polarimeters - Array of STRING - polarimeters to be checked
-        
+
         Output
         out - DICT - Dictionary containing 'ID_SET', 'VD_SET', 'VD_HK', 'VG_HK', 'ID_HK'
-        
+
         """
         hklist = ["ID_SET", "VD_SET", "VD_HK", "VG_HK", "ID_HK"]
         out = {}
@@ -1076,7 +1052,7 @@ class PinchOffAnalysis:
                     # Save verification 1
                     try:
                         data = self.configuration["PINCHOFF_VERIFICATION_1"][pol]
-                    except:
+                    except (TypeError, KeyError, IndexError):
                         print(
                             "Problem in configuration file. Either not present or wrong tag"
                         )
@@ -1119,23 +1095,6 @@ class PinchOffAnalysis:
 
                     writer.writerow([""])
 
-    #####################################################
-    # Save configuration into pickle and text file
-    #####################################################
-    def print_configuration_map(self, polarimeter, output_folder="./"):
-        """
-        Saves a csv file containing the configuration map of a given polarimeter
-        """
-        import pickle
-
-        file_id = open(self.output_folder + filename + ".pickle", "wb")
-        pickle.dump(d, file_id)
-        file_id.close()
-
-        file_id = open(self.output_folder + filename + ".txt", "a")
-        self.pretty(d, file_id)
-        file_id.close()
-
     # Get list of tested polarimeters
     #################################
     def get_tested_polarimeters(self, search_tag="PINCHOFF_IDSET", tags=None):
@@ -1155,7 +1114,7 @@ class PinchOffAnalysis:
         """
         Retrieves a list of tags matchina search_tag
         """
-        if tags == None:
+        if tags is None:
             tags = self.tags
 
         names = [t.name for t in tags]

@@ -39,7 +39,7 @@ Here we learn how to access the file metadata and, in particular, its tags. Tags
 
 ```{python}
 # Specify the filename containing the data
-fname = '/home/daniele/Documents/LSPE/testing_integration/system_level_tests/pre_tests/2020_04_05_14-31-54.h5' 
+fname = '/home/daniele/Documents/LSPE/testing_integration/system_level_tests/pre_tests/2020_04_05_14-31-54.h5'
 
 # Initialize the class
 my_data = DataFile(fname)
@@ -93,7 +93,7 @@ The user must load scientific data by specifying, in order:
 
 ```{python}
 # Specify the filename containing the data
-fname = '/home/daniele/Documents/LSPE/testing_integration/system_level_tests/pre_tests/2020_04_05_14-31-54.h5' 
+fname = '/home/daniele/Documents/LSPE/testing_integration/system_level_tests/pre_tests/2020_04_05_14-31-54.h5'
 
 # Initialize the class
 my_data = DataFile(fname)
@@ -178,7 +178,7 @@ Each group is subdivided into two subgroups: POL_XY (regarding parameters relati
 
 ```{python}
 # Specify the filename containing the data
-fname = '/home/daniele/Documents/LSPE/testing_integration/system_level_tests/pre_tests/2020_04_05_14-31-54.h5' 
+fname = '/home/daniele/Documents/LSPE/testing_integration/system_level_tests/pre_tests/2020_04_05_14-31-54.h5'
 
 # Initialize the class
 my_data = DataFile(fname)
@@ -203,7 +203,7 @@ print(hdf5files.VALID_SUBGROUPS)
 
 ```{python}
 # Specify the filename containing the data
-fname = '/home/daniele/Documents/LSPE/testing_integration/system_level_tests/pre_tests/2020_04_05_14-31-54.h5' 
+fname = '/home/daniele/Documents/LSPE/testing_integration/system_level_tests/pre_tests/2020_04_05_14-31-54.h5'
 
 # Initialize the class
 my_data = DataFile(fname)

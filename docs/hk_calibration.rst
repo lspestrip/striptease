@@ -46,7 +46,7 @@ to the constructor and it will be reused::
 
   conn = StripConnection()
   conn.login()
-  
+
   config = Config()
   config.load(conn)
 
@@ -56,7 +56,7 @@ to the constructor and it will be reused::
   # Reuse the configuration object
   cal = CalibrationTables(config)
 
-  
+
 Low-level calibration functions
 -------------------------------
 
@@ -70,7 +70,7 @@ has the following fields:
 3. ``mul`` (int)
 
 4. ``div`` (int)
- 
+
 5. ``add`` (int)
 
 The operation carried out by the electronics to convert physical units

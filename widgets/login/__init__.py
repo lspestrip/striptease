@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2018 Stefano Sartor - stefano.sartor@inaf.it
 from widgets.login.ui.login_dialog import Ui_Dialog
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtWidgets
 
 
 class LoginWidget(QtWidgets.QDialog):

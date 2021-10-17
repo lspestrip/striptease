@@ -4,10 +4,10 @@ Writing test procedures
 To create a new script that builds a sequence of JSON commands, the
 easiest way is to create a new class derived from
 :class:`striptease.procedures.StripProcedure`::
-  
+
   from striptease.procedures import StripProcedure
   from calibration import CalibrationTables
-  
+
   class MyProcedure(StripProcedure):
       def __init__(self):
           super(MyProcedure, self).__init__()
@@ -50,7 +50,7 @@ using :meth:`.StripConnection.set_id`. Finally, the test procedure
 will be written to ``stdout`` as a JSON object:
 
 .. code-block:: json
-                
+
     [
         {
             "path": "/rest/slo",
@@ -84,7 +84,7 @@ will be written to ``stdout`` as a JSON object:
                 ]
             }
         }
-    ]  
+    ]
 
 Note that the names of the LNAs (``HA1`` and ``HB2``) have been
 converted in the naming scheme used by the electronics (the indexes

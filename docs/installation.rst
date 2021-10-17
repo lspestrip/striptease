@@ -15,7 +15,7 @@ Installing the code
 To build the program, use the following commands:
 
 .. code-block:: bash
-                
+
     git clone git@github.com:lspestrip/striptease.git
     cd striptease
     python -m pip install -e .
@@ -47,11 +47,11 @@ compiler and the `Qt libraries <https://www.qt.io/>`_ installed. Run
 the following commands within the ``striptease`` directory:
 
 .. code-block:: bash
-                
+
     cd TestRunner
     qmake TestRunner.pro && make
 
-  
+
 Authentication
 --------------
 
@@ -66,7 +66,7 @@ credentials to the web portal. Here are the possibilities:
 1. Save your credentials in a text file, which is read any time
    Stripeline needs authentication. This requires some setup, but it's
    the best method.
-   
+
 2. Enter username and password every time. This is boring, but it's
    the most secure way to authenticate.
 

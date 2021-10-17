@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 
-from collections import namedtuple
-from datetime import datetime
 import logging as log
-import os.path
 import re
-import sys
 
-from config import Config
-from program_turnon import SetupBoard, TurnOnOffProcedure
+from program_turnon import TurnOnOffProcedure
 from striptease import BOARD_TO_W_BAND_POL
 
 DEFAULT_WAITTIME_S = 5.0
@@ -37,7 +32,6 @@ def unroll_polarimeters(pol_list):
 
 
 if __name__ == "__main__":
-    import sys
     from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
     parser = ArgumentParser(
@@ -90,8 +84,8 @@ Usage example:
         type=float,
         dest="waittime_s",
         default=DEFAULT_WAITTIME_S,
-        help=f"Time to wait after having altered the bias level for each amplifier "
-        "(default: {DEFAULT_WAITTIME_S}, set to 0 to disable)",
+        help="Time to wait after having altered the bias level for each amplifier "
+        f"(default: {DEFAULT_WAITTIME_S}, set to 0 to disable)",
     )
 
     args = parser.parse_args()

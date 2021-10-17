@@ -10,7 +10,6 @@ from striptease import (
     STRIP_BOARD_NAMES,
     BOARD_TO_W_BAND_POL,
     StripTag,
-    normalize_polarimeter_name,
     get_lna_num,
     get_lna_list,
 )
@@ -208,7 +207,6 @@ class IVProcedure(StripProcedure):
 
                 # from V to mV
                 curve_vgate = matrixIDVG["GateV"][:, vd_idx] * 1000.0
-                selcurvg = curve_vgate >= -360
                 curve_vgate = vgate[selvg]
 
                 for vg_idx, vg in enumerate(curve_vgate):

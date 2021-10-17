@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 import sqlite3
 from shutil import copyfileobj
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, Union
 import urllib.request as urlreq
 from urllib.parse import urljoin
 

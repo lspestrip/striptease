@@ -37,7 +37,7 @@ class provides two methods:
 
 Moreover, a method :meth:`.DataFile.get_average_biases` can be used
 to retrieve the average level of biases within some time frame.
-  
+
 Information about housekeeping parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

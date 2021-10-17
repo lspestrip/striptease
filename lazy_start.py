@@ -5,7 +5,6 @@ import time
 import csv
 import sys
 import pandas as pd
-from pprint import pprint
 from striptease.biases import InstrumentBiases
 
 board_on = [
@@ -104,7 +103,6 @@ def read_board_xlsx(path):
         line_count = 0
         current_item = pd.np.nan
         current_fit = pd.np.nan
-        current_chan = pd.np.nan
         for r in pol:
             row = pol[r]
             if line_count <= 1:
@@ -142,7 +140,6 @@ def read_board_calib(path):
         line_count = 0
         current_item = ""
         current_fit = ""
-        current_chan = ""
 
         for row in csv_reader:
             if line_count <= 1:

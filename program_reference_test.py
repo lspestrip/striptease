@@ -1,14 +1,8 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 
-from collections import namedtuple
-from datetime import datetime
 import logging as log
-import os.path
-import re
-import sys
 
-from config import Config
 from striptease import StripTag
 from program_turnon import SetupBoard
 
@@ -63,7 +57,7 @@ class ReferenceTestProcedure(StripProcedure):
 
         with StripTag(
             conn=self.command_emitter,
-            name=f"PHSW_STATUS_EXPLICIT",
+            name="PHSW_STATUS_EXPLICIT",
             comment=f"Setting status for phase switches in {self.horn}",
         ):
             for idx, status in [(0, 1), (1, 3), (2, 2), (3, 4)]:
@@ -74,7 +68,7 @@ class ReferenceTestProcedure(StripProcedure):
 
         with StripTag(
             conn=self.command_emitter,
-            name=f"PHSW_STATUS_EXPLICIT_INVERSE",
+            name="PHSW_STATUS_EXPLICIT_INVERSE",
             comment=f"Setting status for phase switches in {self.horn}",
         ):
             for idx, status in [(0, 3), (1, 1), (2, 4), (3, 2)]:
@@ -146,7 +140,6 @@ class ReferenceTestProcedure(StripProcedure):
 ################################################################################
 
 if __name__ == "__main__":
-    import sys
     from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
     parser = ArgumentParser(

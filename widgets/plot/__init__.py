@@ -2,15 +2,13 @@
 #
 # Code copied from matplotlib online documentation
 from PyQt5 import QtCore, QtWidgets
+import numpy as np
 import matplotlib
 
 # Make sure that we are using QT5
 matplotlib.use("Qt5Agg")
-import sys
-import os
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
 
 
 class MplCanvas(FigureCanvas):
@@ -41,8 +39,8 @@ class StaticMplCanvas(MplCanvas):
     """Simple canvas with a sine plot."""
 
     def compute_initial_figure(self):
-        t = arange(0.0, 3.0, 0.01)
-        s = sin(2 * pi * t)
+        t = np.arange(0.0, 3.0, 0.01)
+        s = np.sin(2 * np.pi * t)
         self.axes.plot(t, s)
 
 
@@ -60,7 +58,7 @@ class DynamicMplCanvas(MplCanvas):
 
     def update_figure(self):
         # Build a list of 4 random integers between 0 and 10 (both inclusive)
-        l = [random.randint(0, 10) for i in range(4)]
+        series = [np.random.randint(0, 10) for i in range(4)]
         self.axes.cla()
-        self.axes.plot([0, 1, 2, 3], l, "r")
+        self.axes.plot([0, 1, 2, 3], series, "r")
         self.draw()

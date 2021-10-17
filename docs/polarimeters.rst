@@ -21,15 +21,15 @@ it shows how ``STRIP_BOARD_NAME`` can make the code more elegant::
           break
       else:
           print(f"'{board_to_skip}' is not a valid board, retry")
-          
+
   for cur_board_name in STRIP_BOARD_NAMES:
       if cur_board_name == board_to_skip:
           continue
-          
+
       print(f"Processing board {cur_board_name}")
       # …
 
-      
+
 The output of the code is the following, assuming that the user
 entered ``R`` at the prompt:
 
@@ -85,7 +85,7 @@ associates the uppercase letter of each board to the name of the
 W-band polarimeter, or ``None`` in the case of board ``I``::
 
   from striptease import STRIP_BOARD_NAMES, BOARD_TO_W_BAND_POL
-  
+
   for cur_board in STRIP_BOARD_NAMES:
       w_pol = BOARD_TO_W_BAND_POL[cur_board]
 
@@ -94,7 +94,7 @@ W-band polarimeter, or ``None`` in the case of board ``I``::
       else:
           print(f"Board {cur_board} has no W-band polarimeters")
 
-          
+
 The output of the script is the following:
 
 .. code-block:: none
@@ -165,7 +165,7 @@ conventions named above::
   print(get_lna_num("Q5"))   # Print 4
 
 
- 
+
 
 Modes of operation
 ~~~~~~~~~~~~~~~~~~
@@ -188,7 +188,7 @@ representing the three bias parameters :math:`I_d`, :math:`V_d`, and
 :math:`V_g` as knobs; only green knobs can be manipulated by the user,
 while the blue knob responds automatically to variations in the green
 knobs.
-   
+
 .. figure:: _static/open-closed-loop-mode.svg
             :align: center
             :alt: Open/closed loop modes

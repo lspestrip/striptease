@@ -4,12 +4,7 @@
 import logging as log
 
 from calibration import CalibrationTables
-from striptease import (
-    STRIP_BOARD_NAMES,
-    BOARD_TO_W_BAND_POL,
-    StripTag,
-    normalize_polarimeter_name,
-)
+from striptease import STRIP_BOARD_NAMES, BOARD_TO_W_BAND_POL, StripTag
 from striptease.procedures import StripProcedure
 from program_turnon import TurnOnOffProcedure
 
@@ -50,7 +45,7 @@ class PinchOffProcedure(StripProcedure):
             self.wait(seconds=5)
 
         # Verification step
-        with StripTag(conn=self.command_emitter, name=f"PINCHOFF_VERIFICATION_1"):
+        with StripTag(conn=self.command_emitter, name="PINCHOFF_VERIFICATION_1"):
             self.wait(seconds=300)
 
         for cur_board in STRIP_BOARD_NAMES:

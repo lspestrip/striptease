@@ -4,10 +4,39 @@
 Striptease
 """
 
-from .unittests import *
-from .biases import *
-from .diagnostics import *
-from .hdf5files import *
+from .unittests import (
+    UnitTestType,
+    UnitTest,
+    unit_test_url,
+    unit_test_json_url,
+    unit_test_download_url,
+    get_unit_test,
+    UnitTestDCCurves,
+    UnitTestDC,
+    UnitTestTimestream,
+    load_unit_test_data,
+)
+from .biases import (
+    BiasConfiguration,
+    ChannelCalibration,
+    InstrumentBiases,
+    BoardCalibration,
+    RefBiasConfiguration,
+    ReferenceBiases,
+)
+from .diagnostics import (
+    TagEvent,
+    script_to_tagevents,
+    plot_tagevents,
+)
+from .hdf5files import (
+    Tag,
+    HkDescriptionList,
+    get_group_subgroup,
+    get_hk_descriptions,
+    DataFile,
+    scan_data_path,
+)
 
 __version__ = "0.1.0"
 
@@ -134,12 +163,13 @@ def get_lna_list(pol_name=None, module_name=None):
 
     Args
     ----
-    rgb_name (str): RGB name of the polarimeter, like ``STRIP02``
+    module_name (str): Name of the module, like ``I`` or ``V``. Use ``Wn`` for
+        any of the W-band polarimeters
     pol_name (str): Name of the polarimeter, like ``R0`` or ``W3``
 
     Return
     ------
-    lnaList (tuple): list of LNA in the pol_name poilarimeter
+    lnaList (tuple): list of LNA in the polarimeter
     """
     if module_name is not None:
         if module_name[0].upper() in STRIP_BOARD_NAMES:
@@ -150,42 +180,7 @@ def get_lna_list(pol_name=None, module_name=None):
             if module_name[1] in ["1", "3", "5", "6"]:
                 lnaList = ("HA3", "HB3", "HA2", "HB2", "HA1", "HB1")
         else:
-            raise ValueError(f"Invalid polarimeter name '{rgb_name}'")
-
-    if pol_name is not None:
-        lnaList = ("HA3", "HB3", "HA2", "HB2", "HA1", "HB1")
-        if pol_name in ["STRIP71", "STRIP73"]:
-            lnaList = ("HA2", "HB2", "HA1", "HB1")
-        elif pol_name in ["STRIP76", "STRIP78", "STRIP81", "STRIP82"]:
-            lnaList = ("HA2", "HB2", "HA1", "HB1")
-
-    return lnaList
-
-
-def get_lna_list(pol_name=None, module_name=None):
-    """
-    Return the LNA list of one polarimeter.
-    In particular, W polarimeters have two type of LNA configurations.
-
-    Args
-    ----
-    rgb_name (str): RGB name of the polarimeter, like ``STRIP02``
-    pol_name (str): Name of the polarimeter, like ``R0`` or ``W3``
-
-    Return
-    ------
-    lnaList (tuple): list of LNA in the pol_name poilarimeter
-    """
-    if module_name is not None:
-        if module_name[0].upper() in STRIP_BOARD_NAMES:
-            lnaList = ("HA3", "HB3", "HA2", "HB2", "HA1", "HB1")
-        elif module_name[0].upper() == "W":
-            if module_name[1] in ["2", "4"]:
-                lnaList = ("HA2", "HB2", "HA1", "HB1")
-            if module_name[1] in ["1", "3", "5", "6"]:
-                lnaList = ("HA3", "HB3", "HA2", "HB2", "HA1", "HB1")
-        else:
-            raise ValueError(f"Invalid polarimeter name '{rgb_name}'")
+            raise ValueError(f"Invalid polarimeter name '{pol_name}'")
 
     if pol_name is not None:
         lnaList = ("HA3", "HB3", "HA2", "HB2", "HA1", "HB1")
@@ -375,7 +370,7 @@ class StripConnection(Connection):
                 result = super(StripConnection, self).post(url=abs_url, message=message)
                 # TODO: once the firmware is updated, remove "ERROR_TIMEOUT_GET" from here!
                 if result["status"] not in ["OK", "ERROR_TIMEOUT_GET"]:
-                    assert False, "Error in POST ({0}): '{1}'".format(result["status"])
+                    assert False, "Error in POST ({0})".format(result["status"])
             else:
                 result = {"status": "OK"}
 
@@ -1160,3 +1155,36 @@ class StripTag:
         # We must close the tag even if an exception has been raised
         if not self.dry_run:
             self.conn.tag_stop(name=self.name, comment=self.stop_comment)
+
+
+__all__ = [
+    # unittests
+    "UnitTestType",
+    "UnitTest",
+    "unit_test_url",
+    "unit_test_json_url",
+    "unit_test_download_url",
+    "get_unit_test",
+    "UnitTestDCCurves",
+    "UnitTestDC",
+    "UnitTestTimestream",
+    "load_unit_test_data",
+    # biases.py
+    "BiasConfiguration",
+    "ChannelCalibration",
+    "InstrumentBiases",
+    "BoardCalibration",
+    "RefBiasConfiguration",
+    "ReferenceBiases",
+    # diagnostics.py
+    "TagEvent",
+    "script_to_tagevents",
+    "plot_tagevents",
+    # hdf5files.py
+    "Tag",
+    "HkDescriptionList",
+    "get_group_subgroup",
+    "get_hk_descriptions",
+    "DataFile",
+    "scan_data_path",
+]

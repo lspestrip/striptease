@@ -65,7 +65,7 @@ Here we learn how to access the file metadata and, in particular, its tags. Tags
 
 ```{python}
 # Specify the filename containing the data
-fname = '/home/daniele/Documents/LSPE/testing_integration/system_level_tests/pre_tests/strip-pinchoff/2020_05_06_02-27-50.h5' 
+fname = '/home/daniele/Documents/LSPE/testing_integration/system_level_tests/pre_tests/strip-pinchoff/2020_05_06_02-27-50.h5'
 
 # Initialize the class
 my_data = striptease.hdf5files.DataFile(fname)
@@ -77,7 +77,7 @@ my_data.read_file_metadata()
 ```{python}
 # Display the tags
 tags = my_data.tags
-for t in tags: 
+for t in tags:
     print(t.name)
 ```
 
@@ -107,7 +107,7 @@ class PinchOffAnalysis:
                                     'HA3':4,\
                                     'HB1':1,\
                                     'HB2':3,\
-                                    'HB3':5                                    
+                                    'HB3':5
                                    }
         self.tag_amp_translation = {\
                                     '0':'HA1',\
@@ -115,7 +115,7 @@ class PinchOffAnalysis:
                                     '4':'HA3',\
                                     '1':'HB1',\
                                     '3':'HB2',\
-                                    '5':'HB3'                                    
+                                    '5':'HB3'
                                    }
         self.quad = lambda x, a, b, c : a*x**2 + b*x + c
         self.lin  = lambda x, a, b : a*x + b
@@ -134,17 +134,17 @@ class PinchOffAnalysis:
         lost when the instance is destroyed
         '''
         import striptease
-        
+
         last_id = self.tags[-1].id
         newtag = striptease.hdf5files.Tag(last_id, mjd_start, mjd_end, name, start_comment, end_comment)
-        
+
         # append tag
         self.tags.append(newtag)
         self.verification_tags = self.get_subtags('PINCHOFF_VERIFICATION_1') + self.get_subtags('PINCHOFF_IDSET')
         print('TAGS UPDATED: ', newtag)
-        
-        
-        
+
+
+
     ##########################
     # Get times of a given tag
     ##########################
@@ -166,7 +166,7 @@ class PinchOffAnalysis:
         tstart  = curtag.mjd_start
         tend    = curtag.mjd_end
         return tstart, tend
-    
+
     #################################
     # Get HK in a given time interval
     #################################
@@ -178,9 +178,9 @@ class PinchOffAnalysis:
         time_obj, values = self.data.load_hk(group, subgroup, parameter)
         mjd = time_obj.mjd # Convert to Julian date
         mask = (mjd >= tstart) & (mjd <= tend)
-        
+
         return time_obj[mask].unix, values[mask]
-    
+
     ##################################
     # Get SCI in a given time interval
     ##################################
@@ -192,9 +192,9 @@ class PinchOffAnalysis:
         time_obj, values = self.data.load_sci(polarimeter, data_type, detector)
         mjd = time_obj.mjd # Convert to Julian date
         mask = (mjd >= tstart) & (mjd <= tend)
-        
+
         return time_obj[mask].unix, values[mask]
-    
+
     ##################################
     # Calculate r^2
     ##################################
@@ -204,7 +204,7 @@ class PinchOffAnalysis:
         ss_res = np.sum(residuals**2)
         ss_tot = np.sum((yvalues - np.mean(yvalues))**2)
         return (1. - (ss_res / ss_tot))
-    
+
     #########################################
     # Plot IV curves
     #########################################
@@ -216,18 +216,18 @@ class PinchOffAnalysis:
         import pickle
         from datetime import datetime
         '''
-        This function plots IV curves given a certain configuration stored into self.configuration. 
-        If self.configuration is empty the function first extracts the configuration for all tested 
+        This function plots IV curves given a certain configuration stored into self.configuration.
+        If self.configuration is empty the function first extracts the configuration for all tested
         polarimeters
-        
+
         It also fits the IV curves with quadratic and linear functions
-        
+
         Inputs
         None
-        
+
         Output
         None (plots are saved as pdf files)
-        
+
         '''
         if len(self.configuration) == 0:
             print('Generating instrument configuration')
@@ -238,9 +238,9 @@ class PinchOffAnalysis:
         main_tags = list(configuration.keys())
         if polarimeters == 'All':
             polarimeters = self.get_tested_polarimeters(tags = main_tags)
-        
+
         amps = np.reshape(self.amps, (2,3))
-        
+
         output = {}
 
         for pol in polarimeters:
@@ -252,35 +252,35 @@ class PinchOffAnalysis:
             rsquared = [[j for j in [1,2,3]] for i in [0,1]]
             rsquared2 = [[j for j in [1,2,3]] for i in [0,1]]
             highlight = [[[j for j in [1,2,3]] for i in [0,1]], [[j for j in [1,2,3]] for i in [0,1]]]
-            
+
             output[pol] = {}
-            
+
             for row in [0,1]:
                 for col in [0,1,2]:
                     # Get current values
                     currents = self.get_currents(pol, amps[row,col])
-                    
+
                     # Remove repeats
                     currents = list(dict.fromkeys(currents))
 
                     # Get measured Voltage and current values
                     dumv = []
                     dumi = []
-                    
+
                     # Add first point from configuration
                     amp_id = self.amp_tag_translation[amps[row,col]]
-                    
+
                     cur_hk = 'VG%s_HK' % (str(amp_id))
                     cur_tag = 'PINCHOFF_VERIFICATION_1'
                     if cur_tag in self.configuration.keys():
                         vg_value = self.configuration[cur_tag][pol][cur_hk]
                         vstart = vg_value
                         dumv.append(vg_value)
-            
+
                         cur_hk = 'ID%s_HK' % (str(amp_id))
                         id_value = self.configuration[cur_tag][pol][cur_hk]
                         dumi.append(id_value)
-                    
+
 #                    print(pol, amps[row,col], amp_id, vg_value,id_value)
 
                     for current in currents:
@@ -297,20 +297,20 @@ class PinchOffAnalysis:
                         group, subgroup = striptease.hdf5files.get_group_subgroup(cur_hk)
                         subgroup = '%s_%s' % (subgroup, pol)
                         t, id_values = self.get_hk(group, subgroup, cur_hk, tstart, tend)
-                        
+
                         dumv.append(np.mean(vg_values))
                         dumi.append(np.mean(id_values))
-                    
+
                     # Sort values according to Vgate
                     dumi = np.array(dumi)
                     dumv = np.array(dumv)
-                    
+
                     dumi = dumi[np.argsort(dumv)]
                     dumv = np.sort(dumv)
-                    
+
                     vgate[row][col] = dumv
                     idrain[row][col] = dumi
-                    
+
                     # Fit curve
                     try:
                         fitquad[row][col] = curve_fit(self.quad, dumv, dumi)
@@ -325,29 +325,29 @@ class PinchOffAnalysis:
                     except:
                         fitlin[row][col] = None
                         rsquared[row][col] = None
-                    
+
                     highlight[0][row][col] = np.where(dumv == vstart)[0]
                     highlight[1][row][col] = 'Stable acquisition before pinchoff'
-                    
+
                     output[pol][amps[row,col]] = {}
                     output[pol][amps[row,col]]['quadratic'] = (fitquad[row][col], rsquared2[row][col])
                     output[pol][amps[row,col]]['linear'] = (fitlin[row][col], rsquared[row][col])
-                                    
+
             self.plot_IV_single(pol, vgate, idrain, fitquad, fitlin, rsquared2, rsquared, highlight = highlight)
-        
+
         if filename == None:
             now = str(datetime.now())
             filename = self.output_folder + 'strip_pinchoff_analysis_' + now + '.pickle'
-        
+
         file_id = open(filename,'wb')
         pickle.dump(output, file_id)
         file_id.close()
-            
+
         return output
-                
-                
+
+
 #        return polarimeters
-    
+
     def plot_IV_single(self, polarimeter, V, I, fitquad, fitlin, rq, rlin, highlight = False):
         import matplotlib
         matplotlib.use('Agg')
@@ -355,7 +355,7 @@ class PinchOffAnalysis:
         import matplotlib.colors as mcolors
         '''
         This function makes a IV plot for a single polarimeter
-        
+
         Inputs
         polarimeter STRING  the id of the polarimeter
         V           FLOAT ARRAY an array of floats containing the voltage values
@@ -367,10 +367,10 @@ class PinchOffAnalysis:
         highlight   MIXED indicates if one or more points need be highlighted
                           with a different color. In this case highlight contains
                           two 2x3 lists: the first one is the list of indices of the points
-                          to be highlighted, the second one is a list of descriptions 
+                          to be highlighted, the second one is a list of descriptions
                           appearing in a legend
         '''
-        
+
         amps = np.reshape(self.amps, (2,3))
         fig, axes = pl.subplots(2,3,figsize=(20,20))
         plot_title = 'Polarimeter ' + polarimeter
@@ -381,18 +381,18 @@ class PinchOffAnalysis:
                 axes[row,col].plot(V[row][col], I[row][col])
                 axes[row,col].plot(V[row][col], I[row][col], 'o', markersize = 10, label = 'PINCHOFF TEST')
                 xarr = np.linspace(min(V[row][col]), max(V[row][col]), 100)
-                
+
                 # Plot fits
                 if fitquad[row][col] is not None:
                     equation = '$y = %3.4f\,x^2 + %3.4f\,x + %3.4f\,\,\, r^2 = %3.4f$' % \
                     (fitquad[row][col][0][0], fitquad[row][col][0][1], fitquad[row][col][0][2], rq[row][col])
                     axes[row,col].plot(xarr, self.quad(xarr, *fitquad[row][col][0]), label = equation)
-                    
+
                 if fitlin[row][col] is not None:
                     equation = '$y = %3.4f\,x + %3.4f\,\,\, r^2 = %3.4f$' % \
                     (fitlin[row][col][0][0], fitlin[row][col][0][1], rlin[row][col])
                     axes[row,col].plot(xarr, self.lin(xarr, *fitlin[row][col][0]), label = equation)
-                
+
                 # Labels
                 axes[row,col].set(xlabel = 'Gate voltage [mV]', ylabel ='Drain current [$\mu$A]')
 
@@ -406,19 +406,19 @@ class PinchOffAnalysis:
                             lab = labels
                         else:
                             lab = labels[j]
-                        
+
                         axes[row,col].plot(V[row][col][index], I[row][col][index], 'o', \
                                            markersize = 10, color = colors[20+j], label = lab)
-                    
+
                 title = 'Amplifier '+ amps[row, col]
                 axes[row,col].set_title(title)
                 axes[row,col].legend()
-        
+
         filename = '%sIVplot_%s.pdf' % (self.output_folder, polarimeter)
         pl.savefig(filename)
         pl.close()
-        
-        
+
+
     #########################################
     # Plot Vg and Id curves versus time #####
     #########################################
@@ -432,17 +432,17 @@ class PinchOffAnalysis:
         from datetime import datetime
         import matplotlib.colors as mcolors
         '''
-        This function plots Vg and Id versus time given a certain configuration stored into self.configuration. 
-        If self.configuration is empty the function first extracts the configuration for all tested 
+        This function plots Vg and Id versus time given a certain configuration stored into self.configuration.
+        If self.configuration is empty the function first extracts the configuration for all tested
         polarimeters
-        
+
         Inputs
         polarimeters LIST of STRING values  List of polarimeters to plot ('All' plots all polarimeters)
         image        STRING         the format of the output plot ('svg, 'png', 'pdf')
-        
+
         Output
         None (plots are saved as pdf files)
-        
+
         '''
         vg_col = {'black': '#000000', 'blue': '#0000FF',\
                   'blueviolet': '#8A2BE2', 'brown': '#A52A2A', 'burlywood': '#DEB887',\
@@ -463,7 +463,7 @@ class PinchOffAnalysis:
                   'honeydew': '#F0FFF0', 'hotpink': '#FF69B4', 'indianred': '#CD5C5C',\
                   'indigo': '#4B0082', 'ivory': '#FFFFF0', 'khaki': '#F0E68C',\
                   'lavender': '#E6E6FA', 'lavenderblush': '#FFF0F5','lawngreen': '#7CFC00'}
-        
+
         id_col = {'magenta': '#FF00FF', 'maroon': '#800000', \
                   'mediumblue': '#0000CD', 'mediumorchid': '#BA55D3', 'mediumpurple': '#9370DB',\
                   'mediumseagreen': '#3CB371', 'mediumslateblue': '#7B68EE', 'mediumspringgreen': '#00FA9A',\
@@ -483,11 +483,11 @@ class PinchOffAnalysis:
                   'steelblue': '#4682B4', 'tan': '#D2B48C', 'teal': '#008080',\
                   'thistle': '#D8BFD8', 'tomato': '#FF6347', 'turquoise': '#40E0D0',\
                   'violet': '#EE82EE', 'wheat': '#F5DEB3', 'yellowgreen': '#9ACD32'}
-        
+
         vg_colors = list(vg_col.values())
         id_colors = list(id_col.values())
         id_colors = list(reversed(id_colors))
-        
+
         if len(self.configuration) == 0:
             print('Generating instrument configuration')
             configuration  = self.get_configuration(self.get_tested_polarimeters())
@@ -498,9 +498,9 @@ class PinchOffAnalysis:
 
         if polarimeters == 'All':
             polarimeters = self.get_tested_polarimeters(tags = main_tags)
-        
+
         amps = np.reshape(self.amps, (2,3))
-        
+
         output = {}
 
         for pol in polarimeters:
@@ -510,12 +510,12 @@ class PinchOffAnalysis:
             idrain = [[j for j in [1,2,3]] for i in [0,1]]
             timev = [[j for j in [1,2,3]] for i in [0,1]]
             timei = [[j for j in [1,2,3]] for i in [0,1]]
-            
+
             for row in [0,1]:
                 for col in [0,1,2]:
                     # Get current values
                     currents = self.get_currents(pol, amps[row,col])
-                    
+
                     # Remove repeats
 
                     # Get measured Voltage, current and time values
@@ -523,40 +523,40 @@ class PinchOffAnalysis:
                     dumi = []
                     dumvt = []
                     dumit = []
-                    
+
                     # Add first point from configuration
                     amp_id = self.amp_tag_translation[amps[row,col]]
-                    
+
                     cur_vghk = 'VG%s_HK' % (str(amp_id))
-                    cur_idhk = 'ID%s_HK' % (str(amp_id))                    
+                    cur_idhk = 'ID%s_HK' % (str(amp_id))
                     cur_tag  = 'PINCHOFF_VERIFICATION_1'
                     tags = []
                     col_id = 0
                     vg_col = []
                     id_col = []
                     if cur_tag in self.configuration.keys():
-                        
+
                         tags.append('Verif. point')
                         vg_col.append(vg_colors[col_id])
                         id_col.append(id_colors[col_id])
                         col_id = col_id + 1
-                        
+
                         tstart, tend = self.get_times(pol, cur_tag)
-                        
+
                         # VG data
                         group, subgroup = striptease.hdf5files.get_group_subgroup(cur_vghk)
                         subgroup = '%s_%s' % (subgroup, pol)
                         t, values = self.get_hk(group, subgroup, cur_vghk, tstart, tend)
                         dumv.append(values[-10:])
                         dumvt.append(t[-10:])
-                        
+
                         #ID data
                         group, subgroup = striptease.hdf5files.get_group_subgroup(cur_idhk)
                         subgroup = '%s_%s' % (subgroup, pol)
                         t, values = self.get_hk(group, subgroup, cur_idhk, tstart, tend)
                         dumi.append(values[-10:])
                         dumit.append(t[-10:])
-                    
+
                     for current in currents:
                         curtag = 'PINCHOFF_IDSET_%s_%s_%smuA' % (pol, amps[row,col], str(current))
                         vg_col.append(vg_colors[col_id])
@@ -571,38 +571,38 @@ class PinchOffAnalysis:
                         t, values = self.get_hk(group, subgroup, cur_vghk, tstart, tend)
                         dumv.append(values)
                         dumvt.append(t)
-                        
+
                         #ID data
                         group, subgroup = striptease.hdf5files.get_group_subgroup(cur_idhk)
                         subgroup = '%s_%s' % (subgroup, pol)
                         t, values = self.get_hk(group, subgroup, cur_idhk, tstart, tend)
                         dumi.append(values)
                         dumit.append(t)
-                    
+
                     # Sort values according to Vgate
 #                    dumi = np.array(dumi)
 #                    dumv = np.array(dumv)
-                    
+
 #                    dumi = dumi[np.argsort(dumv)]
 #                    dumv = np.sort(dumv)
-                    
+
                     vgate[row][col] = dumv
                     idrain[row][col] = dumi
                     timev[row][col] = dumvt
                     timei[row][col] = dumit
-                                                        
+
             self.bias_plot_single(pol, (timev, vgate), (timei, idrain), tags, vg_col, id_col, image = image)
-        
+
 #        if filename == None:
 #            now = str(datetime.now())
 #            filename = self.output_folder + 'strip_pinchoff_analysis_' + now + '.pickle'
-        
+
 #        file_id = open(filename,'wb')
 #        pickle.dump(output, file_id)
 #        file_id.close()
-            
-#        return vgate, idrain, timev, timei    
-    
+
+#        return vgate, idrain, timev, timei
+
     def bias_plot_single(self, polarimeter, vgate, idrain, tags, vg_col, id_col, image = 'png'):
         import matplotlib
         matplotlib.use('Agg')
@@ -610,7 +610,7 @@ class PinchOffAnalysis:
         import matplotlib.colors as mcolors
         '''
         This function plots a given bias parameter versus time for a single polarimeter
-        
+
         Inputs
         polarimeter STRING  the id of the polarimeter
         vgate       TUPLE   vgate[0] - FLOAT ARRAY an array of floats containing the time values
@@ -620,9 +620,9 @@ class PinchOffAnalysis:
         tags        LIST    list of strings itentifying the various steps
         image       STRING  the format of the output plot ('svg', 'pdf', 'png')
         '''
-        
+
         colors = list(mcolors.CSS4_COLORS.values())
-        
+
         amps = np.reshape(self.amps, (2,3))
         fig, axes = pl.subplots(2,3,figsize=(35,30))
         plot_title = 'Polarimeter ' + polarimeter
@@ -643,7 +643,7 @@ class PinchOffAnalysis:
                     dumi = list(np.arange(len(xi)) + starti)
                     starti = starti + len(xi)
                     newtime_i[row][col].append(dumi)
-                    
+
         for row in [0,1]:
             for col in [0,1,2]:
                 # Plot data
@@ -651,7 +651,7 @@ class PinchOffAnalysis:
                 vg = vgate[1]
                 #ti = idrain[0]
                 idr = idrain[1]
-                
+
                 ax2 = axes[row,col].twinx()
                 for x, y, x1, y1, t, vgc, idc in zip(newtime_v[row][col], vg[row][col], newtime_i[row][col], idr[row][col], tags, vg_col, id_col):
                     axes[row,col].plot(x,y, color = vgc, label = 'Vg %s' % t)
@@ -666,12 +666,12 @@ class PinchOffAnalysis:
 
                 # Labels
 #                axes[row,col].set(xlabel = 'time [s]', ylabel = label)
-        
+
         filename = '%s_vg_id_timeplot_%s.%s' % (self.output_folder, polarimeter, image)
         pl.savefig(filename)
         pl.close()
-        
-        
+
+
     #########################################
     # Plot Sci curves versus time       #####
     #########################################
@@ -685,21 +685,21 @@ class PinchOffAnalysis:
         from datetime import datetime
         import matplotlib.colors as mcolors
         '''
-        This function plots scientific data versus time given a certain configuration stored into self.configuration. 
-        If self.configuration is empty the function first extracts the configuration for all tested 
+        This function plots scientific data versus time given a certain configuration stored into self.configuration.
+        If self.configuration is empty the function first extracts the configuration for all tested
         polarimeters
-        
+
         Inputs
         polarimeters LIST of STRING values  List of polarimeters to plot ('All' plots all polarimeters)
         image        STRING         the format of the output plot ('svg, 'png', 'pdf')
-        
+
         Output
         None (plots are saved as files)
-        
+
         Notes
-        The procedure produces for each polarimeter and for each tested amplifers one plot with 
-        eight subplots four for PWR data and four for DEM data. 
-        
+        The procedure produces for each polarimeter and for each tested amplifers one plot with
+        eight subplots four for PWR data and four for DEM data.
+
         '''
 #         vg_col = {'black': '#000000', 'blue': '#0000FF',\
 #                   'blueviolet': '#8A2BE2', 'brown': '#A52A2A', 'burlywood': '#DEB887',\
@@ -720,7 +720,7 @@ class PinchOffAnalysis:
 #                   'honeydew': '#F0FFF0', 'hotpink': '#FF69B4', 'indianred': '#CD5C5C',\
 #                   'indigo': '#4B0082', 'ivory': '#FFFFF0', 'khaki': '#F0E68C',\
 #                   'lavender': '#E6E6FA', 'lavenderblush': '#FFF0F5','lawngreen': '#7CFC00'}
-        
+
 #         id_col = {'magenta': '#FF00FF', 'maroon': '#800000', \
 #                   'mediumblue': '#0000CD', 'mediumorchid': '#BA55D3', 'mediumpurple': '#9370DB',\
 #                   'mediumseagreen': '#3CB371', 'mediumslateblue': '#7B68EE', 'mediumspringgreen': '#00FA9A',\
@@ -740,14 +740,14 @@ class PinchOffAnalysis:
 #                   'steelblue': '#4682B4', 'tan': '#D2B48C', 'teal': '#008080',\
 #                   'thistle': '#D8BFD8', 'tomato': '#FF6347', 'turquoise': '#40E0D0',\
 #                   'violet': '#EE82EE', 'wheat': '#F5DEB3', 'yellowgreen': '#9ACD32'}
-        
+
 #         vg_colors = list(vg_col.values())
 #         id_colors = list(id_col.values())
 #         id_colors = list(reversed(id_colors))
 
         diodes = ['Q1', 'Q2', 'U1', 'U2']
         data_types = ['PWR', 'DEM']
-    
+
         if len(self.configuration) == 0:
             print('Generating instrument configuration')
             configuration  = self.get_configuration(self.get_tested_polarimeters())
@@ -755,13 +755,13 @@ class PinchOffAnalysis:
             configuration = self.configuration
 
         main_tags = list(configuration.keys())
-        
+
 
         if polarimeters == 'All':
             polarimeters = self.get_tested_polarimeters(tags = main_tags)
-        
+
         amps = np.reshape(self.amps, (2,3))
-        
+
         output = {}
 
 
@@ -770,13 +770,13 @@ class PinchOffAnalysis:
             # Initialize matrices
             data = {}
             time = {}
-            
+
             for diode in diodes:
                 for data_type in data_types:
                     key = '%s_%s' % (diode, data_type)
                     data[key] = [[j for j in [1,2,3]] for i in [0,1]]
                     time[key] = [[j for j in [1,2,3]] for i in [0,1]]
-            
+
             # Now we cycle legs ([0,1]) and amps ([0,1,2]) for each element
             # we get all the available currents, the starting configuration point
             # and we store the scientific data in the data, time matrices
@@ -784,7 +784,7 @@ class PinchOffAnalysis:
                 for col in [0,1,2]:
                     # Get current values
                     currents = self.get_currents(pol, amps[row,col])
-         
+
                     # Get measured Voltage, current and time values
                     dumv = {}
                     dumt = {}
@@ -793,24 +793,24 @@ class PinchOffAnalysis:
                             key = '%s_%s' % (diode, data_type)
                             dumv[key] = []
                             dumt[key] = []
-                    
+
                     # Add first point from configuration
                     amp_id = self.amp_tag_translation[amps[row,col]]
-                                       
+
                     cur_tag  = 'PINCHOFF_VERIFICATION_1'
                     tags = []
                     # col_id = 0
                     # vg_col = []
                     # id_col = []
                     if cur_tag in self.configuration.keys():
-                        
+
                         tags.append('Verif. point')
                         # vg_col.append(vg_colors[col_id])
                         # id_col.append(id_colors[col_id])
                         # col_id = col_id + 1
-                        
+
                         tstart, tend = self.get_times(pol, cur_tag)
-                        
+
                         for diode in diodes:
                             for data_type in data_types:
                                 key = '%s_%s' % (diode, data_type)
@@ -819,7 +819,7 @@ class PinchOffAnalysis:
                                 t, values = self.get_sci(pol, data_type, diode, tstart, tend)
                                 dumv[key].append(values[-100:])
                                 dumt[key].append(t[-100:])
-                    
+
                     for current in currents:
                         curtag = 'PINCHOFF_IDSET_%s_%s_%smuA' % (pol, amps[row,col], str(current))
                         # vg_col.append(vg_colors[col_id])
@@ -833,36 +833,36 @@ class PinchOffAnalysis:
                                 key = '%s_%s' % (diode, data_type)
                                 t, values = self.get_sci(pol, data_type, diode, tstart, tend)
                                 dumv[key].append(values)
-                                dumt[key].append(t)              
-                    
+                                dumt[key].append(t)
+
 #                     # Sort values according to Vgate
 # #                    dumi = np.array(dumi)
 # #                    dumv = np.array(dumv)
-                    
+
 # #                    dumi = dumi[np.argsort(dumv)]
 # #                    dumv = np.sort(dumv)
                     for diode in diodes:
                         for data_type in data_types:
-                            key = '%s_%s' % (diode, data_type)                    
+                            key = '%s_%s' % (diode, data_type)
                             data[key][row][col] = dumv[key]
                             time[key][row][col] = dumt[key]
-                            
+
                     # Now data and time contain, for each key, the scientifica data for the various
                     # current steps of the six amplifiers
-                                                        
+
             self.sci_plot_single(pol, time, data, tags, image = image)
-        
+
 # #        if filename == None:
 # #            now = str(datetime.now())
 # #            filename = self.output_folder + 'strip_pinchoff_analysis_' + now + '.pickle'
-        
+
 # #        file_id = open(filename,'wb')
 # #        pickle.dump(output, file_id)
 # #        file_id.close()
-            
+
         # return(tags, time, data)
 
-    
+
     def sci_plot_single(self, polarimeter, time, data, tags, image = 'png'):
         import matplotlib
         matplotlib.use('Agg')
@@ -870,7 +870,7 @@ class PinchOffAnalysis:
         import matplotlib.colors as mcolors
         '''
         This function plots a given bias parameter versus time for a single polarimeter
-        
+
         Inputs
         polarimeter STRING  the id of the polarimeter
         time       DICT with FLOAT arrays containing the time values
@@ -878,7 +878,7 @@ class PinchOffAnalysis:
         tags        LIST    list of strings itentifying the various steps
         image       STRING  the format of the output plot ('svg', 'pdf', 'png')
         '''
-                
+
         amps = np.reshape(self.amps, (2,3))
         keys = data.keys()
         keys1 = np.reshape(list(keys),(4,2))
@@ -894,7 +894,7 @@ class PinchOffAnalysis:
                         dumt = list(np.arange(len(xv)) + start)
                         start = start + len(xv)
                         newtime[key][row][col].append(dumt)
-            
+
         for row in [0,1]:
             for col in [0,1,2]:
                 fig, axes = pl.subplots(4,2,figsize=(35,30))
@@ -922,8 +922,8 @@ class PinchOffAnalysis:
                 pl.savefig(filename)
                 pl.close()
 
-        
-        
+
+
     #########################################
     # Get the configuration of the instrument
     #########################################
@@ -933,15 +933,15 @@ class PinchOffAnalysis:
         '''
         This function retrieves the configuration of a given set of polarimeters at the various
         verification points indicated by the tags
-        The configuration is given by: start_time, end_time and the average value of 
+        The configuration is given by: start_time, end_time and the average value of
         ID_SET, VD_set, Vd_hk, Vg_hk, Id_hk in each time window
-        
+
         Inputs
         polarimeters - Array of STRING - polarimeters to be checked
-        
+
         Output
         out - DICT - Dictionary containing 'ID_SET', 'VD_SET', 'VD_HK', 'VG_HK', 'ID_HK'
-        
+
         '''
         hklist = ['ID_SET', 'VD_SET', 'VD_HK', 'VG_HK', 'ID_HK']
         out = {}
@@ -962,10 +962,10 @@ class PinchOffAnalysis:
                         out[curtag][pol][cur_hk] = np.mean(values)
 
         self.configuration = out
-            
+
         return out
-    
-    
+
+
     #####################################################
     # Save configuration into pickle and text file
     #####################################################
@@ -994,9 +994,9 @@ class PinchOffAnalysis:
                                'VG_HA3','VG_HA2','VG_HA1',\
                                'VG_HB3','VG_HB2','VG_HB1',\
                                'VG4A_HK','VG5A_HK']
-    
+
                 writer.writerow(header_top)
-        
+
                 for pol in self.get_tested_polarimeters():
                     writer.writerow([pol])
                     # Save verification 1
@@ -1004,7 +1004,7 @@ class PinchOffAnalysis:
                         data = self.configuration['PINCHOFF_VERIFICATION_1'][pol]
                     except:
                         print('Problem in configuration file. Either not present or wrong tag')
-                    
+
                     head = ['PINCHOFF_VERIFICATION_1']
                     currents = self.get_currents(pol, 'HA1')
                     id_list = [data['ID%s_HK' % self.amp_tag_translation[h]] for h in ['HA3','HA2','HA1','HB3','HB2','HB1']]
@@ -1026,11 +1026,11 @@ class PinchOffAnalysis:
 #                            idvals.append(self.configuration[tag][pol]['ID%s_HK' % self.amp_tag_translation[amp]])
 #                            vgvals.append(self.configuration[tag][pol]['VG%s_HK' % self.amp_tag_translation[amp]])
                         writer.writerow([step] + idvals + vgvals)
-                    
+
                     writer.writerow([''])
-                    
-        
-    
+
+
+
     #####################################################
     # Save configuration into pickle and text file
     #####################################################
@@ -1042,11 +1042,11 @@ class PinchOffAnalysis:
         file_id = open(self.output_folder + filename + '.pickle',"wb")
         pickle.dump(d, file_id)
         file_id.close()
-        
+
         file_id = open(self.output_folder + filename + ".txt","a")
         self.pretty(d, file_id)
         file_id.close()
-    
+
     # Get list of tested polarimeters
     #################################
     def get_tested_polarimeters(self, search_tag = 'PINCHOFF_IDSET', tags = None):
@@ -1057,7 +1057,7 @@ class PinchOffAnalysis:
         filtered = self.get_subtags(search_tag)
         pols = [o[15:17] for o in filtered] # Extract the polarimeter string
         return np.array(list(dict.fromkeys(pols))) # Remove duplicates
-        
+
     ###################################
     # Get list of tags matching pattern
     ###################################
@@ -1067,11 +1067,11 @@ class PinchOffAnalysis:
         '''
         if tags == None:
             tags = self.tags
-            
+
         names = [t.name for t in tags]
         substr = [search_tag]
         return [str for str in names if any(sub in str for sub in substr)] # Filter tags according to the search_tag
-    
+
     ##############################################
     # Get list of currents for a given pol and amp
     ##############################################
@@ -1084,7 +1084,7 @@ class PinchOffAnalysis:
         if pol not in pols:
             print('Polarimeter %s does not exist in data' % pol)
             return None
-        
+
         if amp not in self.amps:
             print('Amplifier %s does not exist' % amp)
             return None

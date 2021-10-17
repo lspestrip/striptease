@@ -34,7 +34,6 @@ class F1Procedure(TurnOnOffProcedure):
 
 
 if __name__ == "__main__":
-    import sys
     from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
     parser = ArgumentParser(
@@ -64,8 +63,8 @@ Usage example:
         type=float,
         dest="waittime_s",
         default=DEFAULT_WAITTIME_S,
-        help=f"Time to wait after having altered the bias level for each amplifier "
-        "(default: {DEFAULT_WAITTIME_S}, set to 0 to disable)",
+        help="Time to wait after having altered the bias level for each amplifier "
+        f"(default: {DEFAULT_WAITTIME_S}, set to 0 to disable)",
     )
 
     args = parser.parse_args()

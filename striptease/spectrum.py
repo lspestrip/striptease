@@ -111,11 +111,6 @@ class Spectrum:
         and ported to Python by A. Mennella."""
 
         import numpy as np
-        import cmath as cm
-        import math as m
-        import string as strg
-        import logging as log
-        import scipy as sc
 
         arr = np.array(array2)
         nel = len(arr)
@@ -124,7 +119,7 @@ class Spectrum:
             # The output is in V/rtHz
             if self.return_phase[0]:
                 raise ValueError(
-                    f"keyword RETURN_PHASE = True is incompatible with WELCH = True. RETURN_PHASE is set to FALSE"
+                    "keyword RETURN_PHASE = True is incompatible with WELCH = True. RETURN_PHASE is set to FALSE"
                 )
                 self.return_phase[0] = False
 
@@ -134,7 +129,7 @@ class Spectrum:
 
         else:
             if self.fast[0]:
-                nel = long(2.0 ** (np.floor(np.log(nel) / np.log(2.0))))
+                nel = int(2.0 ** (np.floor(np.log(nel) / np.log(2.0))))
                 arr = np.array(array2[0:nel])
 
             # 1.2 is a normalisation factor to make the fft level similar
@@ -154,7 +149,8 @@ class Spectrum:
             z[:, 0] = dummy[0 : int(nel / 2 + 1)]
 
             if self.remove_drift[0]:
-                arr = self.lresid(arr)
+                raise Exception("lresid was not properly imported")
+                # arr = self.lresid(arr)
 
             ft = np.fft.fft(arr)
 
@@ -164,7 +160,7 @@ class Spectrum:
             z[:, 1] = dummy[0 : int(nel / 2 + 1)]  # z[*,1] is now in V/rtHz
 
             if self.return_phase[0]:
-                phases = map(phase, ft)
+                phases = map(phases, ft)
             else:
                 phases = np.zeros(len(ft))
 
@@ -194,14 +190,11 @@ class Spectrum:
     def nps(self, array2, sampfreq):
 
         import numpy as np
-        import pdb
         from scipy.signal import welch
 
-        array1 = np.array(array2)
         if self.remove_drift[0] == 1:
-            array1 = lresid(array1)
-
-        nnn = len(array1)
+            raise Exception("lresid was not properly imported")
+            # array1 = lresid(array1)
 
         nlow = np.double((sampfreq / self.lowfreq[0]))
 
@@ -215,13 +208,7 @@ class Spectrum:
         if not (nlow % 2 == 0):
             nlow = nlow + 1
 
-        lowestfreq = sampfreq / nlow
-        # log.debug('using lowest freq of %f' % lowestfreq)
         nlow = int(nlow)
-        retsamp = 1.0 / sampfreq
-        tlow = 1.0 / lowestfreq
-        i = 0
-        count = 1
         j = np.arange(nlow)
         welch_window = (
             1 - ((j - (nlow / 2.0)) / (nlow / 2.0)) ** 2
@@ -282,11 +269,6 @@ class Spectrum:
         z[:, 1] = self.cshift(spec, -n21)
         z[:, 0] = self.cshift(f, -n21)
 
-        upper_x = 10.0 ** (int(np.log10(sampfreq / 2.0)))
-        duration = n / sampfreq  # duration of data in seconds
-        sfactor = 10.0  # smoothing
-        lower_x = 10.0 ** (int(np.log10(1.0 / (duration))))
-
         norm = n * (1.0 / (sampfreq / 2.0))  # this is the power normalization
 
         z[:, 1] = z[:, 1] * norm
@@ -308,14 +290,14 @@ class Spectrum:
 
     ######################################
 
-    def cshift(self, l, offset):
+    def cshift(self, arr, offset):
         import numpy as np
 
-        offset %= len(l)
-        return np.concatenate((l[-offset:], l[:-offset]))
+        offset %= len(arr)
+        return np.concatenate((arr[-offset:], arr[:-offset]))
 
     #######################################
-    ## Wrapper functions
+    # Wrapper functions
     #######################################
 
     def spectrum(self, toi, sampfreq):
@@ -374,7 +356,7 @@ class Spectrum:
 
         if self.welch[0] and self.return_phase[0]:
             raise ValueError(
-                f"keyword /RETURN_PHASE is incompatible with /WELCH. RETURN_PHASE is set to zero"
+                "keyword /RETURN_PHASE is incompatible with /WELCH. RETURN_PHASE is set to zero"
             )
             self.return_phase[0] = 0
 
@@ -401,7 +383,7 @@ class Spectrum:
 
         if self.welch[0] and self.return_phase[0]:
             raise ValueError(
-                f"keyword /RETURN_PHASE is incompatible with /WELCH. RETURN_PHASE is set to zero"
+                "keyword /RETURN_PHASE is incompatible with /WELCH. RETURN_PHASE is set to zero"
             )
             self.return_phase[0] = 0
 
@@ -414,7 +396,7 @@ class Spectrum:
 
         if self.welch[0] and self.return_phase[0]:
             raise ValueError(
-                f"keyword /RETURN_PHASE is incompatible with /WELCH. RETURN_PHASE is set to zero"
+                "keyword /RETURN_PHASE is incompatible with /WELCH. RETURN_PHASE is set to zero"
             )
             self.return_phase[0] = 0
 
@@ -427,7 +409,7 @@ class Spectrum:
 
         if self.welch[0] and self.return_phase[0]:
             raise ValueError(
-                f"keyword /RETURN_PHASE is incompatible with /WELCH. RETURN_PHASE is set to zero"
+                "keyword /RETURN_PHASE is incompatible with /WELCH. RETURN_PHASE is set to zero"
             )
             self.return_phase[0] = 0
 
@@ -440,7 +422,7 @@ class Spectrum:
 
         if self.welch[0] and self.return_phase[0]:
             raise ValueError(
-                f"keyword /RETURN_PHASE is incompatible with /WELCH. RETURN_PHASE is set to zero"
+                "keyword /RETURN_PHASE is incompatible with /WELCH. RETURN_PHASE is set to zero"
             )
             self.return_phase[0] = 0
 
@@ -713,7 +695,6 @@ class Spectrum:
 
             freqs = spectrum["frequencies"]
             power = spectrum["amplitudes"]
-            nel = len(spectrum["frequencies"])
 
             # choose the first nfirst frequency and power points
             if spectrum["welch"]:
@@ -747,7 +728,7 @@ class Spectrum:
 
             """
             This function calculates noise properties using a three parameters fit of the input
-            spectrum against a function \sigma(1+ (fk/f)^(-slope)). This function is used only
+            spectrum against a function σ(1+ (fk/f)^(-slope)). This function is used only
             if windowing was used in the spectrum computation. In case welch = 0 the linear_fit
             is called instead
 
@@ -785,14 +766,11 @@ class Spectrum:
             +-------------------------+------------------+-----------------------------------+
             """
 
-            import numpy as np
             from scipy.optimize import curve_fit
 
             # Check if windowing was used. Otherwise fall back on linear_fit
             if not spectrum["welch"]:
                 return self.linear_fit(spectrum)
-
-            one_over_f = lambda x, sig, fk, sl: sig * (1.0 + (fk / x) ** (-sl))
 
             wn_guess = self.spect.white_noise_level(spectrum)
             guess = [wn_guess, self.fkguess, self.slopeguess]
@@ -800,6 +778,11 @@ class Spectrum:
             freqs = spectrum["frequencies"]
             power = spectrum["amplitudes"]
 
-            resfit = curve_fit(one_over_f, freqs, power, p0=guess)
+            resfit = curve_fit(
+                lambda x, sig, fk, sl: sig * (1.0 + (fk / x) ** (-sl)),
+                freqs,
+                power,
+                p0=guess,
+            )
 
             return resfit[0]
