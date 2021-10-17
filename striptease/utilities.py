@@ -148,3 +148,23 @@ def get_lna_list(pol_name=None, module_name=None):
             lnaList = ("HA2", "HB2", "HA1", "HB1")
 
     return lnaList
+
+
+def polarimeter_iterator(
+    boards=STRIP_BOARD_NAMES, include_q_band=True, include_w_band=True
+):
+    start_idx = 0 if include_q_band else 7
+    stop_idx = 8 if include_w_band else 7
+
+    for cur_board in boards:
+        for pol_idx in range(start_idx, stop_idx):
+
+            if cur_board == "I" and pol_idx == 7:
+                continue
+
+            if pol_idx != 7:
+                pol_name = f"{cur_board}{pol_idx}"
+            else:
+                pol_name = BOARD_TO_W_BAND_POL[cur_board]
+
+            yield cur_board, pol_idx, pol_name
