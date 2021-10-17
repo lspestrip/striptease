@@ -217,7 +217,7 @@ noisegen.set_default()
 frequency          = 30    # GHz
 bandwidth          = 6     # GHz
 sigma              = 1e-3  # K
-fknee              = 1e-2  # This parameter must be set but it is not used with white noise only 
+fknee              = 1e-2  # This parameter must be set but it is not used with white noise only
 slope              = -1.   # This parameter must be set but it is not used with white noise only
 sampling_frequency = 1.    # Hz
 time_length        = 10**6 # seconds
@@ -271,7 +271,7 @@ frequency          = 30    # GHz
 bandwidth          = 6     # GHz
 sigma              = 1e-3  # K
 fknee              = 1e-2  # Hz
-slope              = -1.   # 
+slope              = -1.   #
 sampling_frequency = 1.    # Hz
 time_length        = 10**6 # seconds
 

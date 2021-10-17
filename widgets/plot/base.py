@@ -62,7 +62,9 @@ class BaseMplCanvas(MplCanvas):
 
         for cur_data in self.data:
             d = self.data[cur_data]
-            (d["line"],) = self.axes.plot(d["mjd"], d["val"], label=cur_data, color=d["color"])
+            (d["line"],) = self.axes.plot(
+                d["mjd"], d["val"], label=cur_data, color=d["color"]
+            )
 
         self.axes.legend(loc="upper right")
         self.axes.set_xlim([0, self.wsec])

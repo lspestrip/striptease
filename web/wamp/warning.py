@@ -115,7 +115,9 @@ class WsWarning(object):
         if self.ws is not None and self.__current.get("config") is not None:
             for c in self.__current["config"]:
                 pkt = {"pol": c["pol"], "remove": c["warn"]}
-                self.loop.call_soon_threadsafe(getattr(asyncio, "async"), self.ws.send(pkt))
+                self.loop.call_soon_threadsafe(
+                    getattr(asyncio, "async"), self.ws.send(pkt)
+                )
         self.__current = {}
 
     def save_config(self, name=None, force_new=False):

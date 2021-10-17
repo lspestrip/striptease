@@ -1169,7 +1169,6 @@ __all__ = [
     "UnitTestDC",
     "UnitTestTimestream",
     "load_unit_test_data",
-
     # biases.py
     "BiasConfiguration",
     "ChannelCalibration",
@@ -1177,12 +1176,10 @@ __all__ = [
     "BoardCalibration",
     "RefBiasConfiguration",
     "ReferenceBiases",
-
     # diagnostics.py
     "TagEvent",
     "script_to_tagevents",
     "plot_tagevents",
-
     # hdf5files.py
     "Tag",
     "HkDescriptionList",

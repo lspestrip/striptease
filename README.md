@@ -17,7 +17,7 @@ You have two choices to install this program:
 2. Install it with the aim to develop and improve it; good if you know
    some Python and do not want to prevent yourself from patching the
    code.
-   
+
 If you want to follow the first route, use the following commands (possibly after having [created a virtual environment](https://docs.python.org/3/library/venv.html)):
 
 ```bash
@@ -113,13 +113,13 @@ The specification for `POLARIMETER` can be one of the following:
 
 - A module name, like `G` or `R`: in this case, all the polarimeters
   belonging to that module will be turned on in sequence.
-  
+
 - A horn name, like `G0` or `Y3`: in this case, the polarimeter that
   should be connected to the horn will be turned on. (The nominal
   correspondence between horns and polarimeters is provided in file
   `data/default_warm_biases.xlsx`.)
-  
+
 - A string like `G0:STRIP33`: in this case, the default association
   between horns and polarimeters can be overridden. This can be useful
   when running debugging tests on the hardware.
-  
+

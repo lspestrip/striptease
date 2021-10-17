@@ -209,7 +209,7 @@ samp_freq = fs # Hz (see above in noise generation part)
 # Calculate amplitude spectrum and check white noise level
 spec_inst.spectrum_type[0] = 'PS' # Calculate power spectrum
 spec_inst.welch[0] = False        # No windowing
-#spec_inst.lowfreq[0] = 1e-3  
+#spec_inst.lowfreq[0] = 1e-3
 spec = spec_inst.spectrum(noise,samp_freq)
 
 pl.loglog(spec['frequencies'],spec['amplitudes'])

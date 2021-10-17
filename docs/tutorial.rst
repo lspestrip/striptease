@@ -50,7 +50,7 @@ manager::
        # Use "conn" freely here, as the login has already been done
        pass
 
-       
+
 Sending commands to the instrument
 ----------------------------------
 
@@ -131,7 +131,7 @@ To ease the use of tags, Striptease implements the
 
   with StripTag(conn, name="MY_TAG",
       start_comment="Start", stop_comment="End"):
-      
+
       # Do whatever you want, send your commands, etc.
       pass
 
@@ -141,14 +141,14 @@ scripts. You can query tags using the method
 :meth:`striptease.StripConnection.tag_query`::
 
   from astropy.time import Time
-  
+
   tags = conn.tag_query("MY_TAG",
       start_mjd=Time("2019-12-20").mjd,
       end_mjd=Time("2019-12-30").mjd)
   for cur_tag in tags:
       # "cur_tag" is a dictionary
       print(cur_tag)
-  
+
 
 Running complex automatic scripts
 ---------------------------------

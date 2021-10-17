@@ -28,7 +28,7 @@ each polarimeter and allows to query the biases for one polarimeter at time::
     :members:
     :undoc-members:
     :show-inheritance:
-       
+
 Configuration
 -------------
 

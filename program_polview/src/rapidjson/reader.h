@@ -607,7 +607,7 @@ public:
         parseResult_.Clear();
         state_ = IterativeParsingStartState;
     }
-    
+
     //! Parse one token from JSON text
     /*! \tparam InputStream Type of input stream, implementing Stream concept
         \tparam Handler Type of handler, implementing Handler concept.
@@ -619,11 +619,11 @@ public:
     bool IterativeParseNext(InputStream& is, Handler& handler) {
         while (RAPIDJSON_LIKELY(is.Peek() != '\0')) {
             SkipWhitespaceAndComments<parseFlags>(is);
-            
+
             Token t = Tokenize(is.Peek());
             IterativeParsingState n = Predict(state_, t);
             IterativeParsingState d = Transit<parseFlags>(state_, t, n, is, handler);
-            
+
             // If we've finished or hit an error...
             if (RAPIDJSON_UNLIKELY(IsIterativeParsingCompleteState(d))) {
                 // Report errors.
@@ -631,11 +631,11 @@ public:
                     HandleError(state_, is);
                     return false;
                 }
-            
+
                 // Transition to the finish state.
                 RAPIDJSON_ASSERT(d == IterativeParsingFinishState);
                 state_ = d;
-                
+
                 // If StopWhenDone is not set...
                 if (!(parseFlags & kParseStopWhenDoneFlag)) {
                     // ... and extra non-whitespace data is found...
@@ -646,11 +646,11 @@ public:
                         return false;
                     }
                 }
-                
+
                 // Success! We are done!
                 return true;
             }
-            
+
             // Transition to the new state.
             state_ = d;
 
@@ -658,7 +658,7 @@ public:
             if (!IsIterativeParsingDelimiterState(n))
                 return true;
         }
-        
+
         // We reached the end of file.
         stack_.Clear();
 
@@ -666,10 +666,10 @@ public:
             HandleError(state_, is);
             return false;
         }
-        
+
         return true;
     }
-    
+
     //! Check if token-by-token parsing JSON text is complete
     /*! \return Whether the JSON has been fully decoded.
      */
@@ -1524,7 +1524,7 @@ private:
                     }
                 }
             }
-            
+
             if (RAPIDJSON_UNLIKELY(!useNanOrInf)) {
                 RAPIDJSON_PARSE_ERROR(kParseErrorValueInvalid, s.Tell());
             }
@@ -1756,12 +1756,12 @@ private:
 
         // Single value state
         IterativeParsingValueState,
-        
+
         // Delimiter states (at bottom)
         IterativeParsingElementDelimiterState,
         IterativeParsingMemberDelimiterState,
         IterativeParsingKeyValueDelimiterState,
-        
+
         cIterativeParsingStateCount
     };
 
@@ -2154,43 +2154,43 @@ private:
     RAPIDJSON_FORCEINLINE bool IsIterativeParsingDelimiterState(IterativeParsingState s) {
         return s >= IterativeParsingElementDelimiterState;
     }
-    
+
     RAPIDJSON_FORCEINLINE bool IsIterativeParsingCompleteState(IterativeParsingState s) {
         return s <= IterativeParsingErrorState;
     }
-    
+
     template <unsigned parseFlags, typename InputStream, typename Handler>
     ParseResult IterativeParse(InputStream& is, Handler& handler) {
         parseResult_.Clear();
         ClearStackOnExit scope(*this);
         IterativeParsingState state = IterativeParsingStartState;
-        
+
         SkipWhitespaceAndComments<parseFlags>(is);
         RAPIDJSON_PARSE_ERROR_EARLY_RETURN(parseResult_);
         while (is.Peek() != '\0') {
             Token t = Tokenize(is.Peek());
             IterativeParsingState n = Predict(state, t);
             IterativeParsingState d = Transit<parseFlags>(state, t, n, is, handler);
-            
+
             if (d == IterativeParsingErrorState) {
                 HandleError(state, is);
                 break;
             }
-            
+
             state = d;
-            
+
             // Do not further consume streams if a root JSON has been parsed.
             if ((parseFlags & kParseStopWhenDoneFlag) && state == IterativeParsingFinishState)
                 break;
-            
+
             SkipWhitespaceAndComments<parseFlags>(is);
             RAPIDJSON_PARSE_ERROR_EARLY_RETURN(parseResult_);
         }
-        
+
         // Handle the end of file.
         if (state != IterativeParsingFinishState)
             HandleError(state, is);
-        
+
         return parseResult_;
     }
 

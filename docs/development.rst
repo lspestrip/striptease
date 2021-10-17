@@ -29,7 +29,7 @@ Here is a screenshot of Qt Designer:
 .. figure:: _static/qtdesigner.png
             :align: center
             :alt: Qt Designer 5.9 screenshot
-               
+
             QT Designer 5.9
 
 
@@ -78,7 +78,7 @@ silently dropped once we load the form in our Python script.
 
 Once you have entered the values listed above, press *Add*; the new
 promotion should be added to the list *Promoted classes*:
-                  
+
 .. figure:: _static/polmplcanvas-03-promoted-widget-2.png
             :align: center
             :alt: Specifying how to promote a widget to ``PolMplCanvas`` (2/2)
