@@ -3,7 +3,7 @@
 from urllib.parse import urljoin
 from web.rest.base import Connection
 
-from utilities import (
+from .utilities import (
     STRIP_BOARD_NAMES,
     normalize_polarimeter_name,
     get_lna_num,

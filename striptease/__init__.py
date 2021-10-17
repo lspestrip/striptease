@@ -37,12 +37,12 @@ from .hdf5files import (
     DataFile,
     scan_data_path,
 )
-from stripconn import (
+from .stripconn import (
     StripConnection,
     StripTag,
     wait_with_tag,
 )
-from utilities import (
+from .utilities import (
     STRIP_BOARD_NAMES,
     BOARD_TO_W_BAND_POL,
     PolMode,
