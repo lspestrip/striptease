@@ -88,18 +88,16 @@ def plot_tagevents(
       - `timelabels`: list of tick labels along the x axis (strings)
       - `timeformatter`: function that produces a tick label (string)
                          from a time (MJD). Used if `timelabels` is not provided
-    Example:
+    Example::
 
-    ```python
-    import matplotlib.pylab
-    fig, ax = matplotlib.pylab.subplots(1)
+      import matplotlib.pylab
+      fig, ax = matplotlib.pylab.subplots(1)
 
-    with open("G0_turnon.json", "rt") as f:
-        import json
-        events = striptease.script_to_tagevents(json.load(f))
+      with open("G0_turnon.json", "rt") as f:
+          import json
+          events = striptease.script_to_tagevents(json.load(f))
 
-    striptease.turnon_time_table(events, ax, ["G0"], {"G0": "#a0a0a0"})
-    ```
+      striptease.turnon_time_table(events, ax, ["G0"], {"G0": "#a0a0a0"})
 
     """
 
