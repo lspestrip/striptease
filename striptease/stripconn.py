@@ -1,10 +1,12 @@
 # -*- encoding: utf-8 -*-
 
+from typing import Union
 from urllib.parse import urljoin
 from web.rest.base import Connection
 
 from .utilities import (
     STRIP_BOARD_NAMES,
+    PhswPinMode,
     normalize_polarimeter_name,
     get_lna_num,
 )
@@ -858,20 +860,31 @@ class StripConnection(Connection):
         self.dac_ref(polarimeter, value=0)
         self.pol_pwr(polarimeter, value=0)
 
-    def set_phsw_status(self, polarimeter, phsw_index, status):
+    def set_phsw_status(
+        self, polarimeter: str, phsw_index: int, status: Union[int, PhswPinMode]
+    ):
         """Set the status of the phase switch
 
         Args
         ----
 
-            polarimeter (str): name of the polarimeter (``I0``)
+            polarimeter (str): name of the polarimeter, e.g., ``I0``
 
             phsw_index (int): a number from 0 to 3, indicating the
-                phase switch to control
+                pin diode to control; 0 and 1 are the diodes in
+                phase switch A, and 2 and 3 are the legs in B.
 
-            status (int): bitmask used to set up the mode of the phase
-                switch
+            status (PhswPinMode): bitmask used to set up the mode of
+                the phase switch. You are advised to use constants
+                from the enumeration class :class:`.PhswPinMode`
+                instead of integer literals, as this will improve the
+                readability of your code.
+
         """
+
+        # if `status` is not a valid number, this will trigger a `ValueError`
+        validated_status = PhswPinMode(status)
+
         real_polarimeter = normalize_polarimeter_name(polarimeter)
         board = real_polarimeter[0]
         self.slo_command(
@@ -880,7 +893,7 @@ class StripConnection(Connection):
             pol=real_polarimeter,
             kind="BIAS",
             base_addr=f"PIN{phsw_index}_CON",
-            data=[status],
+            data=[int(validated_status)],
         )
 
     def set_phsw_bias(self, polarimeter, phsw_index, vpin_adu, ipin_adu):
