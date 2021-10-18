@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 
-from enum import IntFlag
+from enum import IntEnum, IntFlag
 
 #: List of all the board names: handy if you need to iterate over them,
 #: or if you need to validate user input
@@ -19,9 +19,21 @@ BOARD_TO_W_BAND_POL = {
 }
 
 
-#: Used to set the operational mode of a polarimeter. See
-#: :data:`CLOSED_LOOP_FLAGS` and :data:`OPEN_LOOP_FLAGS`.
 class PolMode(IntFlag):
+    """Used to set the operational mode of a polarimeter.
+
+    See :data:`CLOSED_LOOP_FLAGS` and :data:`OPEN_LOOP_FLAGS`.
+
+    ``ENABLE_VDRAIN``
+       If this is not set, the electronics will ignore drain settings
+
+    ``ENABLE_IDRAIN_LOOP``
+       If this is set, the LNA works in open-loop mode
+
+    ``MANUAL_MODE``
+       If enable, gate voltage is set to a constant value
+    """
+
     # If this is not set, the electronics will ignore drain settings
     ENABLE_VDRAIN = 1
     # If this is set, the LNA works in open-loop mode
@@ -37,6 +49,58 @@ OPEN_LOOP_MODE = PolMode.ENABLE_VDRAIN
 #: Value to be passed to ``POL_MODE`` to use closed-loop mode for LNAs
 #: (constant drain current)
 CLOSED_LOOP_MODE = PolMode.ENABLE_VDRAIN | PolMode.ENABLE_IDRAIN_LOOP
+
+
+class PhswPinMode(IntEnum):
+    """Valus to set the switching status of one pin of a phase switch
+
+    These values can be used when calling the method :meth:`.StripConnection.set_phsw_status` to set the state of a pin diode in one of the phase switches.
+
+    The meaning of the values is the following:
+
+    ``FAST_SWITCHING_FORWARD``
+       Switch at 4 kHz, starting from the «forward» configuration
+
+    ``SLOW_SWITCHING_FORWARD``
+       Switch at 50 Hz, starting from the «forward» configuration
+
+    ``FAST_SWITCHING_REVERSE``
+       Switch at 4 kHz, starting from the «reverse» configuration
+
+    ``SLOW_SWITCHING_REVERSE``
+       Switch at 50 Hz, starting from the «reverse» configuration
+
+    ``STILL_SIGNAL``
+       Stand still and make the signal pass through the leg
+
+    ``STILL_NO_SIGNAL``
+       Stand still and prevent the signal from going through the leg
+
+    ``NOMINAL_SWITCHING``
+       Use the nominal configuration for this pin (switching at 4 kHz
+       in leg A and at 50 Hz in leg B, with the two pins in opposite
+       states). It corresponds to the following set up:
+
+       - Pin #0: ``FAST_SWITCHING_FORWARD``
+
+       - Pin #1: ``FAST_SWITCHING_REVERSE``
+
+       - Pin #2: ``SLOW_SWITCHING_FORWARD``
+
+       - Pin #3: ``SLOW_SWITCHING_REVERSE``
+
+    ``DEFAULT_STATE``
+       Same as ``NOMINAL_SWITCHING``
+    """
+
+    DEFAULT_STATE = 0
+    FAST_SWITCHING_FORWARD = 1
+    SLOW_SWITCHING_FORWARD = 2
+    FAST_SWITCHING_REVERSE = 3
+    SLOW_SWITCHING_REVERSE = 4
+    STILL_SIGNAL = 5
+    STILL_NO_SIGNAL = 6
+    NOMINAL_SWITCHING = 7
 
 
 def normalize_polarimeter_name(name: str):
