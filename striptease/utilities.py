@@ -153,6 +153,36 @@ def get_lna_list(pol_name=None, module_name=None):
 def polarimeter_iterator(
     boards=STRIP_BOARD_NAMES, include_q_band=True, include_w_band=True
 ):
+    """Iterate over all the polarimeters/feed horns of one or more boards.
+
+    Arguments:
+
+      - boards (``str`` or list of strings): letters identifying the
+        boards. You can either pass a string containing all the board
+        letters (e.g., ``"BVI"``), or a list of strings (``["B", "V",
+        "I"]``).
+
+      - include_q_band (bool): whether to include Q-band polarimeters
+        or not
+
+      - include_w_band (bool): whether to include W-band polarimeters
+        or not
+
+    Returns: A sequence of tuples in the form ``(board_name,
+      polarimeter_index, polarimeter_name)``, where ``board_name`` is
+      a one-letter string containing the name of the board (e.g.,
+      ``B``), ``polarimeter_index`` is a zero-based index of the
+      polarimeter within the board, and ``polarimeter_name`` the name
+      of the polarimeter/feed horn (e.g., ``B4``). W-band polarimeters
+      use their official name, e.g., ``W4``.
+
+    Example::
+
+      for board_name, pol_idx, pol_name in polarimeter_iterator():
+          print(f"- Polarimeter {pol_name} (#{pol_idx}), board {board_name}")
+
+    """
+
     start_idx = 0 if include_q_band else 7
     stop_idx = 8 if include_w_band else 7
 
