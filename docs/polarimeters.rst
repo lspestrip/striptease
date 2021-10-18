@@ -297,3 +297,71 @@ to be used, but usually you can stick to the two constants
 
         conn = st.StripConnection()
         conn.set_pol_mode("I0", OPEN_LOOP_MODE)
+
+
+Phase switches
+--------------
+
+Each polarimeter in Strip implements two phase switches, which are
+devices able to inject a phase shift in the signal by making it pass
+through a longer path to induce a phase shift in the wave. They are
+called «switches» because they are usually employed to turn this shift
+on and off at some fixed rate (from several Hz up to kHz).
+
+Each phase switch in the Strip polarimeters can either switch at 4 kHz
+(fast switching) or at 50 Hz (slow switching). It implements two
+paths, whose length in terms of the wavelength λ differs by λ/2, so
+that it effectively induces a 180° phase shift whenever the signal
+goes through the longer path. Each path can be activated or
+deactivated by controlling a «pin diode»: if the diode is
+forward-biased, it lets the radiation pass through its path, but if it
+is reverse-biased, radiation is blocked. Thus, to make a phase switch
+induce an alternating phase shift of 0°/180°, it must switch back and
+forth between a «forward/reverse» and a «reverse/forward»
+configuration, so that the signal can either pass through the first or
+the second path, but never through both of them (which would cause
+destructive interference when the two paths join).
+
+.. figure:: _static/phase-switches.svg
+            :align: center
+            :alt: Phase switches in a Strip polarimeter
+
+The default configuration of the phase switches is the following:
+
+- The first phase switch (leg A) oscillates at 4 kHz;
+- The second phase switch (leg B) oscillates at 50 Hz.
+
+There is no need to send sequences of commands to make each pin diode
+switch, as the electronics is smart enough to understand how to do so.
+You can either tell the electronics to switch or to stay fixed at some
+position.
+
+The values to be sent to the pin diodes are listed in the enumeration
+class :class:`.PhswPinMode`; they can be sent to the diodes using the
+method :meth:`.StripConnection.set_phsw_status`. Of particular interest
+is the constant ``NOMINAL_SWITCHING``, which assumes a different
+meaning depending on the pin diode you are programming: it makes sure
+that the default configuration for each of the four pins is set, i.e.,
+switching at 4 kHz for leg A and at 50 Hz for leg B.
+
+Here is an example where we set the state of the four pin diodes for
+polarimeter ``I0`` to the nominal state::
+
+  conn = StripConnection()
+  for pin_idx in range(4):
+      conn.set_phsw_status(
+          polarimeter="I0",
+          phsw_index=pin_idx,
+          status=PhswPinMode.NOMINAL_SWITCHING,
+      )
+
+More complex configurations can of course be employed; the following
+example makes the signal pass through the shorter path while blocking
+the longer one::
+
+  conn = StripConnection()
+  conn.set_phsw_status("I0", 0, PhswPinMode.STILL_SIGNAL)
+  conn.set_phsw_status("I0", 1, PhswPinMode.NO_SIGNAL)
+  conn.set_phsw_status("I0", 2, PhswPinMode.STILL_SIGNAL)
+  conn.set_phsw_status("I0", 3, PhswPinMode.NO_SIGNAL)
+
