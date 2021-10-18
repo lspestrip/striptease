@@ -133,6 +133,100 @@ polarimeters always use index ``7``:
   print(get_polarimeter_index("W1")) # Print 7
 
 
+Iterating over polarimeters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is often the case that some code needs to iterate over all the
+polarimeters in a board. The function :func:`.polarimeter_iterator`
+can be used in ``for`` loops to efficiently scan the list of
+polarimeters for a board::
+
+  for board_name, pol_idx, pol_name in polarimeter_iterator():
+      print(f"Board '{board_name}': polarimeter '{pol_name}' (#{pol_idx})")
+
+This is the output:
+
+.. code-block:: none
+
+  Board 'R': polarimeter 'R0' (#0)
+  Board 'R': polarimeter 'R1' (#1)
+  Board 'R': polarimeter 'R2' (#2)
+  Board 'R': polarimeter 'R3' (#3)
+  Board 'R': polarimeter 'R4' (#4)
+  Board 'R': polarimeter 'R5' (#5)
+  Board 'R': polarimeter 'R6' (#6)
+  Board 'R': polarimeter 'W3' (#7)
+  Board 'V': polarimeter 'V0' (#0)
+  Board 'V': polarimeter 'V1' (#1)
+  Board 'V': polarimeter 'V2' (#2)
+  Board 'V': polarimeter 'V3' (#3)
+  Board 'V': polarimeter 'V4' (#4)
+  Board 'V': polarimeter 'V5' (#5)
+  Board 'V': polarimeter 'V6' (#6)
+  Board 'V': polarimeter 'W4' (#7)
+  Board 'G': polarimeter 'G0' (#0)
+  Board 'G': polarimeter 'G1' (#1)
+  Board 'G': polarimeter 'G2' (#2)
+  Board 'G': polarimeter 'G3' (#3)
+  Board 'G': polarimeter 'G4' (#4)
+  Board 'G': polarimeter 'G5' (#5)
+  Board 'G': polarimeter 'G6' (#6)
+  Board 'G': polarimeter 'W6' (#7)
+  Board 'B': polarimeter 'B0' (#0)
+  Board 'B': polarimeter 'B1' (#1)
+  Board 'B': polarimeter 'B2' (#2)
+  Board 'B': polarimeter 'B3' (#3)
+  Board 'B': polarimeter 'B4' (#4)
+  Board 'B': polarimeter 'B5' (#5)
+  Board 'B': polarimeter 'B6' (#6)
+  Board 'B': polarimeter 'W5' (#7)
+  Board 'Y': polarimeter 'Y0' (#0)
+  Board 'Y': polarimeter 'Y1' (#1)
+  Board 'Y': polarimeter 'Y2' (#2)
+  Board 'Y': polarimeter 'Y3' (#3)
+  Board 'Y': polarimeter 'Y4' (#4)
+  Board 'Y': polarimeter 'Y5' (#5)
+  Board 'Y': polarimeter 'Y6' (#6)
+  Board 'Y': polarimeter 'W1' (#7)
+  Board 'O': polarimeter 'O0' (#0)
+  Board 'O': polarimeter 'O1' (#1)
+  Board 'O': polarimeter 'O2' (#2)
+  Board 'O': polarimeter 'O3' (#3)
+  Board 'O': polarimeter 'O4' (#4)
+  Board 'O': polarimeter 'O5' (#5)
+  Board 'O': polarimeter 'O6' (#6)
+  Board 'O': polarimeter 'W2' (#7)
+  Board 'I': polarimeter 'I0' (#0)
+  Board 'I': polarimeter 'I1' (#1)
+  Board 'I': polarimeter 'I2' (#2)
+  Board 'I': polarimeter 'I3' (#3)
+  Board 'I': polarimeter 'I4' (#4)
+  Board 'I': polarimeter 'I5' (#5)
+  Board 'I': polarimeter 'I6' (#6)
+
+Valid keywords for :func:`.polarimeter_iterator` are `boards` and
+`include_q_band`/`include_w_band`, which permit to pick which boards
+to scan and to include/exclude Q and W-band polarimeters::
+
+  for _, pol_idx, pol_name in polarimeter_iterator(boards=["V"], include_w_band=False):
+      print(f"Polarimeter {pol_name} (#{pol_idx})")
+
+In this case, the output is the following:
+
+.. code-block:: none
+
+  Polarimeter V0 (#0)
+  Polarimeter V1 (#1)
+  Polarimeter V2 (#2)
+  Polarimeter V3 (#3)
+  Polarimeter V4 (#4)
+  Polarimeter V5 (#5)
+  Polarimeter V6 (#6)
+
+You can see that the W-band polarimeter of board ``V`` (``W4``) was
+not included.
+
+
 Amplifiers
 ----------
 
