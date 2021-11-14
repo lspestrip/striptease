@@ -502,6 +502,9 @@ class TurnOnOffProcedure(StripProcedure):
         else:
             self.run_turnoff()
 
+        # Clear the list of commands, as we have just sent them
+        self.command_history = []
+
     def run_turnon(self, turn_on_board=True, stable_acquisition_time_s=120):
         """Execute a turn-on procedure for the horn specified in `self.horn`.
 
