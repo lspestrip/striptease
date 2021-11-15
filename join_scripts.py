@@ -3,6 +3,7 @@
 
 import json
 import sys
+from striptease import dump_procedure_as_json
 
 
 def main():
@@ -24,7 +25,7 @@ Example:
         with open(curfilename, "rt") as inpf:
             commands += json.load(inpf)
 
-    json.dump(commands, sys.stdout, indent=4)
+    dump_procedure_as_json(sys.stdout, commands)
 
 
 if __name__ == "__main__":

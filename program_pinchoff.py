@@ -6,11 +6,11 @@ import logging as log
 from calibration import CalibrationTables
 from striptease import (
     STRIP_BOARD_NAMES,
+    StripProcedure,
     StripTag,
     polarimeter_iterator,
     wait_with_tag,
 )
-from striptease.procedures import StripProcedure
 from program_turnon import TurnOnOffProcedure
 
 

@@ -3,10 +3,70 @@
 from copy import deepcopy
 from urllib.parse import urlparse
 import json
+import sys
 
 from config import Config
-from striptease import StripConnection
+from striptease.stripconn import StripConnection
 from striptease.biases import InstrumentBiases
+
+
+def dump_procedure_as_json(outf, obj, indent_level=0, use_newlines=True):
+    """
+    Dump a list of commands into a JSON file.
+
+    This is similar to what the standard function ``json.dump`` does,
+    but it uses less carriage returns to make the output easier to
+    read and to search with ``grep``.
+    """
+
+    def dump_newline(indent_level):
+        if use_newlines:
+            outf.write("\n")
+            outf.write(" " * indent_level)
+
+    if isinstance(obj, list):
+        outf.write("[")
+        indent_level += 2
+        dump_newline(indent_level)
+
+        for idx, elem in enumerate(obj):
+            dump_procedure_as_json(
+                outf, elem, indent_level=indent_level, use_newlines=use_newlines
+            )
+            if idx < len(obj) - 1:
+                outf.write(", ")
+            dump_newline(indent_level)
+        indent_level -= 2
+        outf.write("]")
+    elif isinstance(obj, dict):
+        # A better visually-looking alternative (which however does not work
+        # well with `grep` is
+        #
+        #     use_newlines and (obj.get("kind", "") in ["log"])
+        use_newlines_here = False
+
+        outf.write("{")
+        indent_level += 2
+        if use_newlines_here:
+            dump_newline(indent_level)
+
+        for idx, elem in enumerate(obj):
+            outf.write(f'"{elem}": ')
+            dump_procedure_as_json(
+                outf,
+                obj[elem],
+                indent_level=indent_level,
+                use_newlines=use_newlines_here,
+            )
+            if idx < len(obj) - 1:
+                outf.write(", ")
+
+            if use_newlines_here:
+                dump_newline(indent_level)
+        indent_level -= 2
+        outf.write("}")
+    else:
+        outf.write(json.dumps(obj))
 
 
 class JSONCommandEmitter:
@@ -114,10 +174,8 @@ class StripProcedure:
                 printed to ``stdout``.
 
         """
-        output = json.dumps(self.get_command_list(), indent=4)
-
         if (not output_filename) or (output_filename == ""):
-            print(output)
+            dump_procedure_as_json(sys.stdout, self.get_command_list())
         else:
             with open(str(output_filename), "wt") as outf:
-                outf.write(output)
+                dump_procedure_as_json(outf, self.get_command_list())

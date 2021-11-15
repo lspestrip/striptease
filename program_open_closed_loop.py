@@ -13,11 +13,11 @@ from calibration import CalibrationTables
 from striptease import (
     OPEN_LOOP_MODE,
     CLOSED_LOOP_MODE,
+    StripProcedure,
     StripTag,
     normalize_polarimeter_name,
 )
 from striptease import InstrumentBiases, BiasConfiguration, DataFile
-from striptease.procedures import StripProcedure
 from program_turnon import TurnOnOffProcedure
 
 # Used to look for tags in HDF5 files
