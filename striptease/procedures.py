@@ -6,7 +6,7 @@ import json
 import sys
 
 from config import Config
-from striptease import StripConnection
+from striptease.stripconn import StripConnection
 from striptease.biases import InstrumentBiases
 
 
@@ -19,7 +19,7 @@ def dump_procedure_as_json(outf, obj, indent_level=0, use_newlines=True):
     read and to search with ``grep``.
     """
 
-    def dump_newline():
+    def dump_newline(indent_level):
         if use_newlines:
             outf.write("\n")
             outf.write(" " * indent_level)
@@ -27,7 +27,7 @@ def dump_procedure_as_json(outf, obj, indent_level=0, use_newlines=True):
     if isinstance(obj, list):
         outf.write("[")
         indent_level += 2
-        dump_newline()
+        dump_newline(indent_level)
 
         for idx, elem in enumerate(obj):
             dump_procedure_as_json(
@@ -35,17 +35,20 @@ def dump_procedure_as_json(outf, obj, indent_level=0, use_newlines=True):
             )
             if idx < len(obj) - 1:
                 outf.write(", ")
-            dump_newline()
+            dump_newline(indent_level)
         indent_level -= 2
         outf.write("]")
     elif isinstance(obj, dict):
+        # A better visually-looking alternative (which however does not work
+        # well with `grep` is
+        #
+        #     use_newlines and (obj.get("kind", "") in ["log"])
+        use_newlines_here = False
+
         outf.write("{")
         indent_level += 2
-        dump_newline()
-
-        use_newlines_here = use_newlines and (
-            obj.get("kind", "") not in ["tag", "command"]
-        )
+        if use_newlines_here:
+            dump_newline(indent_level)
 
         for idx, elem in enumerate(obj):
             outf.write(f'"{elem}": ')
@@ -59,7 +62,7 @@ def dump_procedure_as_json(outf, obj, indent_level=0, use_newlines=True):
                 outf.write(", ")
 
             if use_newlines_here:
-                dump_newline()
+                dump_newline(indent_level)
         indent_level -= 2
         outf.write("}")
     else:
