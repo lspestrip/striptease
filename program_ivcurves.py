@@ -11,12 +11,12 @@ from calibration import CalibrationTables
 from striptease import (
     STRIP_BOARD_NAMES,
     BOARD_TO_W_BAND_POL,
+    StripProcedure,
     StripTag,
     get_lna_num,
     get_lna_list,
 )
 from striptease.biases import InstrumentBiases
-from striptease.procedures import StripProcedure
 from program_turnon import TurnOnOffProcedure
 
 
