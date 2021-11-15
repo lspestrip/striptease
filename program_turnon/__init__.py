@@ -8,9 +8,8 @@ import sys
 import pandas as pd
 import numpy as np
 from calibration import physical_units_to_adu
-from striptease import get_lna_num, get_polarimeter_index
+from striptease import get_lna_num, get_polarimeter_index, StripProcedure
 from striptease.biases import InstrumentBiases, BoardCalibration
-from striptease.procedures import StripProcedure
 
 CalibrationCurve = namedtuple(
     "CalibrationCurve", ["slope", "intercept", "mul", "div", "add"]
