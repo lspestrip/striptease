@@ -37,6 +37,10 @@ from .hdf5files import (
     DataFile,
     scan_data_path,
 )
+from .procedures import (
+    dump_procedure_as_json,
+    StripProcedure,
+)
 from .stripconn import (
     StripConnection,
     StripTag,
@@ -89,6 +93,9 @@ __all__ = [
     "get_hk_descriptions",
     "DataFile",
     "scan_data_path",
+    # procedures.py
+    "dump_procedure_as_json",
+    "StripProcedure",
     # stripconn.py
     "StripConnection",
     "StripTag",
