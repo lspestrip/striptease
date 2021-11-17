@@ -5,7 +5,7 @@
 
 import logging as log
 from calibration import CalibrationTables
-from .reference_test import (
+from reference_test import (
     proc_1,
 )
 from striptease import (
@@ -14,9 +14,9 @@ from striptease import (
     PhswPinMode,
     StripProcedure,
     StripTag,
-    TurnOnOffProcedure,
     wait_with_tag,
 )
+from program_turnon import TurnOnOffProcedure
 
 
 class ReferenceTestProcedure(StripProcedure):

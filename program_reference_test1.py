@@ -58,15 +58,10 @@ class ReferenceTestProcedure(StripProcedure):
 
 
 if __name__ == "__main__":
-    from argparse import ArgumentParser, RawDescriptionHelpFormatter
+    from argparse import ArgumentParser
 
     parser = ArgumentParser(
         description="Procedure a command sequence to turn on the boards",
-        formatter_class=RawDescriptionHelpFormatter,
-        epilog=""""
-
-        python3 amalia_reference.py
-        """,
     )
     parser.add_argument(
         "--output",
@@ -75,8 +70,8 @@ if __name__ == "__main__":
         type=str,
         dest="output_filename",
         default="",
-        help="Name of the file where to write the output (in JSON format)."
-        "If not provided, the output will be sent to stdout",
+        help="""Name of the file where to write the output (in JSON format).
+        If not provided, the output will be sent to stdout""",
     )
 
     parser.add_argument(
