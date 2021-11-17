@@ -16,7 +16,7 @@ from striptease import (
 from striptease.biases import InstrumentBiases
 from striptease.procedures import StripProcedure
 from striptease.unittests import get_unit_test, load_unit_test_data, UnitTestDC
-from program_turnon import TurnOnOffProcedure
+from turnon import TurnOnOffProcedure
 
 
 class IVProcedure(StripProcedure):

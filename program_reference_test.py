@@ -4,7 +4,7 @@
 import logging as log
 
 from striptease import StripTag
-from program_turnon import SetupBoard
+from turnon import SetupBoard
 
 from striptease.procedures import StripProcedure
 

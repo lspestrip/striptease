@@ -11,7 +11,7 @@ from striptease import (
     polarimeter_iterator,
     wait_with_tag,
 )
-from program_turnon import TurnOnOffProcedure
+from turnon import TurnOnOffProcedure
 
 
 class PinchOffProcedure(StripProcedure):

@@ -14,7 +14,7 @@ from striptease import (
     StripProcedure,
     StripTag,
 )
-from program_turnon import TurnOnOffProcedure
+from turnon import TurnOnOffProcedure
 
 
 class ReferenceTestProcedure(StripProcedure):

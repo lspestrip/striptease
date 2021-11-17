@@ -17,7 +17,7 @@ from striptease import (
     get_lna_list,
 )
 from striptease.biases import InstrumentBiases
-from program_turnon import TurnOnOffProcedure
+from turnon import TurnOnOffProcedure
 
 
 class IVProcedure(StripProcedure):

@@ -16,7 +16,7 @@ from striptease import (
     StripTag,
     wait_with_tag,
 )
-from program_turnon import TurnOnOffProcedure
+from turnon import TurnOnOffProcedure
 
 
 class ReferenceTestProcedure(StripProcedure):

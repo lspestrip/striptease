@@ -6,7 +6,7 @@ from striptease import (
     StripTag,
     wait_with_tag,
 )
-from program_turnon import SetupBoard
+from turnon import SetupBoard
 
 
 def set_0_bias(self, polname):
