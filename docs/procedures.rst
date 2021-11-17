@@ -5,7 +5,7 @@ To create a new script that builds a sequence of JSON commands, the
 easiest way is to create a new class derived from
 :class:`striptease.procedures.StripProcedure`::
 
-  from striptease.procedures import StripProcedure
+  from striptease import StripProcedure
   from calibration import CalibrationTables
 
   class MyProcedure(StripProcedure):
