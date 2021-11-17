@@ -162,6 +162,11 @@ class StripProcedure:
         """
         return self.command_emitter.command_list
 
+    def clear_command_list(self):
+        "Remove all the commands produced so far from memory"
+
+        self.command_emitter.command_list = []
+
     def output_json(self, output_filename=None):
         """Write the list of commands executed so far in a JSON object.
 
