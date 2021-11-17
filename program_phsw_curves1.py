@@ -3,11 +3,12 @@
 
 # phaseswitch test procedure
 
+import logging as log
 from pathlib import Path
+from urllib.error import HTTPError
 
 import pandas as pd
 import numpy as np
-import logging as log
 
 from calibration import CalibrationTables
 from striptease import (
@@ -26,6 +27,11 @@ from program_turnon import TurnOnOffProcedure
 class PSProcedure(StripProcedure):
     def __init__(self):
         super(PSProcedure, self).__init__()
+        data_file_path = (
+            Path(__file__).parent / "data" / "corrispondenze_FH_testDC.xlsx"
+        )
+        log.info(f'Reading correspondences from file "{data_file_path}"')
+        self.dfs = pd.read_excel(data_file_path, index_col=0)
 
     def run(self):
         calibr = CalibrationTables()
@@ -73,12 +79,13 @@ class PSProcedure(StripProcedure):
 
             # cuves
 
-            data_file_path = (
-                Path(__file__).parent / "data" / "corrispondenze_FH_testDC.xlsx"
-            )
-            dfs = pd.read_excel(data_file_path, index_col=0)
-            val = dfs.loc[pol_name]["RT"]
-            test = get_unit_test(dfs.loc[pol_name]["RT"])
+            val = self.dfs.loc[pol_name]["RT"]
+            test_number = self.dfs.loc[pol_name]["RT"]
+            log.info("Going to download unit-level test {}".format(test_number))
+            try:
+                test = get_unit_test(test_number)
+            except HTTPError as e:
+                log.error(f"Unable to load test {test_number}, reason: {e}")
             data = load_unit_test_data(test)
             log.info(f"Loading test {val} of {pol_name}")
 
