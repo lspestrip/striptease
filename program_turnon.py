@@ -4,7 +4,7 @@
 import logging as log
 import re
 
-from program_turnon import TurnOnOffProcedure
+from turnon import TurnOnOffProcedure
 from striptease import BOARD_TO_W_BAND_POL
 
 DEFAULT_WAITTIME_S = 5.0

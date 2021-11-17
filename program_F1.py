@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 
-from program_turnon import TurnOnOffProcedure
+from turnon import TurnOnOffProcedure
 import logging as log
 
 DEFAULT_WAITTIME_S = 5.0

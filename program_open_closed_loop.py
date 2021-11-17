@@ -18,7 +18,7 @@ from striptease import (
     normalize_polarimeter_name,
 )
 from striptease import InstrumentBiases, BiasConfiguration, DataFile
-from program_turnon import TurnOnOffProcedure
+from turnon import TurnOnOffProcedure
 
 # Used to look for tags in HDF5 files
 DEFAULT_TAG_TEMPLATE = "OPEN_LOOP_TEST_ACQUISITION_{polarimeter}"
