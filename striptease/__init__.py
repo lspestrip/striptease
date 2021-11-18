@@ -32,10 +32,10 @@ from .diagnostics import (
 from .hdf5files import (
     Tag,
     HkDescriptionList,
+    find_first_and_last_samples_in_hdf5,
     get_group_subgroup,
     get_hk_descriptions,
     DataFile,
-    scan_data_path,
 )
 from .procedures import (
     dump_procedure_as_json,
@@ -89,6 +89,7 @@ __all__ = [
     # hdf5files.py
     "Tag",
     "HkDescriptionList",
+    "find_first_and_last_samples_in_hdf5",
     "get_group_subgroup",
     "get_hk_descriptions",
     "DataFile",

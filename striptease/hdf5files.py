@@ -2,7 +2,7 @@
 
 from collections import namedtuple
 from pathlib import Path
-from typing import Union, List, Set
+from typing import List, Set
 
 from astropy.time import Time
 import csv
@@ -13,13 +13,6 @@ from scipy.interpolate import interp1d
 
 from .biases import BiasConfiguration
 
-__all__ = [
-    "get_hk_descriptions",
-    "HkDescriptionList",
-    "DataFile",
-    "Tag",
-    "scan_data_path",
-]
 
 VALID_GROUPS = ["BIAS", "DAQ"]
 VALID_SUBGROUPS = ["POL", "BOARD"]
@@ -254,6 +247,43 @@ def extract_mean_from_time_range(times, values, time_range=None):
     return average
 
 
+def find_first_and_last_samples_in_hdf5(hdf5_file):
+    """Search the minimum and maximum MJD time in the HDF5 (slow!)
+
+    Return the MJD of the first and last samples recorded in the HDF5
+    file ``hdf5_file`` (which must have been already opened).
+
+    If the HDF5 contains the ``FIRST_SAMPLE`` and ``LAST_SAMPLE``, the
+    function returns these values; otherwise, it scans all the datasets
+    and find the minimum. The latter options is quite slow (it takes
+    several seconds for file), but it is needed because the data server
+    currently (2021/11/18) has a bug that prevents valid values from
+    being written into HDF5 files.
+    """
+
+    min_mjd = hdf5_file.attrs.get("FIRST_SAMPLE", -1)
+    max_mjd = hdf5_file.attrs.get("LAST_SAMPLE", -1)
+
+    def find_extrema(name, obj):
+        nonlocal min_mjd, max_mjd
+        if isinstance(obj, h5py.Dataset) and len(obj) > 0:
+            if (obj.dtype.names is not None) and ("m_jd" in obj.dtype.names):
+                cur_min = obj["m_jd"][0]
+                cur_max = obj["m_jd"][-1]
+                if (min_mjd < 0) or (cur_min < min_mjd):
+                    min_mjd = cur_min
+                if (max_mjd < 0) or (cur_max > max_mjd):
+                    max_mjd = cur_max
+
+    if (min_mjd < 0) or (max_mjd < 0):
+        # No meaningful values for FIRST_SAMPLE and LAST_SAMPLE:
+        # use the slow approach of crawling through all the datasets
+        # in the file
+        hdf5_file.visititems(find_extrema)
+
+    return min_mjd, max_mjd
+
+
 class DataFile:
     """A HDF5 file containing timelines acquired by Strip
 
@@ -278,6 +308,11 @@ class DataFile:
 
     - ``datetime``: a Python ``datetime`` object containing the time
           when the acquisition started
+
+    - ``mjd_range``: a pair of ``float`` numbers representing the
+          MJD of the first and last sample in the file. To initialize
+          this field, you must call ``DataFile.read_file_metadata``
+          first.
 
     - ``hdf5_groups``: a list of ``str`` objects containing the names
           of the groups in the HDF5 file. To initialize this field,
@@ -322,6 +357,7 @@ class DataFile:
                     except RuntimeError:
                         pass
 
+        self.mjd_range = None
         self.hdf5_groups = []
         self.tags = None
 
@@ -348,6 +384,8 @@ class DataFile:
             )
             for x in self.hdf5_file["TAGS"]["tag_data"][:]
         ]
+
+        self.mjd_range = find_first_and_last_samples_in_hdf5(self.hdf5_file)
 
     def close_file(self):
         "Close the HDF5 file"
@@ -555,17 +593,3 @@ class DataFile:
                 result[x] = average
 
         return BiasConfiguration(**result)
-
-
-def scan_data_path(path: Union[str, Path]) -> List[DataFile]:
-    result = []  # type: List[DataFile]
-    for file_name in Path(path).glob("**/*.h5"):
-        # file_name is a Path object
-        curfile = DataFile(file_name)
-        try:
-            curfile.read_file_metadata()
-        except OSError:
-            pass
-        result.append(curfile)
-
-    return sorted(result, key=lambda n: n.datetime)
