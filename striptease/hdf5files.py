@@ -360,14 +360,23 @@ class DataFile:
         self.mjd_range = None
         self.hdf5_groups = []
         self.tags = None
+        self.hdf5_file = None
 
     def __str__(self):
         return f'striptease.DataFile("{self.filepath}")'
 
-    def read_file_metadata(self):
+    def read_file_metadata(self, force=False):
         "Open the file and checks the contents"
 
+        if self.hdf5_file:
+            if not force:
+                return
+            else:
+                self.hdf5_file.close()
+                del self.hdf5_file
+
         self.hdf5_file = h5py.File(self.filepath, "r")
+
         self.hdf5_groups = list(self.hdf5_file)
 
         self.boards = scan_board_names(self.hdf5_groups)
