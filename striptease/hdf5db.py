@@ -134,7 +134,7 @@ class DataStorage:
         first_mjd, last_mjd = mjd_interval
         assert (
             first_mjd <= last_mjd
-        ), f"Wrong range {mjd_interval=} passed to DataStorage.files_in_range"
+        ), f"Wrong range {mjd_interval} passed to DataStorage.files_in_range"
         first_idx = find_time_in_files(self.file_list, first_mjd)
         last_idx = find_time_in_files(self.file_list, last_mjd)
 
@@ -174,7 +174,7 @@ class DataStorage:
                 time = cur_time
                 data = cur_data
             else:
-                assert time[-1] < cur_time[0], f"Non-consecutive times in {mjd_range=}"
+                assert time[-1] < cur_time[0], f"Non-consecutive times in {mjd_range}"
                 time = np.concatenate((time, cur_time))
                 data = np.concatenate((data, cur_data))
 
