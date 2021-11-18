@@ -26,5 +26,5 @@ jobs:
       - name: Tests
         run: |
           black --check .
-          flake8
+          flake8 -vvv
           python -m pytest -vv
