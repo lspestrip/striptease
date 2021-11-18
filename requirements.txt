@@ -7,14 +7,12 @@ requests
 h5py
 autobahn
 pyserial
-xlrd
 pandas
 pyqtgraph
 pytest
 black
 tqdm
 scipy
-dataclasses
 flake8
 pre-commit
 openpyxl
