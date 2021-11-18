@@ -17,4 +17,4 @@ scipy
 dataclasses
 flake8
 pre-commit
-
+openpyxl
