@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 
+import logging as log
 from pathlib import Path
 import sqlite3
 from typing import Union, List, Tuple
@@ -53,10 +54,11 @@ CREATE TABLE IF NOT EXISTS tags(
 
 
 def scan_data_path(
-    path: Union[str, Path],
+    path: Union[str, Path], database_name="index.db"
 ) -> Tuple[List[DataFile], sqlite3.Connection]:
 
-    db = sqlite3.connect(Path(path) / "index.db")
+    db_path = Path(path) / "index.db"
+    db = sqlite3.connect(db_path)
     create_storage_db(db)
 
     file_list = []
@@ -77,13 +79,25 @@ def scan_data_path(
             (str(file_name.absolute()),),
         )
         entry = curs.fetchone()
-        if entry:
-            assert isinstance(entry, tuple)
-            assert len(entry) == 2
+        if entry and isinstance(entry, tuple) and (len(entry) == 2) and (entry[0] > 0):
             # The entry is already in the database, so we can skip opening the file
             hdf5.mjd_range = entry
         else:
-            hdf5.read_file_metadata()  # This can take some time
+            log.debug(
+                f"file {file_name} not found in database {db_path}, adding its metadata"
+            )
+
+            try:
+                hdf5.read_file_metadata()  # This can take some time
+            except OSError as e:
+                log.error(f'unable to read metadata from "{file_name}" (OSError): {e}')
+                continue
+            except RuntimeError as e:
+                log.error(
+                    f'unable to read metadata from "{file_name}" (RuntimeError): {e}'
+                )
+                continue
+
             first_sample, last_sample = hdf5.mjd_range
             curs.execute(
                 "INSERT INTO files VALUES (:path, :size, :first_sample, :last_sample)",
