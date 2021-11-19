@@ -9,12 +9,36 @@ import numpy as np
 from .hdf5files import DataFile, Tag
 
 
-def create_tag_database(db: sqlite3.Connection):
+def extract_mjd_range(
+    mjd_range: Union[Tuple[float, float], Tag]
+) -> Tuple[float, float]:
+    "Convenience function that returns the start and end MJD from a 2-tuple/tag"
+
+    if isinstance(mjd_range, Tag):
+        return (mjd_range.mjd_start, mjd_range.mjd_end)
+    else:
+        return mjd_range  # Just return the tuple
+
+
+def create_storage_db(db: sqlite3.Connection):
     curs = db.cursor()
 
+    # List all the files in the archive
     curs.execute(
         """
-CREATE TABLE tags(
+CREATE TABLE IF NOT EXISTS files(
+    path TEXT,
+    size_in_bytes NUMBER,
+    first_sample REAL,
+    last_sample REAL
+)
+"""
+    )
+
+    # List of tags from all the files in the archive
+    curs.execute(
+        """
+CREATE TABLE IF NOT EXISTS tags(
     id INTEGER PRIMARY KEY,
     mjd_start REAL,
     mjd_end REAL,
@@ -31,22 +55,77 @@ CREATE TABLE tags(
 def scan_data_path(
     path: Union[str, Path], close_files=True
 ) -> Tuple[List[DataFile], sqlite3.Connection]:
-    result = []  # type: List[DataFile]
+
+    db = sqlite3.connect(Path(path) / "index.db")
+    create_storage_db(db)
+
+    file_list = []
+    curs = db.cursor()
     for file_name in Path(path).glob("**/*.h5"):
+        # Follow symlinks and remove "." and ".."
+        file_name = file_name.resolve()
+
         # file_name is a Path object
         hdf5 = DataFile(file_name)
-        try:
-            hdf5.read_file_metadata()
-        except OSError:
-            continue
+
+        curs.execute(
+            """
+            SELECT first_sample, last_sample
+            FROM files
+            WHERE path = ?
+            """,
+            (str(file_name.absolute()),),
+        )
+        entry = curs.fetchone()
+        if entry:
+            assert isinstance(entry, tuple)
+            assert len(entry) == 2
+            # The entry is already in the database, so we can skip opening the file
+            hdf5.mjd_range = entry
+        else:
+            hdf5.read_file_metadata()  # This can take some time
+            first_sample, last_sample = hdf5.mjd_range
+            curs.execute(
+                "INSERT INTO files VALUES (:path, :size, :first_sample, :last_sample)",
+                {
+                    "path": str(file_name.absolute()),
+                    "size": file_name.stat().st_size,
+                    "first_sample": float(first_sample),
+                    "last_sample": float(last_sample),
+                },
+            )
+
+            # If a tag is not closed when a HDF5 file is being opened, the
+            # tag is left open and it will be properly closed in the next file.
+            # Since the next file will contain *complete* information on the tag
+            # (i.e., including the start time, which was written in the previous
+            # file), we need to use a database which stores tags according to
+            # their unique index. We use `INSERT OR REPLACE` so that a tag is
+            # inserted twice, the second tag (presumably the one with both the
+            # start and end times) will overwrite the first. SQLite is awesome!
+            curs.executemany(
+                "INSERT OR REPLACE INTO tags VALUES (?, ?, ?, ?, ?, ?)",
+                [
+                    (
+                        int(x.id),
+                        float(x.mjd_start),
+                        float(x.mjd_end),
+                        x.name,
+                        x.start_comment,
+                        x.end_comment,
+                    )
+                    for x in hdf5.tags
+                ],
+            )
+
+            db.commit()
 
         if close_files:
             hdf5.close_file()
-        result.append(hdf5)
 
-    db = sqlite3.connect(":memory:")
-    create_tag_database(db)
-    return (sorted(result, key=lambda n: n.datetime), db)
+        file_list.append(hdf5)
+
+    return (sorted(file_list, key=lambda x: x.mjd_range[0]), db)
 
 
 def find_time_in_files(files: List[DataFile], mjd: float, first=0, last=None):
@@ -99,37 +178,14 @@ class DataStorage:
         self.basepath = path
         self.file_list, self.db = scan_data_path(path)
 
-        # If a tag is not closed when a HDF5 file is being opened, the
-        # tag is left open and it will be properly closed in the next file.
-        # Since the next file will contain *complete* information on the tag
-        # (i.e., including the start time, which was written in the previous
-        # file), we need to use a database which stores tags according to
-        # their unique index. We use `INSERT OR REPLACE` so that a tag is
-        # inserted twice, the second tag (presumably the one with both the
-        # start and end times) will overwrite the first. SQLite is awesome!
-        curs = self.db.cursor()
-        for cur_file in self.file_list:
-            curs.executemany(
-                "INSERT OR REPLACE INTO tags VALUES (?, ?, ?, ?, ?, ?)",
-                [
-                    (
-                        int(x.id),
-                        float(x.mjd_start),
-                        float(x.mjd_end),
-                        x.name,
-                        x.start_comment,
-                        x.end_comment,
-                    )
-                    for x in cur_file.tags
-                ],
-            )
-        self.db.commit()
-
     def _files_in_range(
         self,
         mjd_interval: Tuple[float, float],
     ):
-        "Return a list of the index of those files that contain data within the MJD range"
+        """Return a list of the indexes of the files that contain data within the MJD range"""
+
+        if not self.file_list:
+            return []
 
         first_mjd, last_mjd = mjd_interval
         assert (
@@ -137,7 +193,6 @@ class DataStorage:
         ), f"Wrong range {mjd_interval} passed to DataStorage.files_in_range"
         first_idx = find_time_in_files(self.file_list, first_mjd)
         last_idx = find_time_in_files(self.file_list, last_mjd)
-
         if self.file_list[first_idx].mjd_range[0] > last_mjd:
             # The time is too far in the past
             return []
@@ -150,12 +205,12 @@ class DataStorage:
 
     def _load(
         self,
-        mjd_range: Tuple[float, float],
+        mjd_range: Union[Tuple[float, float], Tag],
         load_fn,
     ):
         "Private function, used by load_sci and load_hk"
 
-        start_mjd, end_mjd = mjd_range
+        start_mjd, end_mjd = extract_mjd_range(mjd_range)
         indexes = self._files_in_range(mjd_range)
         if not indexes:
             return None, None
@@ -180,7 +235,7 @@ class DataStorage:
 
         return time, data
 
-    def get_tags(self, mjd_range: Tuple[float, float]) -> List[Tag]:
+    def get_tags(self, mjd_range: Union[Tuple[float, float], Tag]) -> List[Tag]:
         """Return a list of all the tags falling within a MJD range
 
         The function returns a list of all the tags found in the HDF5 files in the
@@ -202,7 +257,7 @@ class DataStorage:
         #      .                              .
         #      .                           TTTTTTTTT
 
-        mjd_start, mjd_end = mjd_range
+        mjd_start, mjd_end = extract_mjd_range(mjd_range)
 
         curs = self.db.cursor()
         curs.execute(
@@ -217,7 +272,7 @@ class DataStorage:
         )
         return [Tag(*row) for row in curs.fetchall()]
 
-    def load_sci(self, mjd_range: Tuple[float, float], *args, **kwargs):
+    def load_sci(self, mjd_range: Union[Tuple[float, float], Tag], *args, **kwargs):
         """Load scientific data within a specified MJD time range
 
         This function operates in the same way as :meth:`.DataFile.load_sci`, but it
@@ -240,7 +295,7 @@ class DataStorage:
         """
         return self._load(mjd_range, load_fn=lambda f: f.load_sci(*args, **kwargs))
 
-    def load_hk(self, mjd_range: Tuple[float, float], *args, **kwargs):
+    def load_hk(self, mjd_range: Union[Tuple[float, float], Tag], *args, **kwargs):
         """Load housekeeping data within a specified MJD time range
 
         This function operates in the same way as :meth:`.DataFile.load_hk`, but it
