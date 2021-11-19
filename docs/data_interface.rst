@@ -4,15 +4,55 @@ Reading data saved in HDF5 files
 Introduction
 ------------
 
-The module data_interface.py provides an interface to the data
-acquired by the instrument and stored in HDF5 files
+Striptease provides an interface to the data acquired by the
+instrument and stored in HDF5 files which allows the user to access
+both scientific and housekeepings data returning them into time, data
+numpy arrays.
 
-It allows the user to access both scientific and housekeepings data
-returning them into time, data numpy arrays.
+Before reading this chapter, you should be aware of the way data are
+saved to disk when LSPE/Strip operates. The instrument sends all the
+scientific (``PWR`` and ``DEM`` timelines) and housekeeping (biases,
+temperatures…) timelines to a computer, where a software called *data
+server* takes them and writes them in HDF5 files. The stream of data
+is usually continuous, but occasionally the *data server* stops
+writing in a file and opens a new one. This ensures that files do not
+get too big and that you can grab one of them for analysis while the
+instrument is still running. These files are usually saved in a
+hierarchical structure of directories, grouped according to the
+year/month of acquisition. So, assuming that these data files are
+stored in ``/storage/strip``, you might find the following files in
+the Strip data storage:
 
-Here is an example that shows how to use it::
+.. code-block:: text
 
-    from striptease.hdf5files import DataFile
+  /storage/strip/2021/10
+      2021_10_31_15-42-44.h5
+      2021_10_31_19-42-44.h5
+      2021_10_31_23-42-44.h5
+  /storage/strip/2021/11
+      2021_11_01_03-42-44.h5
+      2021_11_01_07-42-44.h5
+      2021_11_01_11-42-44.h5
+
+It is now time to see the kind of tools that Striptease provides to
+access these files. The interface is based on two classes:
+
+- :class:`.DataFile` provides a high-level access to a **single** HDF5
+  file.
+
+- :class:`.DataStorage` provides a high-level access to a
+  **directory** containing several HDF5 files, like the one above. It
+  basically abstracts over the concept of a «file» and instead
+  considers the data as being acquired continuously.
+
+
+Accessing one file
+------------------
+
+Let's begin with a small example that shows how to use the class
+:class:`.DataFile`::
+
+    from striptease import DataFile
     fname = '/path_to/data.h5'
 
     with DataFile(fname) as my_data:
@@ -50,33 +90,62 @@ description. The object can be printed using ``print``: it will
 produce a (long!) table containing all the housekeeping parameters and
 descriptions in alphabetic order.
 
-Handling multiple HDF5 files
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Acquiring Strip data is a continuous process, and HDF5 files are
-continuously created once every `n` hours. It might happen that the
-data you want to load span more than one file. Striptease provides the
-function :func:`.scan_data_path` to ease the task of transversing the
-list of HDF5 in chronological order; it returns a list of
-:class:`.DataFile` objects found in a folder and any of its
-subdirectories.
+Handling multiple HDF5 files
+----------------------------
+
+It is often the case that the data you are looking for spans more than
+one HDF5 file. In this case, it is a tedious process to read chunks of
+data from several files and knit them together. Luckly, Striptease
+provides the :class:`.DataStorage` class, which implements a database
+of HDF5 files and provides methods for accessing scientific and
+housekeeping data without bothering of which files should be read.
 
 Here is an example::
 
-  from pathlib import Path
-  from striptease.hdf5files import scan_data_path
+  from striptease import DataStorage
 
-  basepath = Path("/storage/mydata/2020")
-  all_files = scan_data_path(basepath)
+  # This call might take some time if you have never used DataStorage
+  # before, as it needs to build an index of all the files
+  ds = DataStorage("/storage/strip")
 
-  # "all_files" is a list of DataFile objects, sorted in chronological
-  # order
+  # Wow! We are reading one whole day of housekeeping data!
+  times, data = ds.load_hk(
+      mjd_range=(59530.0, 59531.0),
+      group="BIAS",
+      subgroup="POL_R0",
+      par="VG1_HK",
+  )
+
+Note that the script provides the range of times as a MJD range; the
+:class:`.DataStorage` object looks in the list of files and decides
+which files contain this information and reads them. The return value
+is the same as for a call to :meth:`.DataFile.load_hk`.
+
+The :class:`.DataStorage` provides the following methods to access
+tags, scientific data and housekeeping parameters:
+
+- :meth:`.DataStorage.get_tags` retrieves a list of tags;
+- :meth:`.DataStorage.load_sci` retrieves scientific timelines;
+- :meth:`.DataStorage.load_hk` retrieves housekeeping timelines.
+
+All these functions accept either a 2-tuple containing the start and
+end MJD or a :class:`.Tag` object that specifies the time range.
 
 
 Module contents
 ----------------------------------
 
-.. automodule:: striptease.hdf5files
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. autoclass:: striptease.Tag
+
+.. autoclass:: HkDescriptionList
+
+.. autofunction:: find_first_and_last_samples_in_hdf5
+
+.. autofunction:: get_group_subgroup
+
+.. autofunction:: get_hk_descriptions
+
+.. autoclass:: striptease.DataFile
+
+.. autoclass:: striptease.DataStorage
