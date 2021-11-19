@@ -29,13 +29,16 @@ from .diagnostics import (
     script_to_tagevents,
     plot_tagevents,
 )
+from .hdf5db import (
+    DataStorage,
+)
 from .hdf5files import (
     Tag,
     HkDescriptionList,
+    find_first_and_last_samples_in_hdf5,
     get_group_subgroup,
     get_hk_descriptions,
     DataFile,
-    scan_data_path,
 )
 from .procedures import (
     dump_procedure_as_json,
@@ -86,9 +89,12 @@ __all__ = [
     "TagEvent",
     "script_to_tagevents",
     "plot_tagevents",
+    # hdf5db.py
+    "DataStorage",
     # hdf5files.py
     "Tag",
     "HkDescriptionList",
+    "find_first_and_last_samples_in_hdf5",
     "get_group_subgroup",
     "get_hk_descriptions",
     "DataFile",
