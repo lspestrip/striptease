@@ -45,8 +45,9 @@ class PSProcedure(StripProcedure):
                     new_pol=None,
                 )
                 turnon_proc.run()
-
                 self.command_emitter.command_list += turnon_proc.get_command_list()
+                turnon_proc.clear_command_list()
+
             self.conn.wait(seconds=1800)
         self.conn.log(message="set pol state to unswitching 0101")
         for cur_board, pol_idx, pol_name in polarimeter_iterator(args.board):
