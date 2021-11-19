@@ -18,7 +18,6 @@ Welcome to Striptease's documentation!
    data_interface
    procedures
    unittests
-   API
    development
 
 Indices and tables

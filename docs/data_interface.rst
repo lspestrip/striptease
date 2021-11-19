@@ -78,6 +78,42 @@ class provides two methods:
 Moreover, a method :meth:`.DataFile.get_average_biases` can be used
 to retrieve the average level of biases within some time frame.
 
+.. autoclass:: striptease.DataFile
+   :members:
+
+
+Accessing the list of tags
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Every :class:`.DataFile` object keeps the list of tags in the ``tags``
+attribute, which is a list of object of type :class:`.Tag`. Here is a
+code that searches for all the tags containing the string
+``STABLE_ACQUISITION`` in their name::
+
+  from striptease import DataFile
+
+  with DataFile("test.h5") as inpf:
+      list_of_tags = [
+          t
+          for t in inpf.tags
+          if "STABLE_ACQUISITION" in t.name
+      ]
+
+  for cur_tag in list_of_tags:
+      print("Found a tag: ", cur_tag.name)
+
+  # Possible output:
+  #
+  # Found a tag: STABLE_ACQUISITION_R0
+  # Found a tag: STABLE_ACQUISITION_B0
+  # Found a tag: STABLE_ACQUISITION_R1
+  # Found a tag: STABLE_ACQUISITION_B1
+
+
+.. autoclass:: striptease.Tag
+
+
+
 Information about housekeeping parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -89,6 +125,12 @@ the name of each housekeeping in the group/subgroup with a textual
 description. The object can be printed using ``print``: it will
 produce a (long!) table containing all the housekeeping parameters and
 descriptions in alphabetic order.
+
+
+.. autoclass:: striptease.HkDescriptionList
+   :members:
+
+.. autofunction:: striptease.get_hk_descriptions
 
 
 Handling multiple HDF5 files
@@ -132,20 +174,5 @@ tags, scientific data and housekeeping parameters:
 All these functions accept either a 2-tuple containing the start and
 end MJD or a :class:`.Tag` object that specifies the time range.
 
-
-Module contents
-----------------------------------
-
-.. autoclass:: striptease.Tag
-
-.. autoclass:: HkDescriptionList
-
-.. autofunction:: find_first_and_last_samples_in_hdf5
-
-.. autofunction:: get_group_subgroup
-
-.. autofunction:: get_hk_descriptions
-
-.. autoclass:: striptease.DataFile
-
 .. autoclass:: striptease.DataStorage
+   :members:
