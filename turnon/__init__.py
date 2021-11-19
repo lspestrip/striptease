@@ -488,6 +488,7 @@ class TurnOnOffProcedure(StripProcedure):
         self.stable_acquisition_time_s = stable_acquisition_time_s
         self.turnon = turnon
         self.on_boards = set()
+        self.off_boards = set()
 
     def set_board_horn_polarimeter(self, new_board, new_horn, new_pol=None):
         self.board = new_board
@@ -659,14 +660,17 @@ class TurnOnOffProcedure(StripProcedure):
             )
 
         # 1
-        with StripTag(
-            conn=self.command_emitter,
-            name="BOARD_TURN_OFF",
-            comment=f"Turning off board for {self.horn}",
-        ):
-            board_setup.log("Going to set up the board…")
-            board_setup.board_setup()
-            board_setup.log("Board has been set up")
+        if self.board not in self.off_boards:
+            with StripTag(
+                conn=self.command_emitter,
+                name="BOARD_TURN_OFF",
+                comment=f"Turning off board for {self.horn}",
+            ):
+                board_setup.log("Going to set up the board…")
+                board_setup.board_setup()
+                board_setup.log("Board has been set up")
+
+            self.off_boards.add(self.board)
 
         # 6
         for lna in reversed(["HA3", "HA2", "HA1", "HB3", "HB2", "HB1"]):
