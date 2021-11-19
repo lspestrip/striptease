@@ -40,7 +40,7 @@ class ReferenceTestProcedure(StripProcedure):
                 turnon_proc.clear_command_list()
 
             self.conn.log(message=f"{polname} is now on, start the reference procedure")
-            proc_1(self, polname, cur_board)
+            proc_1(self, polname, cur_board, 1)
             self.conn.log(
                 message=f"reference procedure for {polname} has been completed, turning {polname} off…"
             )
