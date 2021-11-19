@@ -254,7 +254,7 @@ class UnitTestDCCurves:
 
     The class has two fields:
 
-    - ``acquisition_date``: a ``datetime.date` object containing the
+    - ``acquisition_date``: a ``datetime.date`` object containing the
       date when the test was acquired.
 
     - ``band``: a string containing either ``Q`` or ``W``;
@@ -319,7 +319,7 @@ class UnitTestDC:
     This class is created by the function :func:`.load_unit_test_data`
     whenever a DC test is requested. It contains the following fields:
 
-    - ``acquisition_date``: a ``datetime.date` object containing the
+    - ``acquisition_date``: a ``datetime.date`` object containing the
       date when the test was acquired.
 
     - ``band``: a string containing either ``Q`` or ``W``;
@@ -358,7 +358,7 @@ class UnitTestTimestream:
     temperature characterization, etc.). It contains the following
     fields:
 
-    - ``acquisition_date``: a ``datetime.date` object containing the
+    - ``acquisition_date``: a ``datetime.date`` object containing the
       date when the test was acquired.
 
     - ``band``: a string containing either ``Q`` or ``W``;
