@@ -32,13 +32,13 @@ conversions::
       value=1000,
   ))
 
-A `CalibrationTable` object connects with the server when the
+A :class:`CalibrationTable` object connects with the server when the
 constructor is called, because it needs to know which is the
 association between the board name (in the example above, ``R``) and
 the board number used by the electronics. Once the object ``cal`` has
 been constructed, the connection is no longer used. If you have
-already instanced a :class:`Config` object, you can pass it
-to the constructor and it will be reused::
+already instanced a :class:`Config` object, you can pass it to the
+constructor and it will be reused::
 
   from calibration import CalibrationTables
   from config import Config
@@ -55,6 +55,10 @@ to the constructor and it will be reused::
 
   # Reuse the configuration object
   cal = CalibrationTables(config)
+
+
+.. autoclass:: calibration.CalibrationTables
+    :members:
 
 
 Low-level calibration functions
@@ -87,11 +91,4 @@ These operations are implemented by the functions
 :meth:`calibration.adu_to_physical_units`, which require a
 `CalibrationCurve` object.
 
-
-Module documentation
---------------------
-
-.. automodule:: calibration
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. autoclass:: calibration.CalibrationCurve
