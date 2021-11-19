@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS tags(
 
 
 def scan_data_path(
-    path: Union[str, Path], close_files=True
+    path: Union[str, Path],
 ) -> Tuple[List[DataFile], sqlite3.Connection]:
 
     db = sqlite3.connect(Path(path) / "index.db")
@@ -119,9 +119,6 @@ def scan_data_path(
             )
 
             db.commit()
-
-        if close_files:
-            hdf5.close_file()
 
         file_list.append(hdf5)
 
@@ -242,6 +239,8 @@ class DataStorage:
         storage directory that fall (even partially) within the range of MJD specified
         by `mjd_range`. The function is quite fast because it uses a cache instead of
         reading the HDF5 files themselves.
+
+        You can pass a :class:`.Tag` object instead of a MJD time range.
         """
 
         # To check if a tag falls within mjd_range, we check
@@ -279,6 +278,8 @@ class DataStorage:
         takes as input a time range (expressed in MJD) which can cross the HDF5 file
         boundaries.
 
+        You can pass a :class:`.Tag` object instead of a MJD time range.
+
         Example::
 
             from striptease import DataStorage
@@ -302,18 +303,20 @@ class DataStorage:
         takes as input a time range (expressed in MJD) which can cross the HDF5 file
         boundaries.
 
+        You can pass a :class:`.Tag` object instead of a MJD time range.
+
         Example::
 
             from striptease import DataStorage
 
             ds = DataStorage("/database/STRIP/HDF5/")
             # Caution! One whole day of scientific data!
-                times, data = ds.load_hk(
-                    mjd_range=(59530.0, 59531.0),
-                    group="BIAS",
-                    subgroup="POL_R0",
-                    par="VG1_HK",
-                )
+            times, data = ds.load_hk(
+                mjd_range=(59530.0, 59531.0),
+                group="BIAS",
+                subgroup="POL_R0",
+                par="VG1_HK",
+            )
 
         """
         return self._load(mjd_range, load_fn=lambda f: f.load_sci(*args, **kwargs))

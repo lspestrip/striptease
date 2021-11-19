@@ -22,11 +22,17 @@ VALID_DATA_TYPES = ["PWR", "DEM"]
 #: Information about a tag loaded from a HDF5 file
 #:
 #: Fields are:
+#:
 #: - ``id``: unique integer number
+#:
 #: - ``mjd_start``: start time of the tag (MJD)
+#:
 #: - ``mjd_end``: stop time of the tag (MJD)
+#:
 #: - ``name``: string containing the name of the tag
+#:
 #: - ``start_comment``: comment put at the start
+#:
 #: - ``end_comment``: comment put at the end
 Tag = namedtuple(
     "Tag", ["id", "mjd_start", "mjd_end", "name", "start_comment", "end_comment"]
@@ -366,7 +372,24 @@ class DataFile:
         return f'striptease.DataFile("{self.filepath}")'
 
     def read_file_metadata(self, force=False):
-        "Open the file and checks the contents"
+        """Open the file and retrieve some basic metadata
+
+        This function opens the HDF5 file and retrieves the following information:
+
+        - List of groups under the root node
+
+        - List of boards for whom some data was saved in the file
+
+        - List of polarimeters that have some data saved in the file
+
+        - List of tags
+
+        - MJD of the first and last scientific/housekeeping sample in the file
+
+        This function is *idempotent*, in the sense that calling it twice will not force
+        a re-read of the metadata. To override this behavior, pass ``force=True``: the
+        function will re-open the file and read all the metadata again.
+        """
 
         if self.hdf5_file:
             if not force:
@@ -395,13 +418,6 @@ class DataFile:
         ]
 
         self.mjd_range = find_first_and_last_samples_in_hdf5(self.hdf5_file)
-
-    def close_file(self):
-        "Close the HDF5 file"
-
-        if self.hdf5_file:
-            self.hdf5_file.close()
-            self.hdf5_file = None
 
     def __enter__(self):
         # Force opening the file and reading the metadata
