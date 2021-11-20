@@ -238,6 +238,22 @@ class DataStorage:
     def _open_file(self, path: Union[str, Path]) -> DataFile:
         return self.opened_files.get(Path(path), DataFile(path))
 
+    def get_list_of_files(self) -> List[HDF5FileInfo]:
+        """Return a list of all the files in the storage path"""
+        curs = self.db.cursor()
+        curs.execute(
+            """
+            SELECT path, size_in_bytes, first_sample, last_sample
+            FROM files
+            ORDER BY first_sample
+        """
+        )
+
+        return [
+            HDF5FileInfo(path=x[0], size=x[1], mjd_range=(x[2], x[3]))
+            for x in curs.fetchall()
+        ]
+
     def _files_in_range(
         self,
         mjd_interval: Tuple[float, float],
