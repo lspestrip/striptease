@@ -98,8 +98,8 @@ def scan_data_path(
         if not update_database:
             log.warning(
                 (
-                    "file {file_name} is not in database {db_path}"
-                    ", consider using update_database=True"
+                    "file {file_name} is not in database {db_path} or has a "
+                    "wrong MJD range, consider using update_database=True"
                 ).format(file_name=file_name, db_path=db_path)
             )
         else:
