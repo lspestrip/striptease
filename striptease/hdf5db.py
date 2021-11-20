@@ -163,7 +163,7 @@ def scan_data_path(
                 f"{cur_path} is present in the database {db_path} but is missing from disk"
             )
             if update_database:
-                curs.execute("DELETE FROM files WHERE path = ?", cur_path)
+                curs.execute("DELETE FROM files WHERE path = ?", (cur_path,))
                 db.commit()
                 log.info(f"entry {cur_path} was deleted from the database")
 
