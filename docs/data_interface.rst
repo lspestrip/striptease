@@ -176,3 +176,10 @@ end MJD or a :class:`.Tag` object that specifies the time range.
 
 .. autoclass:: striptease.DataStorage
    :members:
+
+You can access a list of the files indexed by a :class:`.DataStorage`
+object using the method :meth:`.DataStorage.get_list_of_files()`,
+which returns a list of :`.HDF5FileInfo` objects.
+
+.. autoclass:: striptease.HDF5FileInfo
+

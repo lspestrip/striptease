@@ -31,6 +31,7 @@ from .diagnostics import (
 )
 from .hdf5db import (
     DataStorage,
+    HDF5FileInfo,
 )
 from .hdf5files import (
     Tag,
@@ -91,6 +92,7 @@ __all__ = [
     "plot_tagevents",
     # hdf5db.py
     "DataStorage",
+    "HDF5FileInfo",
     # hdf5files.py
     "Tag",
     "HkDescriptionList",
