@@ -12,7 +12,17 @@ import numpy as np
 from .hdf5files import DataFile, Tag
 
 
-FileEntry = namedtuple("FileEntry", ["path", "size", "mjd_range"])
+#: Basic information about a HDF5 data file
+#:
+#: Fields are:
+#:
+#: - ``path``: a ``pathlib.Path`` object containing the path to the file
+#:
+#: - ``size``: size of the file, in bytes
+#:
+#: - ``mjd_range``: a 2-tuple containing the MJD of the first and last
+#:   scientific/housekeeping sample in the file (``float`` values)
+HDF5FileInfo = namedtuple("HDF5FileInfo", ["path", "size", "mjd_range"])
 
 
 def extract_mjd_range(
@@ -160,7 +170,7 @@ def scan_data_path(
     return db
 
 
-def find_time_in_files(files: List[FileEntry], mjd: float, first=0, last=None):
+def find_time_in_files(files: List[HDF5FileInfo], mjd: float, first=0, last=None):
     """Search the HDF5 file that contains the specified MJD
 
     This is a textbook-like implementation of a binary search. Therefore, it is
@@ -231,7 +241,7 @@ class DataStorage:
     def _files_in_range(
         self,
         mjd_interval: Tuple[float, float],
-    ) -> List[FileEntry]:
+    ) -> List[HDF5FileInfo]:
         """Return a list of the files that contain data within the MJD range"""
 
         first_mjd, last_mjd = mjd_interval
@@ -254,7 +264,7 @@ class DataStorage:
         )
 
         return [
-            FileEntry(path=x[0], size=x[1], mjd_range=(x[2], x[3]))
+            HDF5FileInfo(path=x[0], size=x[1], mjd_range=(x[2], x[3]))
             for x in curs.fetchall()
         ]
 
