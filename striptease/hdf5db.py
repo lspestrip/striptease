@@ -1,13 +1,18 @@
 # -*- encoding: utf-8 -*-
 
+from collections import namedtuple
 import logging as log
 from pathlib import Path
 import sqlite3
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Set, Dict
 
+from rich.progress import track
 import numpy as np
 
 from .hdf5files import DataFile, Tag
+
+
+FileEntry = namedtuple("FileEntry", ["path", "size", "mjd_range"])
 
 
 def extract_mjd_range(
@@ -54,41 +59,47 @@ CREATE TABLE IF NOT EXISTS tags(
 
 
 def scan_data_path(
-    path: Union[str, Path], database_name="index.db"
-) -> Tuple[List[DataFile], sqlite3.Connection]:
+    path: Union[str, Path],
+    database_name="index.db",
+    update_database=False,
+) -> sqlite3.Connection:
 
-    db_path = Path(path) / "index.db"
+    db_path = Path(path) / database_name
     db = sqlite3.connect(db_path)
     create_storage_db(db)
 
-    file_list = []
     curs = db.cursor()
-    for file_name in Path(path).glob("**/*.h5"):
+    visited_files = set()  # type: Set[str]
+    files_to_update = list(Path(path).glob("**/*.h5"))
+    for file_name in track(files_to_update) if update_database else files_to_update:
         # Follow symlinks and remove "." and ".."
         file_name = file_name.resolve()
-
-        # file_name is a Path object
-        hdf5 = DataFile(file_name)
+        visited_files.add(str(file_name))
 
         curs.execute(
-            """
-            SELECT first_sample, last_sample
-            FROM files
-            WHERE path = ?
-            """,
+            "SELECT first_sample, last_sample FROM files WHERE path = ?",
             (str(file_name.absolute()),),
         )
         entry = curs.fetchone()
-        if entry and isinstance(entry, tuple) and (len(entry) == 2) and (entry[0] > 0):
+        if entry and (entry[0] > 0):
             # The entry is already in the database, so we can skip opening the file
-            hdf5.mjd_range = entry
+            continue
+
+        if not update_database:
+            log.warning(
+                (
+                    "file {file_name} is not in database {db_path}"
+                    ", consider using update_database=True"
+                ).format(file_name=file_name, db_path=db_path)
+            )
         else:
-            log.debug(
-                f"file {file_name} not found in database {db_path}, adding its metadata"
+            log.info(
+                f'file "{file_name}" not found in database "{db_path}", adding its metadata'
             )
 
             try:
-                hdf5.read_file_metadata()  # This can take some time
+                with DataFile(file_name) as hdf5:
+                    first_sample, last_sample = hdf5.mjd_range
             except OSError as e:
                 log.error(f'unable to read metadata from "{file_name}" (OSError): {e}')
                 continue
@@ -98,7 +109,6 @@ def scan_data_path(
                 )
                 continue
 
-            first_sample, last_sample = hdf5.mjd_range
             curs.execute(
                 "INSERT INTO files VALUES (:path, :size, :first_sample, :last_sample)",
                 {
@@ -134,12 +144,23 @@ def scan_data_path(
 
             db.commit()
 
-        file_list.append(hdf5)
+    # Now check that there are no files that have been deleted but are still present
+    # in the database
+    curs.execute("SELECT path FROM files ORDER BY first_sample")
+    for (cur_path,) in curs.fetchall():
+        if cur_path not in visited_files:
+            log.warning(
+                f"{cur_path} is present in the database {db_path} but is missing from disk"
+            )
+            if update_database:
+                curs.execute("DELETE FROM files WHERE path = ?", cur_path)
+                db.commit()
+                log.info(f"entry {cur_path} was deleted from the database")
 
-    return (sorted(file_list, key=lambda x: x.mjd_range[0]), db)
+    return db
 
 
-def find_time_in_files(files: List[DataFile], mjd: float, first=0, last=None):
+def find_time_in_files(files: List[FileEntry], mjd: float, first=0, last=None):
     """Search the HDF5 file that contains the specified MJD
 
     This is a textbook-like implementation of a binary search. Therefore, it is
@@ -185,34 +206,57 @@ class DataStorage:
             print(cur_tag)
     """
 
-    def __init__(self, path: Union[str, Path]):
+    def __init__(
+        self, path: Union[str, Path], database_name="index.db", update_database=False
+    ):
+        """Load a database of HDF5 files
+
+        Load a database of HDF5 files from the specified path. The database is a SQLite3
+        file saved in a file named `database_name` in folder `path`. If the flag
+        `update_database` is ``True``, the database will be created/updated whenever
+        needed; if it is false, it will be only read.
+
+        Beware that ``update_database=True`` requires that you have write permission
+        on the database file.
+        """
         self.basepath = path
-        self.file_list, self.db = scan_data_path(path)
+        self.db = scan_data_path(
+            path, database_name=database_name, update_database=update_database
+        )
+        self.opened_files = {}  # type: Dict[Path, DataFile]
+
+    def _open_file(self, path: Union[str, Path]) -> DataFile:
+        return self.opened_files.get(Path(path), DataFile(path))
 
     def _files_in_range(
         self,
         mjd_interval: Tuple[float, float],
-    ):
-        """Return a list of the indexes of the files that contain data within the MJD range"""
-
-        if not self.file_list:
-            return []
+    ) -> List[FileEntry]:
+        """Return a list of the files that contain data within the MJD range"""
 
         first_mjd, last_mjd = mjd_interval
-        assert (
-            first_mjd <= last_mjd
-        ), f"Wrong range {mjd_interval} passed to DataStorage.files_in_range"
-        first_idx = find_time_in_files(self.file_list, first_mjd)
-        last_idx = find_time_in_files(self.file_list, last_mjd)
-        if self.file_list[first_idx].mjd_range[0] > last_mjd:
-            # The time is too far in the past
-            return []
 
-        if self.file_list[last_idx].mjd_range[1] < first_mjd:
-            # The time is too far in the future
-            return []
+        curs = self.db.cursor()
+        # The WHERE clause considers three possibilities:
+        # 1. The first part of the file falls within the time range we're looking for
+        # 2. The last part of the file falls within the time range we're looking for
+        # 3. The entirety of the file falls within the time range we're looking for
+        curs.execute(
+            """
+            SELECT path, size_in_bytes, first_sample, last_sample
+            FROM files
+            WHERE ((:query_start >= first_sample) AND (:query_start <= last_sample))
+               OR ((:query_end >= first_sample) AND (:query_end <= last_sample))
+               OR ((:query_start <= first_sample) AND (:query_end >= last_sample))
+            ORDER BY first_sample
+        """,
+            {"query_start": first_mjd, "query_end": last_mjd},
+        )
 
-        return list(range(first_idx, last_idx + 1))
+        return [
+            FileEntry(path=x[0], size=x[1], mjd_range=(x[2], x[3]))
+            for x in curs.fetchall()
+        ]
 
     def _load(
         self,
@@ -222,16 +266,12 @@ class DataStorage:
         "Private function, used by load_sci and load_hk"
 
         start_mjd, end_mjd = extract_mjd_range(mjd_range)
-        indexes = self._files_in_range(mjd_range)
-        if not indexes:
-            return None, None
-
         time, data = None, None
-        for idx in indexes:
-            # Reopen the file if it was closed and leave it open for possible later usage
-            self.file_list[idx].read_file_metadata(force=False)
+        for cur_file in self._files_in_range((start_mjd, end_mjd)):
+            hdf5_file = self._open_file(cur_file.path)
+            hdf5_file.read_file_metadata(force=False)
 
-            cur_time, cur_data = load_fn(self.file_list[idx])
+            cur_time, cur_data = load_fn(hdf5_file)
             mask = (cur_time.value >= start_mjd) & (cur_time.value <= end_mjd)
             cur_time = cur_time[mask]
             cur_data = cur_data[mask]

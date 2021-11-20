@@ -343,8 +343,9 @@ class DataFile:
 
     """
 
-    def __init__(self, filepath):
+    def __init__(self, filepath, filemode="r"):
         self.filepath = Path(filepath)
+        self.filemode = filemode
 
         try:
             self.datetime = parse_datetime_from_filename(self.filepath)
@@ -398,7 +399,7 @@ class DataFile:
                 self.hdf5_file.close()
                 del self.hdf5_file
 
-        self.hdf5_file = h5py.File(self.filepath, "r")
+        self.hdf5_file = h5py.File(self.filepath, self.filemode)
 
         self.hdf5_groups = list(self.hdf5_file)
 
@@ -425,7 +426,8 @@ class DataFile:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close_file()
+        self.hdf5_file.close()
+        del self.hdf5_file
 
     def load_hk(self, group, subgroup, par, verbose=False):
         """Loads scientific data from one detector of a given polarimeter
