@@ -164,6 +164,17 @@ Note that the script provides the range of times as a MJD range; the
 which files contain this information and reads them. The return value
 is the same as for a call to :meth:`.DataFile.load_hk`.
 
+For the class :class:`.DataStorage` to work, a database of the HDF5
+files in the specified path must be already present. You can create
+one using the command-line script ``build_hdf5_database.py``:
+
+.. code-block:: text
+
+  ./build_hdf5_database.py /storage/strip
+
+Accessing data in a storage
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 The :class:`.DataStorage` provides the following methods to access
 tags, scientific data and housekeeping parameters:
 
@@ -182,4 +193,5 @@ object using the method :meth:`.DataStorage.get_list_of_files()`,
 which returns a list of :`.HDF5FileInfo` objects.
 
 .. autoclass:: striptease.HDF5FileInfo
+
 
