@@ -9,8 +9,8 @@ from striptease import (
 from turnon import SetupBoard
 
 
-def set_0_bias(self, polname):
-    with StripTag(conn=self.command_emitter, name=f"ref_set_0B_pol_{polname}"):
+def set_0_bias(self, polname, test_number):
+    with StripTag(conn=self.command_emitter, name=f"ref{test_number}_set_0B_pol_{polname}"):
 
         for cur_lna in ("HA3", "HA2", "HA1", "HB3", "HB2", "HB1"):
             adu = self.calib.physical_units_to_adu(
@@ -24,15 +24,15 @@ def set_0_bias(self, polname):
         self.conn.set_pol_mode(polarimeter=polname, mode=5)
 
 
-def proc_1(self, polname, cur_board):
+def proc_1(self, polname, cur_board, test_number):
     # set to zero bias
-    set_0_bias(self, polname)
+    set_0_bias(self, polname, test_number)
     self.conn.set_hk_scan(boards=cur_board, allboards=False, time_ms=500)
-    wait_with_tag(conn=self.conn, seconds=120, name=f"ref_acquisition_0B_pol{polname}")
+    wait_with_tag(conn=self.conn, seconds=120, name=f"ref{test_number}_acquisition_0B_pol{polname}")
 
-    self.conn.log(message="ref_set pol state to unsw 1010")
+    self.conn.log(message="ref{test_number}_set pol state to unsw 1010")
     # set pol state to unsw 1010 (STATO 1)
-    with StripTag(conn=self.command_emitter, name=f"ref_set_pol_state{polname}"):
+    with StripTag(conn=self.command_emitter, name=f"ref{test_number}_set_pol_state{polname}"):
         for h, s in enumerate(
             [
                 PhswPinMode.STILL_NO_SIGNAL,
@@ -47,7 +47,7 @@ def proc_1(self, polname, cur_board):
 
     # imposto un wait per l'acquisizione
     wait_with_tag(
-        conn=self.conn, seconds=120, name=f"ref_acquisition_STATE1_pol{polname}"
+        conn=self.conn, seconds=120, name=f"ref{test_number}_acquisition_STATE1_pol{polname}"
     )
 
     # set pol to default bias
@@ -55,18 +55,18 @@ def proc_1(self, polname, cur_board):
         config=self.conf, post_command=self.command_emitter, board_name=cur_board
     )
 
-    self.conn.log(message="ref_set pol state to default bias")
+    self.conn.log(message="ref{test_number}_set pol state to default bias")
     for lna in ("HA3", "HA2", "HA1", "HB3", "HB2", "HB1"):
         board_setup.setup_VD(polname, lna, step=1.0)
         board_setup.setup_VG(polname, lna, step=1.0)
 
     self.conn.set_hk_scan(boards=cur_board, allboards=False, time_ms=500)
 
-    wait_with_tag(conn=self.conn, seconds=120, name=f"ref_acquisition_pol{polname}")
+    wait_with_tag(conn=self.conn, seconds=120, name=f"ref{test_number}_acquisition_pol{polname}")
 
-    self.conn.log(message="ref_set pol state to unsw 0101")
+    self.conn.log(message="ref{test_number}_set pol state to unsw 0101")
     # set pol to unsw 0101 (STATO 2)
-    with StripTag(conn=self.command_emitter, name=f"ref_set_pol_state{polname}"):
+    with StripTag(conn=self.command_emitter, name=f"ref{test_number}_set_pol_state{polname}"):
         for h, s in enumerate(
             [
                 PhswPinMode.STILL_SIGNAL,
@@ -80,13 +80,13 @@ def proc_1(self, polname, cur_board):
     self.conn.set_hk_scan(boards=cur_board, allboards=False, time_ms=200)
 
     wait_with_tag(
-        conn=self.conn, seconds=120, name=f"ref_acquisition_STATE2_pol{polname}"
+        conn=self.conn, seconds=120, name=f"ref{test_number}_acquisition_STATE2_pol{polname}"
     )
 
-    self.conn.log(message="ref_set phsw state to default bias")
+    self.conn.log(message="ref{test_number}_set phsw state to default bias")
     # set phsw modulation to default bias
     for h in range(4):
-        with StripTag(conn=self.command_emitter, name=f"ref_set_pol_state{polname}"):
+        with StripTag(conn=self.command_emitter, name=f"ref{test_number}_set_pol_state{polname}"):
             self.conn.set_phsw_status(
                 polarimeter=polname,
                 phsw_index=h,
@@ -95,11 +95,11 @@ def proc_1(self, polname, cur_board):
 
     self.conn.set_hk_scan(boards=cur_board, allboards=False, time_ms=500)
 
-    wait_with_tag(conn=self.conn, seconds=120, name=f"ref_acquisition_pol{polname}")
+    wait_with_tag(conn=self.conn, seconds=120, name=f"ref{test_number}_acquisition_pol{polname}")
 
-    self.conn.log(message="ref_set phsw state to antidefault bias")
+    self.conn.log(message="ref{test_number}_set phsw state to antidefault bias")
     # set phsw modulation to antidefault bias
-    with StripTag(conn=self.command_emitter, name=f"ref_set_pol_state{polname}"):
+    with StripTag(conn=self.command_emitter, name=f"ref{test_number}_set_pol_state{polname}"):
         for h, s in enumerate(
             [
                 PhswPinMode.SLOW_SWITCHING_FORWARD,
@@ -112,4 +112,4 @@ def proc_1(self, polname, cur_board):
 
     self.conn.set_hk_scan(boards=cur_board, allboards=False, time_ms=500)
 
-    wait_with_tag(conn=self.conn, seconds=120, name=f"ref_acquisition_pol{polname}")
+    wait_with_tag(conn=self.conn, seconds=120, name=f"ref{test_number}_acquisition_pol{polname}")
