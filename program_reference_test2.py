@@ -37,10 +37,11 @@ class ReferenceTestProcedure(StripProcedure):
                 )
                 turnon_proc.run()
                 self.command_emitter.command_list += turnon_proc.get_command_list()
+                turnon_proc.clear_command_list()
 
             print(polname)
 
-            proc_1(self, polname, cur_board, '2')
+            proc_1(self, polname, cur_board, 2)
 
             self.conn.log(message="ref2_set phsw state to default bias")
             # set phsw modulation to default bias

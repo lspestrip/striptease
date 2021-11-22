@@ -253,6 +253,8 @@ def copy_hdf5(source, dest, start_time=None, end_time=None, compression_level=4)
     if "/TAGS/tag_data" in dest:
         del dest["/TAGS/tag_data"]
 
+    return (source.attrs["FIRST_SAMPLE"], source.attrs["LAST_SAMPLE"])
+
 
 def parse_args():
     parser = ArgumentParser(
@@ -356,10 +358,11 @@ def main():
 
     # Now the main loop begins
     copied_files = []
+    first_sample, last_sample = None, None
     with h5py.File(args.output_filename, "w") as outf:
         for cur_input_filename in args.filenames:
             with h5py.File(cur_input_filename, "r") as inpf:
-                copy_hdf5(
+                cur_first_sample, cur_last_sample = copy_hdf5(
                     source=inpf,
                     dest=outf,
                     start_time=args.start_time,
@@ -367,7 +370,15 @@ def main():
                     compression_level=args.compression_level,
                 )
 
+                if not first_sample or (cur_first_sample < first_sample):
+                    first_sample = cur_first_sample
+                if not last_sample or (cur_last_sample < last_sample):
+                    last_sample = cur_last_sample
+
             copied_files.append(cur_input_filename)
+
+        outf.attrs["FIRST_SAMPLE"] = first_sample
+        outf.attrs["LAST_SAMPLE"] = last_sample
 
         maxlen = max([len(x) for x in copied_files])
 

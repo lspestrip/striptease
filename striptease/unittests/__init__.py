@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 import sqlite3
 from shutil import copyfileobj
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, Optional
 import urllib.request as urlreq
 from urllib.parse import urljoin
 
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS tests (
 
 def __get_test_from_cache(
     db: sqlite3.Connection, test_num: int, server: str
-) -> UnitTest:
+) -> Optional[UnitTest]:
     curs = db.cursor()
     url = unit_test_url(test_num, server)
     curs.execute(
@@ -152,7 +152,7 @@ FROM tests WHERE url = ?""",
 
 def __download_test(
     db: sqlite3.Connection, test_num: int, server: str, local_cache: Path
-) -> UnitTest:
+) -> Optional[UnitTest]:
     # Download the metadata from the db (JSON record)
     response = urlreq.urlopen(unit_test_json_url(test_num, server))
     metadata_str = response.read().decode("utf-8")
@@ -188,7 +188,7 @@ def get_unit_test(
     test_num: int,
     server=DEFAULT_UNIT_TEST_SERVER,
     local_cache=DEFAULT_UNIT_TEST_CACHE_PATH,
-):
+) -> Optional[UnitTest]:
     """Return a :class:`UnitTest` object referring to a unit test.
 
     This function is used to access the data files acquired during the
@@ -254,7 +254,7 @@ class UnitTestDCCurves:
 
     The class has two fields:
 
-    - ``acquisition_date``: a ``datetime.date` object containing the
+    - ``acquisition_date``: a ``datetime.date`` object containing the
       date when the test was acquired.
 
     - ``band``: a string containing either ``Q`` or ``W``;
@@ -319,7 +319,7 @@ class UnitTestDC:
     This class is created by the function :func:`.load_unit_test_data`
     whenever a DC test is requested. It contains the following fields:
 
-    - ``acquisition_date``: a ``datetime.date` object containing the
+    - ``acquisition_date``: a ``datetime.date`` object containing the
       date when the test was acquired.
 
     - ``band``: a string containing either ``Q`` or ``W``;
@@ -358,7 +358,7 @@ class UnitTestTimestream:
     temperature characterization, etc.). It contains the following
     fields:
 
-    - ``acquisition_date``: a ``datetime.date` object containing the
+    - ``acquisition_date``: a ``datetime.date`` object containing the
       date when the test was acquired.
 
     - ``band``: a string containing either ``Q`` or ``W``;
@@ -513,7 +513,7 @@ def load_unit_test_data(
     if isinstance(input_file, UnitTest):
         file_name = input_file.hdf5_file_path
     else:
-        file_name = input_file
+        file_name = Path(input_file)
 
     with h5py.File(file_name, "r") as h5_file:
         if "time_series" in h5_file:

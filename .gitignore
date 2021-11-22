@@ -109,3 +109,4 @@ STRIP_ENV/
 
 # other files
 *~
+.vscode/settings.json
