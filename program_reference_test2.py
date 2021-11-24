@@ -28,7 +28,7 @@ class ReferenceTestProcedure(StripProcedure):
         # turn on polarimeter
         turnon_proc = TurnOnOffProcedure(waittime_s=1.0, turnon=True)
         for cur_board, pol_idx, polname in polarimeter_iterator(args.board):
-            with StripTag(conn=self.command_emitter, name=f"ref_turnon_pol_{polname}"):
+            with StripTag(conn=self.command_emitter, name=f"ref2_turnon_pol_{polname}"):
 
                 turnon_proc.set_board_horn_polarimeter(
                     new_board=cur_board,
@@ -41,11 +41,11 @@ class ReferenceTestProcedure(StripProcedure):
 
             proc_1(self, polname, cur_board, 2)
 
-            self.conn.log(message="ref_set phsw state to default bias")
+            self.conn.log(message="ref2_set phsw state to default bias")
             # set phsw modulation to default bias
             for h in range(4):
                 with StripTag(
-                    conn=self.command_emitter, name=f"ref_set_pol_state{polname}"
+                    conn=self.command_emitter, name=f"ref2_set_pol_state{polname}"
                 ):
                     self.conn.set_phsw_status(
                         polarimeter=polname,
@@ -57,7 +57,7 @@ class ReferenceTestProcedure(StripProcedure):
             wait_with_tag(
                 conn=self.conn,
                 seconds=120,
-                name=f"ref_acquisition_default_pol{polname}",
+                name=f"ref2_acquisition_default_pol{polname}",
             )
 
 

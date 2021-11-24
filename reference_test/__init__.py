@@ -41,6 +41,7 @@ def proc_1(procedure, polname, cur_board, test_number):
     with StripTag(
         conn=procedure.command_emitter, name=f"ref{test_number}_set_pol_state{polname}"
     ):
+
         for h, s in enumerate(
             [
                 PhswPinMode.STILL_NO_SIGNAL,
@@ -68,6 +69,7 @@ def proc_1(procedure, polname, cur_board, test_number):
     )
 
     procedure.conn.log(message="ref_set pol state to default bias")
+
     for lna in ("HA3", "HA2", "HA1", "HB3", "HB2", "HB1"):
         board_setup.setup_VD(polname, lna, step=1.0)
         board_setup.setup_VG(polname, lna, step=1.0)
@@ -85,6 +87,7 @@ def proc_1(procedure, polname, cur_board, test_number):
     with StripTag(
         conn=procedure.command_emitter, name=f"ref{test_number}_set_pol_state{polname}"
     ):
+
         for h, s in enumerate(
             [
                 PhswPinMode.STILL_SIGNAL,
@@ -129,6 +132,7 @@ def proc_1(procedure, polname, cur_board, test_number):
     with StripTag(
         conn=procedure.command_emitter, name=f"ref{test_number}_set_pol_state{polname}"
     ):
+
         for h, s in enumerate(
             [
                 PhswPinMode.SLOW_SWITCHING_FORWARD,
