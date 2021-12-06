@@ -698,8 +698,8 @@ class TurnOnOffProcedure(StripProcedure):
         # 2
         with StripTag(
             conn=self.command_emitter,
-            name="ELECTRONICS_DISABLE",
-            comment=f"Enabling electronics for {self.horn}",
+            name="ELECTRONICS_DISABLE_{self.horn}",
+            comment=f"Disabling electronics for {self.horn}",
         ):
             board_setup.log(f"Disabling electronics for {self.horn}…")
             board_setup.disable_electronics(polarimeter=self.horn)
