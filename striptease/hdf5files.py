@@ -1,14 +1,20 @@
 # -*- encoding: utf-8 -*-
 
 from collections import namedtuple
+from io import BytesIO
 from pathlib import Path
 from typing import List, Set
+
+# Compression libraries
+import bz2
+import gzip
+import lzma
+import pyzstd
 
 from astropy.time import Time
 import csv
 import h5py
 import numpy as np
-from datetime import datetime
 from scipy.interpolate import interp1d
 
 from .biases import BiasConfiguration
@@ -18,6 +24,26 @@ VALID_GROUPS = ["BIAS", "DAQ"]
 VALID_SUBGROUPS = ["POL", "BOARD"]
 VALID_DETECTORS = ["Q1", "Q2", "U1", "U2"]
 VALID_DATA_TYPES = ["PWR", "DEM"]
+
+HDF5_GZIP_FILE_SUFFIXES = [".gz", ".gzip"]
+HDF5_BZIP2_FILE_SUFFIXES = [".bz2", ".bzip2"]
+HDF5_ZSTD_FILE_SUFFIXES = [".zst", ".zstd"]
+HDF5_XZ_FILE_SUFFIXES = [".xz", ".lzma"]
+HDF5_RAW_FILE_SUFFIXES = [".h5", ".hdf5"]
+HDF5_FILE_SUFFIXES = (
+    HDF5_GZIP_FILE_SUFFIXES
+    + HDF5_BZIP2_FILE_SUFFIXES
+    + HDF5_ZSTD_FILE_SUFFIXES
+    + HDF5_XZ_FILE_SUFFIXES
+    + HDF5_RAW_FILE_SUFFIXES
+)
+
+
+class HDF5ReadError(Exception):
+    """Raised when a HDF5 file does not matches the specifications"""
+
+    pass
+
 
 #: Information about a tag loaded from a HDF5 file
 #:
@@ -168,29 +194,6 @@ def get_hk_descriptions(group, subgroup):
     return HkDescriptionList(group, subgroup, hklist)
 
 
-def parse_datetime_from_filename(filename):
-    """Extract a datetime from a HDF5 file name
-
-    Example::
-
-        >>> parse_datetime_from_filename("2019_11_12_05-34-17.h5")
-        datetime.datetime(2019, 11, 12, 5, 34, 17)
-    """
-
-    basename = Path(filename).name
-    try:
-        return datetime(
-            year=int(basename[0:4]),
-            month=int(basename[5:7]),
-            day=int(basename[8:10]),
-            hour=int(basename[11:13]),
-            minute=int(basename[14:16]),
-            second=int(basename[17:19]),
-        )
-    except ValueError:
-        raise RuntimeError(f"Invalid HDF5 filename: {filename}")
-
-
 def scan_board_names(group_names: List[str]) -> Set[str]:
     """Scan a list of group names and return the set of boards in it.
 
@@ -290,6 +293,36 @@ def find_first_and_last_samples_in_hdf5(hdf5_file):
     return min_mjd, max_mjd
 
 
+def _open_file(filepath, filemode):
+    "Open a HDF5 file, applying a decompression step if necessary"
+
+    suffix = Path(filepath).suffix
+    if suffix not in HDF5_FILE_SUFFIXES:
+        raise HDF5ReadError(f'Unknown file suffix {suffix} for file "{filepath}"')
+
+    decompressor_fn = None
+    if suffix in HDF5_GZIP_FILE_SUFFIXES:
+        decompressor_fn = gzip.decompress
+    elif suffix in HDF5_BZIP2_FILE_SUFFIXES:
+        decompressor_fn = bz2.decompress
+    elif suffix in HDF5_ZSTD_FILE_SUFFIXES:
+        decompressor_fn = pyzstd.decompress
+    elif suffix in HDF5_XZ_FILE_SUFFIXES:
+        decompressor_fn = lzma.decompress
+    elif suffix in HDF5_RAW_FILE_SUFFIXES:
+        # In this case we just call h5py.File with no pre-loading
+        return h5py.File(filepath, filemode)
+
+    assert filemode == "r", "Compressed HDF5 files are read-only"
+    assert (
+        decompressor_fn is not None
+    ), f"Unhandled suffix {suffix} in DataFile._open_file"
+    with open(filepath, "rb") as inpf:
+        stream = BytesIO(decompressor_fn(inpf.read()))
+
+    return h5py.File(stream, filemode)
+
+
 class DataFile:
     """A HDF5 file containing timelines acquired by Strip
 
@@ -347,23 +380,6 @@ class DataFile:
         self.filepath = Path(filepath)
         self.filemode = filemode
 
-        try:
-            self.datetime = parse_datetime_from_filename(self.filepath)
-        except RuntimeError:
-            self.datetime = None
-
-            # Maybe this file was created by "join_hdf5.py". Let's check
-            # it by looking for a section containing the names of the
-            # files that have been joined
-            with h5py.File(self.filepath, "r") as inpf:
-                if "joined_files" in inpf and len(inpf["joined_files"]) > 0:
-                    try:
-                        self.datetime = parse_datetime_from_filename(
-                            str(inpf["joined_files"][0], encoding="utf-8")
-                        )
-                    except RuntimeError:
-                        pass
-
         self.mjd_range = None
         self.hdf5_groups = []
         self.tags = None
@@ -399,7 +415,7 @@ class DataFile:
                 self.hdf5_file.close()
                 del self.hdf5_file
 
-        self.hdf5_file = h5py.File(self.filepath, self.filemode)
+        self.hdf5_file = _open_file(self.filepath, self.filemode)
 
         self.hdf5_groups = list(self.hdf5_file)
 

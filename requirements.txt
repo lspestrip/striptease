@@ -17,3 +17,4 @@ flake8~=4.0.1
 pre-commit~=2.15.0
 openpyxl~=3.0.9
 rich~=10.14.0
+pyzstd~=0.15.0
