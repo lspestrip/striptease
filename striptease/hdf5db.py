@@ -9,7 +9,7 @@ from typing import Union, List, Tuple, Set, Dict
 from rich.progress import track
 import numpy as np
 
-from .hdf5files import DataFile, Tag
+from .hdf5files import HDF5_FILE_SUFFIXES, DataFile, Tag
 
 
 #: Basic information about a HDF5 data file
@@ -80,7 +80,12 @@ def scan_data_path(
 
     curs = db.cursor()
     visited_files = set()  # type: Set[str]
-    files_to_update = list(Path(path).glob("**/*.h5"))
+
+    files_to_update = []  # type: List[Path]
+    for cur_suffix in HDF5_FILE_SUFFIXES:
+        files_to_update += list(Path(path).glob(f"**/*{cur_suffix}"))
+
+    log.info(f"{len(files_to_update)} files match the glob pattern")
     for file_name in track(files_to_update) if update_database else files_to_update:
         # Follow symlinks and remove "." and ".."
         file_name = file_name.resolve()
