@@ -310,7 +310,8 @@ def _open_file(filepath, filemode):
     elif suffix in HDF5_XZ_FILE_SUFFIXES:
         decompressor_fn = lzma.decompress
     elif suffix in HDF5_RAW_FILE_SUFFIXES:
-        decompressor_fn = gzip.decompress
+        # In this case we just call h5py.File with no pre-loading
+        return h5py.File(filepath, filemode)
 
     assert filemode == "r", "Compressed HDF5 files are read-only"
     assert (
