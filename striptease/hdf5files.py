@@ -8,7 +8,6 @@ from astropy.time import Time
 import csv
 import h5py
 import numpy as np
-from datetime import datetime
 from scipy.interpolate import interp1d
 
 from .biases import BiasConfiguration
@@ -168,29 +167,6 @@ def get_hk_descriptions(group, subgroup):
     return HkDescriptionList(group, subgroup, hklist)
 
 
-def parse_datetime_from_filename(filename):
-    """Extract a datetime from a HDF5 file name
-
-    Example::
-
-        >>> parse_datetime_from_filename("2019_11_12_05-34-17.h5")
-        datetime.datetime(2019, 11, 12, 5, 34, 17)
-    """
-
-    basename = Path(filename).name
-    try:
-        return datetime(
-            year=int(basename[0:4]),
-            month=int(basename[5:7]),
-            day=int(basename[8:10]),
-            hour=int(basename[11:13]),
-            minute=int(basename[14:16]),
-            second=int(basename[17:19]),
-        )
-    except ValueError:
-        raise RuntimeError(f"Invalid HDF5 filename: {filename}")
-
-
 def scan_board_names(group_names: List[str]) -> Set[str]:
     """Scan a list of group names and return the set of boards in it.
 
@@ -346,23 +322,6 @@ class DataFile:
     def __init__(self, filepath, filemode="r"):
         self.filepath = Path(filepath)
         self.filemode = filemode
-
-        try:
-            self.datetime = parse_datetime_from_filename(self.filepath)
-        except RuntimeError:
-            self.datetime = None
-
-            # Maybe this file was created by "join_hdf5.py". Let's check
-            # it by looking for a section containing the names of the
-            # files that have been joined
-            with h5py.File(self.filepath, "r") as inpf:
-                if "joined_files" in inpf and len(inpf["joined_files"]) > 0:
-                    try:
-                        self.datetime = parse_datetime_from_filename(
-                            str(inpf["joined_files"][0], encoding="utf-8")
-                        )
-                    except RuntimeError:
-                        pass
 
         self.mjd_range = None
         self.hdf5_groups = []
