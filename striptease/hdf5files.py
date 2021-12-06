@@ -293,6 +293,8 @@ def find_first_and_last_samples_in_hdf5(hdf5_file):
                 mjd = obj["m_jd"]
                 # Filter out bad values
                 mjd = mjd[mjd >= EARLIEST_ACCEPTABLE_MJD]
+                if len(mjd) == 0:
+                    return
 
                 cur_min = mjd[0]
                 cur_max = mjd[-1]
