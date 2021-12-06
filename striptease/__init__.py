@@ -34,6 +34,12 @@ from .hdf5db import (
     HDF5FileInfo,
 )
 from .hdf5files import (
+    HDF5_GZIP_FILE_SUFFIXES,
+    HDF5_BZIP2_FILE_SUFFIXES,
+    HDF5_ZSTD_FILE_SUFFIXES,
+    HDF5_XZ_FILE_SUFFIXES,
+    HDF5_RAW_FILE_SUFFIXES,
+    HDF5_FILE_SUFFIXES,
     Tag,
     HkDescriptionList,
     find_first_and_last_samples_in_hdf5,
@@ -94,6 +100,12 @@ __all__ = [
     "DataStorage",
     "HDF5FileInfo",
     # hdf5files.py
+    "HDF5_GZIP_FILE_SUFFIXES",
+    "HDF5_BZIP2_FILE_SUFFIXES",
+    "HDF5_ZSTD_FILE_SUFFIXES",
+    "HDF5_XZ_FILE_SUFFIXES",
+    "HDF5_RAW_FILE_SUFFIXES",
+    "HDF5_FILE_SUFFIXES",
     "Tag",
     "HkDescriptionList",
     "find_first_and_last_samples_in_hdf5",
