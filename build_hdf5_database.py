@@ -51,7 +51,7 @@ def main():
             db_path.unlink()
             log.info(f'database "{db_path}" was removed from disk')
 
-    log.info("going to scan {path} for HDF5 files…")
+    log.info(f"going to scan {path} for HDF5 files…")
     ds = DataStorage(path, database_name=args.database_name, update_database=True)
     log.info(
         "the database has been updated and now contains {} entries".format(
