@@ -19,6 +19,11 @@ from scipy.interpolate import interp1d
 
 from .biases import BiasConfiguration
 
+# Any MJD value smaller than this will be considered invalid. We must
+# perform this kind of checks because the electronics has the nasty
+# habit of registering a few samples here and there with dates that
+# are way back in the past.
+EARLIEST_ACCEPTABLE_MJD = Time("2018-01-01").mjd
 
 VALID_GROUPS = ["BIAS", "DAQ"]
 VALID_SUBGROUPS = ["POL", "BOARD"]
@@ -271,14 +276,23 @@ def find_first_and_last_samples_in_hdf5(hdf5_file):
     """
 
     min_mjd = hdf5_file.attrs.get("FIRST_SAMPLE", -1)
+    if min_mjd < EARLIEST_ACCEPTABLE_MJD:
+        min_mjd = -1
+
     max_mjd = hdf5_file.attrs.get("LAST_SAMPLE", -1)
+    if max_mjd < EARLIEST_ACCEPTABLE_MJD:
+        max_mjd = -1
 
     def find_extrema(name, obj):
         nonlocal min_mjd, max_mjd
         if isinstance(obj, h5py.Dataset) and len(obj) > 0:
             if (obj.dtype.names is not None) and ("m_jd" in obj.dtype.names):
-                cur_min = obj["m_jd"][0]
-                cur_max = obj["m_jd"][-1]
+                mjd = obj["m_jd"]
+                # Filter out bad values
+                mjd = mjd[mjd >= EARLIEST_ACCEPTABLE_MJD]
+
+                cur_min = mjd[0]
+                cur_max = mjd[-1]
                 if (min_mjd < 0) or (cur_min < min_mjd):
                     min_mjd = cur_min
                 if (max_mjd < 0) or (cur_max > max_mjd):
