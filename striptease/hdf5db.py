@@ -9,7 +9,7 @@ from typing import Union, List, Tuple, Set, Dict
 from rich.progress import track
 import numpy as np
 
-from .hdf5files import HDF5_FILE_SUFFIXES, DataFile, Tag
+from .hdf5files import HDF5_FILE_SUFFIXES, EARLIEST_ACCEPTABLE_MJD, DataFile, Tag
 
 
 #: Basic information about a HDF5 data file
@@ -72,6 +72,7 @@ def scan_data_path(
     path: Union[str, Path],
     database_name="index.db",
     update_database=False,
+    update_hdf5=False,
 ) -> sqlite3.Connection:
 
     db_path = Path(path) / database_name
@@ -96,7 +97,11 @@ def scan_data_path(
             (str(file_name.absolute()),),
         )
         entry = curs.fetchone()
-        if entry and (entry[0] > 0):
+        if (
+            entry
+            and (entry[0] > EARLIEST_ACCEPTABLE_MJD)
+            and (entry[1] > EARLIEST_ACCEPTABLE_MJD)
+        ):
             # The entry is already in the database, so we can skip opening the file
             continue
 
@@ -115,6 +120,7 @@ def scan_data_path(
             try:
                 with DataFile(file_name) as hdf5:
                     first_sample, last_sample = hdf5.mjd_range
+                    computed = hdf5.computed_mjd_range
             except OSError as e:
                 log.error(f'unable to read metadata from "{file_name}" (OSError): {e}')
                 continue
@@ -133,6 +139,14 @@ def scan_data_path(
                     "last_sample": float(last_sample),
                 },
             )
+
+            if update_hdf5 and computed:
+                log.info(
+                    f'Writing MJD range ({first_sample}, {last_sample}) back in "{file_name}"'
+                )
+                with DataFile(file_name, "r+") as hdf5:
+                    hdf5.hdf5_file.attrs["FIRST_SAMPLE"] = first_sample
+                    hdf5.hdf5_file.attrs["LAST_SAMPLE"] = last_sample
 
             # If a tag is not closed when a HDF5 file is being opened, the
             # tag is left open and it will be properly closed in the next file.
@@ -222,21 +236,31 @@ class DataStorage:
     """
 
     def __init__(
-        self, path: Union[str, Path], database_name="index.db", update_database=False
+        self,
+        path: Union[str, Path],
+        database_name="index.db",
+        update_database=False,
+        update_hdf5=False,
     ):
         """Load a database of HDF5 files
 
         Load a database of HDF5 files from the specified path. The database is a SQLite3
         file saved in a file named `database_name` in folder `path`. If the flag
         `update_database` is ``True``, the database will be created/updated whenever
-        needed; if it is false, it will be only read.
+        needed; if it is false, it will be only read. If ``update_hdf5`` is ``True``,
+        whenever MJD ranges must be computed because they are not present in a HDF5
+        file, they will be written back to the HDF5 file itself.
 
         Beware that ``update_database=True`` requires that you have write permission
-        on the database file.
+        on the database file; similarly, ``update_hdf5=True`` requires to have write
+        permission on the HDF5 files.
         """
         self.basepath = path
         self.db = scan_data_path(
-            path, database_name=database_name, update_database=update_database
+            path,
+            database_name=database_name,
+            update_database=update_database,
+            update_hdf5=update_hdf5,
         )
         self.opened_files = {}  # type: Dict[Path, DataFile]
 

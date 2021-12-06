@@ -31,6 +31,13 @@ def main():
         help="""If true, any existing database will be removed and a new one will
         be created from scratch. CAUTION: this might take a lot of time!""",
     )
+    parser.add_argument(
+        "--update-hdf5",
+        default=False,
+        action="store_true",
+        help="""If specified, MJD timestamps that are not found in HDF5 files will
+        be saved back in the files. This requires write-access to the HDF5 files.""",
+    )
     parser.add_argument("path", type=str, help="Path where the HDF5 files are stored")
     args = parser.parse_args()
 
@@ -52,7 +59,12 @@ def main():
             log.info(f'database "{db_path}" was removed from disk')
 
     log.info(f"going to scan {path} for HDF5 files…")
-    ds = DataStorage(path, database_name=args.database_name, update_database=True)
+    ds = DataStorage(
+        path,
+        database_name=args.database_name,
+        update_database=True,
+        update_hdf5=args.update_hdf5,
+    )
     log.info(
         "the database has been updated and now contains {} entries".format(
             len(ds.get_list_of_files())
