@@ -265,7 +265,10 @@ def find_first_and_last_samples_in_hdf5(hdf5_file):
     """Search the minimum and maximum MJD time in the HDF5 (slow!)
 
     Return the MJD of the first and last samples recorded in the HDF5
-    file ``hdf5_file`` (which must have been already opened).
+    file ``hdf5_file`` (which must have been already opened), as well
+    as a Boolean telling if the MJD was read from file or computed
+    by scanning the whole file. (In the latter case, the user might
+    want to save it back in the file to avoid recomputing it again.)
 
     If the HDF5 contains the ``FIRST_SAMPLE`` and ``LAST_SAMPLE``, the
     function returns these values; otherwise, it scans all the datasets
@@ -303,8 +306,11 @@ def find_first_and_last_samples_in_hdf5(hdf5_file):
         # use the slow approach of crawling through all the datasets
         # in the file
         hdf5_file.visititems(find_extrema)
+        computed_range = True
+    else:
+        computed_range = False
 
-    return min_mjd, max_mjd
+    return min_mjd, max_mjd, computed_range
 
 
 def _open_file(filepath, filemode):
@@ -366,6 +372,14 @@ class DataFile:
           MJD of the first and last sample in the file. To initialize
           this field, you must call ``DataFile.read_file_metadata``
           first.
+
+    - ``computed_mjd_range``: a Boolean that is set to ``True`` if
+          the field ``mjd_range`` was computed through a complete
+          scanning of the datasets in the file or read from the
+          file attributes. (In the former case, the user might
+          want to save the MJD range back in the file and have it
+          ready for the future, as the scanning of a HDF5 file can
+          take considerable time.)
 
     - ``hdf5_groups``: a list of ``str`` objects containing the names
           of the groups in the HDF5 file. To initialize this field,
@@ -448,7 +462,11 @@ class DataFile:
             for x in self.hdf5_file["TAGS"]["tag_data"][:]
         ]
 
-        self.mjd_range = find_first_and_last_samples_in_hdf5(self.hdf5_file)
+        mjd_start, mjd_stop, computed = find_first_and_last_samples_in_hdf5(
+            self.hdf5_file
+        )
+        self.mjd_range = (mjd_start, mjd_stop)
+        self.computed_mjd_range = computed
 
     def __enter__(self):
         # Force opening the file and reading the metadata
