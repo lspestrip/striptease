@@ -698,7 +698,7 @@ class TurnOnOffProcedure(StripProcedure):
         # 2
         with StripTag(
             conn=self.command_emitter,
-            name="ELECTRONICS_DISABLE_{self.horn}",
+            name=f"ELECTRONICS_DISABLE_{self.horn}",
             comment=f"Disabling electronics for {self.horn}",
         ):
             board_setup.log(f"Disabling electronics for {self.horn}…")
