@@ -45,9 +45,17 @@ python3 program_reference_test3.py \
         --wait-time-s=$short_wait_time_s \
         --turn-on \
         --long-wait-time-s=$proc3_long_wait_time_s \
-        > "${output_dir}/reftest_all_3.json"
+        > "${output_dir}/reftest_all_3_turnon.json"
 python3 program_reference_test4.py \
         --wait-time-s=$short_wait_time_s \
         --turn-on \
         --long-wait-time-s=$proc4_long_wait_time_s \
-        > "${output_dir}/reftest_all_4.json"
+        > "${output_dir}/reftest_all_4_turnon.json"
+python3 program_reference_test3.py \
+        --wait-time-s=$short_wait_time_s \
+        --long-wait-time-s=$proc3_long_wait_time_s \
+        > "${output_dir}/reftest_all_3_no_turnon.json"
+python3 program_reference_test4.py \
+        --wait-time-s=$short_wait_time_s \
+        --long-wait-time-s=$proc4_long_wait_time_s \
+        > "${output_dir}/reftest_all_4_no_turnon.json"

@@ -23,32 +23,36 @@ from program_turnon import TurnOnOffProcedure
 
 
 class PSProcedure(StripProcedure):
-    def __init__(self):
-        super(PSProcedure, self).__init__()
+    def __init__(self, turn_on):
+        super().__init__()
         data_file_path = (
             Path(__file__).parent / "data" / "corrispondenze_FH_testDC.xlsx"
         )
         log.info(f'Reading correspondences from file "{data_file_path}"')
         self.dfs = pd.read_excel(data_file_path, index_col=0)
+        self.turn_on = turn_on
 
     def run(self):
         calibr = CalibrationTables()
-        turnon_proc = TurnOnOffProcedure(waittime_s=1.0, turnon=True)
-        with StripTag(conn=self.command_emitter, name="turnon_all_pol"):
-            for cur_board, pol_idx, pol_name in polarimeter_iterator(args.board):
 
-                # turnon pol
+        if self.turn_on:
+            turnon_proc = TurnOnOffProcedure(waittime_s=1.0, turnon=True)
+            with StripTag(conn=self.command_emitter, name="turnon_all_pol"):
+                for cur_board, pol_idx, pol_name in polarimeter_iterator(args.board):
 
-                turnon_proc.set_board_horn_polarimeter(
-                    new_board=cur_board,
-                    new_horn=pol_name,
-                    new_pol=None,
-                )
-                turnon_proc.run()
-                self.command_emitter.command_list += turnon_proc.get_command_list()
-                turnon_proc.clear_command_list()
+                    # turnon pol
 
-            self.conn.wait(seconds=1800)
+                    turnon_proc.set_board_horn_polarimeter(
+                        new_board=cur_board,
+                        new_horn=pol_name,
+                        new_pol=None,
+                    )
+                    turnon_proc.run()
+                    self.command_emitter.command_list += turnon_proc.get_command_list()
+                    turnon_proc.clear_command_list()
+
+                self.conn.wait(seconds=1800)
+
         self.conn.log(message="set pol state to unswitching 0101")
         for cur_board, pol_idx, pol_name in polarimeter_iterator(args.board):
 
@@ -177,6 +181,13 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--turn-on",
+        default=False,
+        action="store_true",
+        help="Include commands to turn on the polarimeters",
+    )
+
+    parser.add_argument(
         "board",
         type=str,
         nargs="?",
@@ -188,6 +199,6 @@ if __name__ == "__main__":
 
     log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
 
-    proc = PSProcedure()
+    proc = PSProcedure(turn_on=args.turn_on)
     proc.run()
     proc.output_json(args.output_filename)

@@ -80,7 +80,7 @@ class ReferenceTestProcedure(StripProcedure):
 
             with StripTag(
                 conn=self.command_emitter,
-                name=f"ref4_set_pol_{polname}_phsw_{h}_STATE1",
+                name=f"ref4_set_pol_{polname}_phsw_STATE1",
             ):
                 for h, s in enumerate(
                     [
@@ -103,7 +103,7 @@ class ReferenceTestProcedure(StripProcedure):
 
             with StripTag(
                 conn=self.command_emitter,
-                name=f"ref4_set_pol_{polname}_phsw_{h}_STATE2",
+                name=f"ref4_set_pol_{polname}_phsw_STATE2",
             ):
                 for h, s in enumerate(
                     [
@@ -126,7 +126,7 @@ class ReferenceTestProcedure(StripProcedure):
 
             with StripTag(
                 conn=self.command_emitter,
-                name=f"ref4_set_pol_{polname}_phsw_{h}_STATE3",
+                name=f"ref4_set_pol_{polname}_phsw_STATE3",
             ):
 
                 for h, s in enumerate(
@@ -150,7 +150,7 @@ class ReferenceTestProcedure(StripProcedure):
 
             with StripTag(
                 conn=self.command_emitter,
-                name=f"ref4_set_pol_{polname}_phsw_{h}_STATE4",
+                name=f"ref4_set_pol_{polname}_phsw_STATE4",
             ):
 
                 for h, s in enumerate(
