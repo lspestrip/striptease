@@ -26,13 +26,13 @@ def set_0_bias(procedure, polname, test_number):
         procedure.conn.set_pol_mode(polarimeter=polname, mode=5)
 
 
-def proc_1(procedure, polname, cur_board, test_number):
+def proc_1(procedure, polname, cur_board, test_number, wait_time_s=120):
     # set to zero bias
     set_0_bias(procedure, polname, test_number)
     procedure.conn.set_hk_scan(boards=cur_board, allboards=False, time_ms=500)
     wait_with_tag(
         conn=procedure.conn,
-        seconds=120,
+        seconds=wait_time_s,
         name=f"ref{test_number}_acquisition_0B_pol{polname}",
     )
 
@@ -57,7 +57,7 @@ def proc_1(procedure, polname, cur_board, test_number):
     # imposto un wait per l'acquisizione
     wait_with_tag(
         conn=procedure.conn,
-        seconds=120,
+        seconds=wait_time_s,
         name=f"ref{test_number}_acquisition_STATE1_pol{polname}",
     )
 
@@ -78,7 +78,7 @@ def proc_1(procedure, polname, cur_board, test_number):
 
     wait_with_tag(
         conn=procedure.conn,
-        seconds=120,
+        seconds=wait_time_s,
         name=f"ref{test_number}_acquisition_pol{polname}",
     )
 
@@ -102,7 +102,7 @@ def proc_1(procedure, polname, cur_board, test_number):
 
     wait_with_tag(
         conn=procedure.conn,
-        seconds=120,
+        seconds=wait_time_s,
         name=f"ref{test_number}_acquisition_STATE2_pol{polname}",
     )
 
@@ -123,7 +123,7 @@ def proc_1(procedure, polname, cur_board, test_number):
 
     wait_with_tag(
         conn=procedure.conn,
-        seconds=120,
+        seconds=wait_time_s,
         name=f"ref{test_number}_acquisition_pol{polname}",
     )
 
@@ -147,6 +147,6 @@ def proc_1(procedure, polname, cur_board, test_number):
 
     wait_with_tag(
         conn=procedure.conn,
-        seconds=120,
+        seconds=wait_time_s,
         name=f"ref{test_number}_acquisition_pol{polname}",
     )

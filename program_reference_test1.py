@@ -17,10 +17,14 @@ from striptease import (
 from turnon import TurnOnOffProcedure
 
 
+DEFAULT_WAIT_TIME_S = 120.0
+
+
 class ReferenceTestProcedure(StripProcedure):
-    def __init__(self):
+    def __init__(self, wait_time_s=120):
         super(ReferenceTestProcedure, self).__init__()
         self.calib = CalibrationTables()
+        self.wait_time_s = wait_time_s
 
     def run(self):
         turnon_proc = TurnOnOffProcedure(waittime_s=1.0, turnon=True)
@@ -40,7 +44,7 @@ class ReferenceTestProcedure(StripProcedure):
                 turnon_proc.clear_command_list()
 
             self.conn.log(message=f"{polname} is now on, start the reference procedure")
-            proc_1(self, polname, cur_board, 1)
+            proc_1(self, polname, cur_board, 1, wait_time_s=self.wait_time_s)
 
             self.conn.log(
                 message=f"reference procedure 1 for {polname} has been completed, turning {polname} off…"
@@ -78,6 +82,16 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--wait-time-s",
+        "-w",
+        metavar="SECONDS",
+        type=float,
+        dest="wait_time_s",
+        default=DEFAULT_WAIT_TIME_S,
+        help="Time to spend in each stable configuration (default: {DEFAULT_WAIT_TIME_S})",
+    )
+
+    parser.add_argument(
         "board",
         type=str,
         nargs="?",
@@ -89,6 +103,6 @@ if __name__ == "__main__":
 
     log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s]%(message)s")
 
-    proc = ReferenceTestProcedure()
+    proc = ReferenceTestProcedure(wait_time_s=args.wait_time_s)
     proc.run()
     proc.output_json(args.output_filename)
