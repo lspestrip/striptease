@@ -124,6 +124,19 @@ def normalize_polarimeter_name(name: str):
     raise KeyError(f"unknown polarimeter {result}")
 
 
+def get_polarimeter_board(pol_name: str) -> str:
+    """Return the board (e.g., ``B``) associated with a polarimeter
+
+    The function correctly handles W-band polarimeters::
+
+        >>> get_polarimeter_board("W2")
+        "B"
+
+    """
+
+    return normalize_polarimeter_name(pol_name)[0]
+
+
 def get_polarimeter_index(pol_name):
     """Return the progressive number of the polarimeter within the board (0…7)
 
