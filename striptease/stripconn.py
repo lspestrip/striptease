@@ -6,6 +6,7 @@ from web.rest.base import Connection
 
 from .utilities import (
     STRIP_BOARD_NAMES,
+    BOARD_TO_W_BAND_POL,
     PhswPinMode,
     normalize_polarimeter_name,
     get_lna_num,
@@ -216,16 +217,7 @@ class StripConnection(Connection):
         """
 
         if board:
-            assert board in [
-                "R",
-                "O",
-                "Y",
-                "G",
-                "B",
-                "I",
-                "V",
-                "",  # Empty case is allowed if "pol" == "BOARD"
-            ], "Invalid BOARD: '{0}'".format(board)
+            assert board in (STRIP_BOARD_NAMES + [""]), f'Invalid BOARD: "{board}"'
 
             if board == "":
                 board = None
@@ -236,7 +228,7 @@ class StripConnection(Connection):
         # It is annoying to accept polarimeters in the form "R0"; in
         # this case, we convert them into an integer number. We'll
         # convert them back to strings later.
-        if type(pol) is str:
+        if isinstance(pol, str):
             if pol != "BOARD":
                 assert len(pol) == 2
                 assert pol[0] == board, "Wrong polarimeter ({0}) for board {1}".format(
@@ -248,8 +240,11 @@ class StripConnection(Connection):
 
         assert pol in ["BOARD", 0, 1, 2, 3, 4, 5, 6, 7]
 
-        if type(pol) is int:
-            pol = "{0}{1}".format(board, pol)
+        if isinstance(pol, int):
+            if pol == 7:
+                pol = BOARD_TO_W_BAND_POL[board]
+            else:
+                pol = "{0}{1}".format(board, pol)
 
         if not allow_board:
             assert board, "You must specify a board"
