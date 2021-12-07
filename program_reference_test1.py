@@ -21,7 +21,7 @@ DEFAULT_WAIT_TIME_S = 120.0
 
 
 class ReferenceTestProcedure(StripProcedure):
-    def __init__(self, wait_time_s=120):
+    def __init__(self, wait_time_s):
         super(ReferenceTestProcedure, self).__init__()
         self.calib = CalibrationTables()
         self.wait_time_s = wait_time_s

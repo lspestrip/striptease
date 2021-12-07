@@ -19,10 +19,14 @@ from striptease import (
 from turnon import TurnOnOffProcedure
 
 
+DEFAULT_WAIT_TIME_S = 120.0
+
+
 class ReferenceTestProcedure(StripProcedure):
-    def __init__(self):
+    def __init__(self, wait_time_s):
         super(ReferenceTestProcedure, self).__init__()
         self.calib = CalibrationTables()
+        self.wait_time_s = wait_time_s
 
     def run(self):
         # turn on polarimeter
@@ -39,7 +43,7 @@ class ReferenceTestProcedure(StripProcedure):
                 self.command_emitter.command_list += turnon_proc.get_command_list()
                 turnon_proc.clear_command_list()
 
-            proc_1(self, polname, cur_board, 2)
+            proc_1(self, polname, cur_board, 2, wait_time_s=self.wait_time_s)
 
             self.conn.log(message="ref2_set phsw state to default bias")
             # set phsw modulation to default bias
@@ -56,7 +60,7 @@ class ReferenceTestProcedure(StripProcedure):
             self.conn.set_hk_scan(boards=cur_board, allboards=False, time_ms=500)
             wait_with_tag(
                 conn=self.conn,
-                seconds=120,
+                seconds=self.wait_time_s,
                 name=f"ref2_acquisition_default_pol{polname}",
             )
 
@@ -84,6 +88,16 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--wait-time-s",
+        "-w",
+        metavar="SECONDS",
+        type=float,
+        dest="wait_time_s",
+        default=DEFAULT_WAIT_TIME_S,
+        help="Time to spend in each stable configuration (default: {DEFAULT_WAIT_TIME_S})",
+    )
+
+    parser.add_argument(
         "board",
         type=str,
         nargs="?",
@@ -95,6 +109,6 @@ if __name__ == "__main__":
 
     log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s]%(message)s")
 
-    proc = ReferenceTestProcedure()
+    proc = ReferenceTestProcedure(wait_time_s=args.wait_time_s)
     proc.run()
     proc.output_json(args.output_filename)
