@@ -19,54 +19,9 @@ def dump_procedure_as_json(outf, obj, indent_level=0, use_newlines=True):
     read and to search with ``grep``.
     """
 
-    def dump_newline(indent_level):
-        if use_newlines:
-            outf.write("\n")
-            outf.write(" " * indent_level)
-
-    if isinstance(obj, list):
-        outf.write("[")
-        indent_level += 2
-        dump_newline(indent_level)
-
-        for idx, elem in enumerate(obj):
-            dump_procedure_as_json(
-                outf, elem, indent_level=indent_level, use_newlines=use_newlines
-            )
-            if idx < len(obj) - 1:
-                outf.write(", ")
-            dump_newline(indent_level)
-        indent_level -= 2
-        outf.write("]")
-    elif isinstance(obj, dict):
-        # A better visually-looking alternative (which however does not work
-        # well with `grep` is
-        #
-        #     use_newlines and (obj.get("kind", "") in ["log"])
-        use_newlines_here = False
-
-        outf.write("{")
-        indent_level += 2
-        if use_newlines_here:
-            dump_newline(indent_level)
-
-        for idx, elem in enumerate(obj):
-            outf.write(f'"{elem}": ')
-            dump_procedure_as_json(
-                outf,
-                obj[elem],
-                indent_level=indent_level,
-                use_newlines=use_newlines_here,
-            )
-            if idx < len(obj) - 1:
-                outf.write(", ")
-
-            if use_newlines_here:
-                dump_newline(indent_level)
-        indent_level -= 2
-        outf.write("}")
-    else:
-        outf.write(json.dumps(obj))
+    outf.write("[\n")
+    outf.write(",\n".join([json.dumps(x) for x in obj]))
+    outf.write("\n]\n")
 
 
 class JSONCommandEmitter:
