@@ -184,7 +184,8 @@ if __name__ == "__main__":
         "--turn-on",
         default=False,
         action="store_true",
-        help="Include commands to turn on the polarimeters",
+        help="""Include at the beginning of the procedure the sequence
+        that turns on the polarimeters""",
     )
 
     parser.add_argument(

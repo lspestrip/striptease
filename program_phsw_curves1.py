@@ -23,15 +23,20 @@ from striptease import (
 )
 from program_turnon import TurnOnOffProcedure
 
+DEFAULT_PRE_ACQUISITION_TIME_S = 120.0
+
 
 class PSProcedure(StripProcedure):
-    def __init__(self):
+    def __init__(self, pre_acquisition_time_s, reverse_test, forward_test):
         super(PSProcedure, self).__init__()
         data_file_path = (
             Path(__file__).parent / "data" / "corrispondenze_FH_testDC.xlsx"
         )
         log.info(f'Reading correspondences from file "{data_file_path}"')
         self.dfs = pd.read_excel(data_file_path, index_col=0)
+        self.pre_acquisition_time_s = pre_acquisition_time_s
+        self.reverse_test = reverse_test
+        self.forward_test = forward_test
 
     def run(self):
         calibr = CalibrationTables()
@@ -71,11 +76,12 @@ class PSProcedure(StripProcedure):
                         polarimeter=pol_name, phsw_index=pin_idx, status=status
                     )
 
-            wait_with_tag(
-                conn=self.command_emitter,
-                seconds=120,
-                name=f"phsw_acq_unsw0101_pol{pol_name}",
-            )
+            if self.pre_acquisition_time_s > 0:
+                wait_with_tag(
+                    conn=self.command_emitter,
+                    seconds=self.pre_acquisition_time_s,
+                    name=f"phsw_acq_unsw0101_pol{pol_name}",
+                )
 
             # cuves
 
@@ -86,74 +92,76 @@ class PSProcedure(StripProcedure):
                 test = get_unit_test(test_number)
             except HTTPError as e:
                 log.error(f"Unable to load test {test_number}, reason: {e}")
-            data = load_unit_test_data(test)
+            unit_test_data = load_unit_test_data(test)
             log.info(f"Loading test {val} of {pol_name}")
 
-            for pin, ps in [
-                (0, "PSA1"),
-                (1, "PSA2"),
-                (2, "PSB1"),
-                (3, "PSB2"),
-            ]:
-                try:
-                    irvr = data.components[ps].curves["IRVR"]
-                    Vrev = irvr["AnodeV"][:, 0] * 1e3  # convert from volt to mV
-                except KeyError:
-                    log.warning(f"IRVR does not exist for {pol_name} {ps}")
-                    Vrev = np.linspace(start=0, stop=1900, num=50)
-                self.conn.log(message=f"curve {pol_name} {ps} Vpin{pin}")
-                with StripTag(
-                    conn=self.command_emitter,
-                    name=f"phsw_curve_{pol_name}_{ps}_vpin{pin}",
-                ):
+            if self.reverse_test:
+                for pin, ps in [
+                    (0, "PSA1"),
+                    (1, "PSA2"),
+                    (2, "PSB1"),
+                    (3, "PSB2"),
+                ]:
+                    try:
+                        irvr = unit_test_data.components[ps].curves["IRVR"]
+                        Vrev = irvr["AnodeV"][:, 0] * 1e3  # convert from volt to mV
+                    except KeyError:
+                        log.warning(f"IRVR does not exist for {pol_name} {ps}")
+                        Vrev = np.linspace(start=0, stop=1900, num=50)
+                    self.conn.log(message=f"curve {pol_name} {ps} Vpin{pin}")
+                    with StripTag(
+                        conn=self.command_emitter,
+                        name=f"phsw_curve_{pol_name}_{ps}_vpin{pin}",
+                    ):
 
-                    for v in Vrev:
-                        adu = calibr.physical_units_to_adu(
-                            pol_name, hk="vphsw", component=pin, value=v
-                        )
-                        self.conn.set_phsw_bias(
-                            pol_name, phsw_index=pin, vpin_adu=adu, ipin_adu=None
-                        )
-                        self.conn.set_hk_scan(cur_board)
-                        self.conn.log(message=f"Set V={v:.1f} mV = {adu} ADU")
-                        wait_with_tag(
-                            conn=self.command_emitter,
-                            seconds=10,
-                            name=f"phsw_set_v_{pol_name}_{ps}_vpin{pin}",
-                        )
+                        for v in Vrev:
+                            adu = calibr.physical_units_to_adu(
+                                pol_name, hk="vphsw", component=pin, value=v
+                            )
+                            self.conn.set_phsw_bias(
+                                pol_name, phsw_index=pin, vpin_adu=adu, ipin_adu=None
+                            )
+                            self.conn.set_hk_scan(cur_board)
+                            self.conn.log(message=f"Set V={v:.1f} mV = {adu} ADU")
+                            wait_with_tag(
+                                conn=self.command_emitter,
+                                seconds=10,
+                                name=f"phsw_set_v_{pol_name}_{ps}_vpin{pin}",
+                            )
 
-            for pin, ps in [
-                (0, "PSA1"),
-                (1, "PSA2"),
-                (2, "PSB1"),
-                (3, "PSB2"),
-            ]:
-                try:
-                    ifvf = data.components[ps].curves["IFVF"]
-                    Ifor = ifvf["AnodeI"][:, 0] * 1e6
-                except KeyError:
-                    log.warning(f"IFVF does not exist for {pol_name} {ps}")
-                    Ifor = np.arange(start=0, stop=1050, step=50)
-                self.conn.log(message=f"curve {pol_name} {ps} Ipin{pin}")
-                with StripTag(
-                    conn=self.command_emitter,
-                    name=f"phsw_curve_{pol_name}_{ps}_ipin{pin}",
-                ):
+            if self.forward_test:
+                for pin, ps in [
+                    (0, "PSA1"),
+                    (1, "PSA2"),
+                    (2, "PSB1"),
+                    (3, "PSB2"),
+                ]:
+                    try:
+                        ifvf = unit_test_data.components[ps].curves["IFVF"]
+                        Ifor = ifvf["AnodeI"][:, 0] * 1e6
+                    except KeyError:
+                        log.warning(f"IFVF does not exist for {pol_name} {ps}")
+                        Ifor = np.arange(start=0, stop=1050, step=50)
+                    self.conn.log(message=f"curve {pol_name} {ps} Ipin{pin}")
+                    with StripTag(
+                        conn=self.command_emitter,
+                        name=f"phsw_curve_{pol_name}_{ps}_ipin{pin}",
+                    ):
 
-                    for i in Ifor:
-                        adu = calibr.physical_units_to_adu(
-                            pol_name, hk="iphsw", component=pin, value=i
-                        )
-                        self.conn.set_phsw_bias(
-                            pol_name, phsw_index=pin, vpin_adu=None, ipin_adu=adu
-                        )
-                        self.conn.set_hk_scan(cur_board)
-                        self.conn.log(message=f"Set I={i:.1f} uA = {adu} ADU")
-                        wait_with_tag(
-                            conn=self.command_emitter,
-                            seconds=10,
-                            name=f"phsw_set_I_{pol_name}_{ps}_vpin{pin}",
-                        )
+                        for i in Ifor:
+                            adu = calibr.physical_units_to_adu(
+                                pol_name, hk="iphsw", component=pin, value=i
+                            )
+                            self.conn.set_phsw_bias(
+                                pol_name, phsw_index=pin, vpin_adu=None, ipin_adu=adu
+                            )
+                            self.conn.set_hk_scan(cur_board)
+                            self.conn.log(message=f"Set I={i:.1f} uA = {adu} ADU")
+                            wait_with_tag(
+                                conn=self.command_emitter,
+                                seconds=10,
+                                name=f"phsw_set_I_{pol_name}_{ps}_vpin{pin}",
+                            )
 
             self.conn.log(message="set pol state to default bias 7")
             # Set default bias
@@ -199,6 +207,27 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--reverse-test",
+        default=False,
+        action="store_true",
+        help="""Acquire the IRVR curves. By default they are skipped, as the
+        electronics prevents this test from being done.""",
+    )
+
+    parser.add_argument(
+        "--pre-acquisition-time",
+        metavar="SECONDS",
+        default=DEFAULT_PRE_ACQUISITION_TIME_S,
+        dest="pre_acquisition_time_s",
+        type=float,
+        help=f"""Before starting the test, the procedure acquires data
+        in stable conditions for some time. With this switch you can
+        either change the duration of the acquisition (the default is
+        {DEFAULT_PRE_ACQUISITION_TIME_S} s), or switch it off entirely
+        by passing 0.""",
+    )
+
+    parser.add_argument(
         "board",
         type=str,
         nargs="?",
@@ -208,8 +237,15 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    # For the moment we do not provide a command-line switch for this
+    args.__setattr__("forward_test", True)
+
     log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
 
-    proc = PSProcedure()
+    proc = PSProcedure(
+        pre_acquisition_time_s=args.pre_acquisition_time_s,
+        reverse_test=args.reverse_test,
+        forward_test=args.forward_test,
+    )
     proc.run()
     proc.output_json(args.output_filename)
