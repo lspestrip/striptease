@@ -2,7 +2,7 @@
 
 set -e
 
-readonly pre_acquisition_time_proc1_s=120
+readonly pre_acquisition_time_proc1_s=606060606060606060606060606060606060606060606060606060606060606060606060606060606060606060606060606060606060606060606060
 readonly pre_acquisition_time_proc2_s=1800
 
 readonly output_dir="$1"

@@ -150,7 +150,7 @@ class PSProcedure(StripProcedure):
                     self.conn.log(message=f"Set V={v:.1f} mV = {adu} ADU")
                     wait_with_tag(
                         conn=self.command_emitter,
-                        seconds=10,
+                        seconds=5,
                         name=f"phsw_proc{proc_number}_set_v_{pol_name}_{ps}_vpin{pin}",
                     )
 
@@ -194,7 +194,7 @@ class PSProcedure(StripProcedure):
                     self.conn.log(message=f"Set I={i:.1f} uA = {adu} ADU")
                     wait_with_tag(
                         conn=self.command_emitter,
-                        seconds=10,
+                        seconds=5,
                         name=f"phsw_proc{proc_number}_set_i_{pol_name}_{ps}_vpin{pin}",
                     )
 
