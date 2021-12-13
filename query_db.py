@@ -4,7 +4,7 @@
 from argparse import ArgumentParser
 from collections import namedtuple
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Union
 import json
 import sqlite3
 import sys
@@ -22,7 +22,9 @@ STRFTIME_DEFAULT = "%Y-%m-%d %H:%M:%S"
 
 
 def format_time(
-    time: Optional[Time], use_mjd: bool = False, homogeneous_units: bool = False
+    time: Union[Time, TimeDelta, None],
+    use_mjd: bool = False,
+    homogeneous_units: bool = False,
 ) -> str:
     "Given a astropy.time.Time object, produces a string representing its value"
 
@@ -35,9 +37,8 @@ def format_time(
 
         return "{}".format(time)
 
-    if isinstance(time, Time):
-        return str(time.to_datetime())
-
+    # This "if" must come before checking if `time` is an
+    # instance of `Time`, as `TimeDelta` derives from `Time`
     if isinstance(time, TimeDelta):
         seconds = time.to_datetime().total_seconds()
 
@@ -51,6 +52,9 @@ def format_time(
             return "{:.1f} h".format(seconds / 3600.0)
 
         return "{:.1f} d".format(seconds / 86400.0)
+
+    if isinstance(time, Time):
+        return str(time.to_datetime())
 
     assert False, "Unhandled case"
 
