@@ -41,13 +41,18 @@ PIN_PS_STATE_COMBINATIONS = [
 
 
 def load_unit_level_test(
-    pol_unittest_associations, pol_name: str
+    pol_unittest_associations,
+    pol_name: str,
+    no_unit_level_tests: bool,
 ) -> Tuple[Optional[int], Optional[UnitTestDC]]:
     """Given the Excel table and a polarimeter, load the associated unit-level test
 
     The Excel table must provide matches between a polarimeter name and the
     number of the unit-level DC test.
     """
+
+    if no_unit_level_tests:
+        return None, None
 
     test_number = pol_unittest_associations.loc[pol_name]["RT"]
     log.info("Going to download unit-level test {}".format(test_number))
@@ -56,7 +61,7 @@ def load_unit_level_test(
         test = get_unit_test(test_number)
     except HTTPError as e:
         log.error(f"Unable to load test {test_number}, reason: {e}")
-        return None
+        return None, None
 
     unit_test_data = load_unit_test_data(test)
     log.info(f"Test {test_number} for {pol_name} has been loaded")
@@ -64,8 +69,33 @@ def load_unit_level_test(
     return test_number, unit_test_data
 
 
+def get_sequence_of_biases(unit_test_data: Optional[UnitTestDC], ps: str, curve: str):
+    if unit_test_data is not None:
+        matr = unit_test_data.components[ps].curves[curve]
+
+        return matr["AnodeI"][:, 0] if curve == "IFVF" else matr["AnodeV"][:0]
+
+    # If we are here, it means that we must not follow the same points as one of the
+    # unit-level tests.
+
+    if curve == "IFVF":
+        # Return a synthetic sequence of currents (in Ampere)
+        return np.linspace(start=150e-6, stop=1e-3, num=35)
+
+    if curve == "IRVR":
+        # Return a synthetic sequence of voltages (in V)
+        return np.linspace(start=0, stop=-1.9, num=20)
+
+
 class PSProcedure(StripProcedure):
-    def __init__(self, pre_acquisition_time_s, reverse_test, forward_test, turn_on):
+    def __init__(
+        self,
+        pre_acquisition_time_s: float,
+        reverse_test: bool,
+        forward_test: bool,
+        turn_on: bool,
+        no_unit_level_tests: bool,
+    ):
         super(PSProcedure, self).__init__()
         data_file_path = (
             Path(__file__).parent / "data" / "corrispondenze_FH_testDC.xlsx"
@@ -76,6 +106,7 @@ class PSProcedure(StripProcedure):
         self.reverse_test = reverse_test
         self.forward_test = forward_test
         self.turn_on = turn_on
+        self.no_unit_level_tests = no_unit_level_tests
 
     def _stable_acquisition(self, pol_name: str, state: str, proc_number: int):
         assert (
@@ -124,11 +155,16 @@ class PSProcedure(StripProcedure):
 
             # …and then acquire the curves
             try:
-                irvr = unit_test_data.components[ps].curves["IRVR"]
-                Vrev = irvr["AnodeV"][:, 0] * 1e3  # convert from volt to mV
+                Vrev = get_sequence_of_biases(unit_test_data, ps, "IRVR")
             except KeyError:
                 log.warning(f"IRVR does not exist for {pol_name} {ps}")
-                Vrev = np.linspace(start=0, stop=1900, num=50)
+                self.conn.log(
+                    message=f"IRVR does not exist for {pol_name} {ps} in unit-level tests. "
+                    "Using a synthetic curve instead"
+                )
+                Vrev = get_sequence_of_biases(None, ps, "IRVR")
+
+            Vrev *= 1e3  # convert from V to mV
 
             self.conn.log(
                 message=f"Acquiring PH/SW reverse curve for {pol_name}, {ps} Vpin{pin}"
@@ -168,11 +204,16 @@ class PSProcedure(StripProcedure):
 
             # …and then acquire the curves
             try:
-                ifvf = unit_test_data.components[ps].curves["IFVF"]
-                Ifor = ifvf["AnodeI"][:, 0] * 1e6
+                Ifor = get_sequence_of_biases(unit_test_data, ps, "IFVF") * 1e6
             except KeyError:
                 log.warning(f"IFVF does not exist for {pol_name} {ps}")
-                Ifor = np.arange(start=0, stop=1050, step=50)
+                self.conn.log(
+                    message=f"IFVF does not exist for {pol_name} {ps} in unit-level tests. "
+                    "Using a synthetic curve instead"
+                )
+                Ifor = get_sequence_of_biases(None, ps, "IFVF") * 1e6
+
+            Ifor *= 1e6  # Convert from A to µA
 
             self.conn.log(
                 message=f"Acquiring PH/SW forward curve for {pol_name}, {ps} Vpin{pin}"
@@ -239,13 +280,21 @@ class PSProcedure(StripProcedure):
             # cuves
 
             test_num, unit_test_data = load_unit_level_test(
-                self.pol_unittest_associations, pol_name
+                self.pol_unittest_associations,
+                pol_name,
+                no_unit_level_tests=self.no_unit_level_tests,
             )
-            assert unit_test_data is not None
 
-            self.conn.log(
-                f"The ph/sw test for polarimeter {pol_name} is based on unit test #{test_num}"
-            )
+            if self.no_unit_level_tests:
+                self.conn.log(
+                    f"The ph/sw test #1 for polarimeter {pol_name} is *not* based on unit-level tests"
+                )
+            else:
+                assert unit_test_data is not None
+
+                self.conn.log(
+                    f"The ph/sw test #1 for polarimeter {pol_name} is based on unit test #{test_num}"
+                )
 
             if self.reverse_test:
                 self._reverse(
@@ -298,18 +347,27 @@ class PSProcedure(StripProcedure):
 
             wait_with_tag(
                 conn=self.command_emitter,
-                seconds=120,
+                seconds=self.pre_acquisition_time_s,
                 name=f"acquisition_unsw0101_pol{pol_name}",
             )
+
             # curves
             test_num, unit_test_data = load_unit_level_test(
-                self.pol_unittest_associations, pol_name
+                self.pol_unittest_associations,
+                pol_name,
+                no_unit_level_tests=self.no_unit_level_tests,
             )
-            assert unit_test_data is not None
 
-            self.conn.log(
-                f"The ph/sw test for polarimeter {pol_name} is based on unit test #{test_num}"
-            )
+            if self.no_unit_level_tests:
+                self.conn.log(
+                    f"The ph/sw test #2 for polarimeter {pol_name} is *not* based on unit-level tests"
+                )
+            else:
+                assert unit_test_data is not None
+
+                self.conn.log(
+                    f"The ph/sw test #2 for polarimeter {pol_name} is based on unit test #{test_num}"
+                )
 
             if self.reverse_test:
                 self._reverse(
@@ -372,6 +430,16 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--no-unit-level-tests",
+        "-n",
+        default=False,
+        action="store_true",
+        help="""Do not download unit-level tests to determine the sequence of
+        currents and voltages, but use a synthetic, pre-defined sequence of
+        voltages and currents.""",
+    )
+
+    parser.add_argument(
         "procedure",
         type=int,
         help="Procedure to generate, either 1 or 2",
@@ -407,6 +475,7 @@ if __name__ == "__main__":
         reverse_test=args.reverse_test,
         forward_test=args.forward_test,
         turn_on=args.turn_on,
+        no_unit_level_tests=args.no_unit_level_tests,
     )
 
     if args.procedure == 1:
