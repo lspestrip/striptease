@@ -6,7 +6,7 @@
 import logging as log
 from pathlib import Path
 from urllib.error import HTTPError
-from typing import Optional
+from typing import Optional, Tuple
 import sys
 
 import pandas as pd
@@ -42,7 +42,7 @@ PIN_PS_STATE_COMBINATIONS = [
 
 def load_unit_level_test(
     pol_unittest_associations, pol_name: str
-) -> Optional[UnitTestDC]:
+) -> Tuple[Optional[int], Optional[UnitTestDC]]:
     """Given the Excel table and a polarimeter, load the associated unit-level test
 
     The Excel table must provide matches between a polarimeter name and the
@@ -61,7 +61,7 @@ def load_unit_level_test(
     unit_test_data = load_unit_test_data(test)
     log.info(f"Test {test_number} for {pol_name} has been loaded")
 
-    return unit_test_data
+    return test_number, unit_test_data
 
 
 class PSProcedure(StripProcedure):
@@ -238,10 +238,14 @@ class PSProcedure(StripProcedure):
 
             # cuves
 
-            unit_test_data = load_unit_level_test(
+            test_num, unit_test_data = load_unit_level_test(
                 self.pol_unittest_associations, pol_name
             )
             assert unit_test_data is not None
+
+            self.conn.log(
+                f"The ph/sw test for polarimeter {pol_name} is based on unit test #{test_num}"
+            )
 
             if self.reverse_test:
                 self._reverse(
@@ -298,10 +302,14 @@ class PSProcedure(StripProcedure):
                 name=f"acquisition_unsw0101_pol{pol_name}",
             )
             # curves
-            unit_test_data = load_unit_level_test(
+            test_num, unit_test_data = load_unit_level_test(
                 self.pol_unittest_associations, pol_name
             )
             assert unit_test_data is not None
+
+            self.conn.log(
+                f"The ph/sw test for polarimeter {pol_name} is based on unit test #{test_num}"
+            )
 
             if self.reverse_test:
                 self._reverse(
