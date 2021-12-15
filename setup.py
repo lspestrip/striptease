@@ -25,7 +25,6 @@ setup(
                 "data/bias8_cal.xlsx",
                 "data/bias9_cal.xlsx",
                 "data/cold_bias_table.json",
-                "data/default_biases_warm_nominal_you_want_to_use_this_when_everything_will_be_fixed.xlsx",
                 "data/default_biases_warm.xlsx",
                 "data/hk_pars_BOARD_BIAS.csv",
                 "data/hk_pars_BOARD_DAQ.csv",
