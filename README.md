@@ -9,31 +9,19 @@ the STRIP system level tests. It uses Python 3.7.x and Qt 5.
 
 ## Installation
 
-You have two choices to install this program:
+This package is peculiar, because at the moment it is not supposed to be installed using `pip install`. Instead, you should clone the repository and always work within it.
 
-1. Install and use it as any other Python package; good if you are not a Python expert but just want to control the Strip instrument;
+Run the following commands to clone this repository on your computer (you must have `git`):
 
-2. Install it with the aim to develop and improve it; good if you know some Python and do not want to prevent yourself from patching the
-   code.
+    git clone git@github.com:lspestrip/striptease.git
+    cd striptease
+    pip install --user -r requirements.txt
 
-If you want to follow the first route, use the following commands (possibly after having [created a virtual environment](https://docs.python.org/3/library/venv.html)):
+You can drop `--user` if you are working in a virtual environment (as you should!).
 
-```bash
-git clone git@github.com:lspestrip/striptease.git
-cd striptease
-pip install --user -r requirements.txt
-python setup.py install
-```
+If you plan to modify the source code and make pull requests, run the following command as well:
 
-If you are a developer, use these commands:
-
-```bash
-git clone git@github.com:lspestrip/striptease.git
-cd striptease
-pip install --user -r requirements.txt
-python -m pip install -e .
-pre-commit install
-```
+    pre-commit install
 
 ## How to use the code
 

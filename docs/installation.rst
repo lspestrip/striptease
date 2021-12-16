@@ -12,18 +12,53 @@ To install Striptease, you need the following tools:
 Installing the code
 -------------------
 
-To build the program, use the following commands:
+To build the program, you must have the command ``git`` installed and
+working on your computer.
 
-.. code-block:: bash
+Creating a new virtual environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You are advised to create a new virtual environment for your work on
+Striptease; this usually requires the following steps:
+
+.. code-block:: sh
+
+    python -m venv my_virtual_environment
+    ?ACTIVATE?
+
+where ``?ACTIVATE?`` is some command that depends on the platform
+(Windows, Mac OS X, Linux) and shell (Bash, Zsh, Fish…) that you are
+using. For instance, if you are using Bash/Zsh under Mac OS X or Linux,
+you must run these commands:
+
+.. code-block:: sh
+
+    python -m venv my_virtual_environment
+    source my_virtual_environment/bin/activate
+
+If you are running the Command Prompt under Windows, the commands are
+the following:
+
+.. code-block:: text
+
+    python -m venv my_virtual_environment
+    my_virtual_environment\scripts\activate.bat
+
+Refer to the `Python documentation
+<https://docs.python.org/3/tutorial/venv.html>`_ for more details.
+
+
+Downloading Striptease
+~~~~~~~~~~~~~~~~~~~~~~
+
+To install Striptease and its dependencies, use the following
+commands:
+
+.. code-block:: sh
 
     git clone git@github.com:lspestrip/striptease.git
     cd striptease
-    python -m pip install -e .
-
-Once the code is installed, you can use it in IPython, Jupyter, or
-Python scripts, using the following ``import``::
-
-  import striptease
+    pip install --user -r requirements.txt
 
 Be sure to run your source codes and Jupyter notebooks within the
 ``striptease`` directory, otherwise calibration tables and other
