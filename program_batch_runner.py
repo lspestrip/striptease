@@ -226,7 +226,7 @@ def main(stdscr):
                 stdscr.nodelay(True)
 
                 if not args.dry_run:
-                    conn.post("/rest/log", message={"level": "INFO", "message": msg})
+                    conn.log(message=msg)
 
                 logmsg(stdscr, f'Custom log message "{msg}" sent to the server')
 
