@@ -119,7 +119,7 @@ def create_intervals(tag_list: List[Tag]) -> List[Dict[str, Any]]:
 
     if interval_start:
         # The polarimeter was still acquiring when the last tag was saved
-        intervals.append((interval_start, -1))
+        intervals.append({"mjd_start": interval_start, "mjd_end": None})
 
     return intervals
 
@@ -140,19 +140,25 @@ def print_intervals(
     table.add_column("Duration", justify="right")
 
     for interval in intervals:
+        t0, t1 = interval["mjd_start"], interval["mjd_end"]
+        if (t0 is not None) and (t1 is not None):
+            diff = t1 - t0
+        else:
+            diff = None
+
         table.add_row(
             format_time(
-                interval["mjd_start"],
+                t0,
                 use_mjd=use_mjd,
                 homogeneous_units=homogeneous_units,
             ),
             format_time(
-                interval["mjd_end"],
+                t1,
                 use_mjd=use_mjd,
                 homogeneous_units=homogeneous_units,
             ),
             format_time(
-                interval["mjd_end"] - interval["mjd_start"],
+                diff,
                 use_mjd=use_mjd,
                 homogeneous_units=homogeneous_units,
             ),
