@@ -16,6 +16,7 @@ Welcome to Striptease's documentation!
    polarimeters
    data_interface
    procedures
+   runlog
    unittests
    development
 
