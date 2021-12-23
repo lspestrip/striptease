@@ -378,7 +378,17 @@ class DataStorage:
             """,
             {"range_start": mjd_start, "range_end": mjd_end},
         )
-        return [Tag(*row) for row in curs.fetchall()]
+        return [
+            Tag(
+                id=row[0],
+                name=row[1],
+                mjd_start=row[2],
+                mjd_end=row[3],
+                start_comment=row[4],
+                end_comment=row[5],
+            )
+            for row in curs.fetchall()
+        ]
 
     def load_sci(self, mjd_range: Union[Tuple[float, float], Tag], *args, **kwargs):
         """Load scientific data within a specified MJD time range
