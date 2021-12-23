@@ -51,6 +51,13 @@ from .procedures import (
     dump_procedure_as_json,
     StripProcedure,
 )
+from .runlog import (
+    RUN_LOG_FILE_PATH,
+    RUN_LOG_DATETIME_FORMAT,
+    RunLogEntry,
+    connect_to_run_log,
+    append_to_run_log,
+)
 from .stripconn import (
     StripConnection,
     StripTag,
@@ -117,6 +124,12 @@ __all__ = [
     # procedures.py
     "dump_procedure_as_json",
     "StripProcedure",
+    # runlog.py
+    "RUN_LOG_FILE_PATH",
+    "RUN_LOG_DATETIME_FORMAT",
+    "RunLogEntry",
+    "connect_to_run_log",
+    "append_to_run_log",
     # stripconn.py
     "StripConnection",
     "StripTag",

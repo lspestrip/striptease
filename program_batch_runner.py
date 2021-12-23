@@ -5,10 +5,13 @@ from argparse import ArgumentParser
 import curses
 import json
 import time
+from datetime import datetime
+from pathlib import Path
 
-from striptease import StripConnection
+from striptease import StripConnection, append_to_run_log
 
 args = None
+cur_json_procedure = []
 DEFAULT_WAIT_TIME_S = 0.5
 
 
@@ -77,6 +80,7 @@ def close_tags(stdscr, conn):
 
 def main(stdscr):
     global args
+    global cur_json_procedure
 
     curses.start_color()
     curses.use_default_colors()
@@ -106,13 +110,8 @@ def main(stdscr):
     stdscr.nodelay(True)  # Don't wait for keypresses
     stdscr.keypad(True)
 
-    commands = []
-    for cur_file in args.json_files:
-        with open(cur_file, "rt") as fp:
-            commands += json.load(fp)
-
     if not args.dry_run:
-        print(f"{len(commands)} commands ready to be executed, let's go!")
+        print(f"{len(cur_json_procedure)} commands ready to be executed, let's go!")
         print("Going to establish a connection with the server…")
         conn = StripConnection()
         conn.login()
@@ -128,7 +127,7 @@ def main(stdscr):
 
     open_tags = set([])
     indent_level = 0
-    for cur_command in commands:
+    for cur_command in cur_json_procedure:
         cmddict = cur_command["command"]
         print_fn = None
 
@@ -230,8 +229,10 @@ def main(stdscr):
 
                 logmsg(stdscr, f'Custom log message "{msg}" sent to the server')
 
-    prompt(stdscr, "Execution completed, press a key to exit")
-    readkey(stdscr)
+    if args.wait_at_end:
+        prompt(stdscr, "Execution completed, press a key to exit")
+        readkey(stdscr)
+
     if not args.dry_run:
         if conn and (not args.do_not_round):
             conn.round_all_files()
@@ -252,6 +253,12 @@ You can pause the execution with the keys SPACE or "p".
 Pressing "l" allows the user to enter a log message.
 Pressing "q" will halt the execution.
 """,
+    )
+    parser.add_argument(
+        "--wait-at-end",
+        default=False,
+        action="store_true",
+        help="Wait a key before ending the procedure",
     )
     parser.add_argument(
         "--wait-time",
@@ -302,4 +309,22 @@ next command. Default is {DEFAULT_WAIT_TIME_S}
 
     args = parser.parse_args()
 
-    curses.wrapper(main)
+    for cur_file in args.json_files:
+        with open(cur_file, "rt") as fp:
+            cur_json_procedure = json.load(fp)
+
+        start_time = datetime.now()
+        curses.wrapper(main)
+        end_time = datetime.now()
+
+        print(f"The command took {end_time - start_time} to complete")
+
+        if not args.dry_run:
+            append_to_run_log(
+                start_time=start_time,
+                end_time=end_time,
+                wait_time_s=args.wait_time,
+                wait_cmd_time_s=args.waitcmd_time,
+                full_path=str(Path(cur_file).absolute()),
+                procedure=cur_json_procedure,
+            )
