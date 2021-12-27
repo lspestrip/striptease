@@ -86,6 +86,7 @@ def scan_data_path(
     for cur_suffix in HDF5_FILE_SUFFIXES:
         files_to_update += list(Path(path).glob(f"**/*{cur_suffix}"))
 
+    files_to_update.sort()
     log.info(f"{len(files_to_update)} files match the glob pattern")
     for file_name in track(files_to_update) if update_database else files_to_update:
         # Follow symlinks and remove "." and ".."
