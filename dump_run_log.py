@@ -54,8 +54,8 @@ def print_table(entries: List[RunLogEntry], output_file):
             "{:.1f}".format((entry.end_time - entry.start_time).total_seconds()),
             Path(entry.full_path).name,
             str(entry.number_of_commands),
-            "{:.2f}".format(entry.wait_time_s),
-            "{:.2f}".format(entry.wait_cmd_time_s),
+            "{:.2f}".format(entry.wait_time_s) if entry.wait_time_s else "",
+            "{:.2f}".format(entry.wait_cmd_time_s) if entry.wait_cmd_time_s else "",
         )
 
     console.print(table)
