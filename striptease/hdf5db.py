@@ -6,6 +6,7 @@ from pathlib import Path
 import sqlite3
 from typing import Union, List, Tuple, Set, Dict
 
+import astropy.time
 from rich.progress import track
 import numpy as np
 
@@ -26,14 +27,33 @@ HDF5FileInfo = namedtuple("HDF5FileInfo", ["path", "size", "mjd_range"])
 
 
 def extract_mjd_range(
-    mjd_range: Union[Tuple[float, float], Tag]
+    mjd_range: Union[
+        Tuple[float, float],
+        Tuple[astropy.time.Time, astropy.time.Time],
+        Tuple[str, str],
+        Tag,
+    ]
 ) -> Tuple[float, float]:
-    "Convenience function that returns the start and end MJD from a 2-tuple/tag"
+    """Convenience function that returns the start and end MJD from a 2-tuple/tag
+
+    If a 2-tuple is provided, it can either be:
+
+    1. A pair of MJD dates, each expressed as a floating-point number;
+    2. A pair of strings, each representing a date that is parseable
+       by ``astropy.time.Time``;
+    3. A pair of ``astropy.time.Time`` objects.
+    """
 
     if isinstance(mjd_range, Tag):
         return (mjd_range.mjd_start, mjd_range.mjd_end)
-    else:
-        return mjd_range  # Just return the tuple
+
+    if isinstance(mjd_range[0], astropy.time.Time):
+        return (x.mjd for x in mjd_range)
+
+    if isinstance(mjd_range[0], str):
+        return (astropy.time.Time(x).mjd for x in mjd_range)
+
+    return mjd_range  # Just return the tuple
 
 
 def create_storage_db(db: sqlite3.Connection):
@@ -316,7 +336,12 @@ class DataStorage:
 
     def _load(
         self,
-        mjd_range: Union[Tuple[float, float], Tag],
+        mjd_range: Union[
+            Tuple[float, float],
+            Tuple[astropy.time.Time, astropy.time.Time],
+            Tuple[str, str],
+            Tag,
+        ],
         load_fn,
     ):
         "Private function, used by load_sci and load_hk"
@@ -342,15 +367,30 @@ class DataStorage:
 
         return time, data
 
-    def get_tags(self, mjd_range: Union[Tuple[float, float], Tag]) -> List[Tag]:
+    def get_tags(
+        self,
+        mjd_range: Union[
+            Tuple[float, float],
+            Tuple[astropy.time.Time, astropy.time.Time],
+            Tuple[str, str],
+            Tag,
+        ],
+    ) -> List[Tag]:
         """Return a list of all the tags falling within a MJD range
 
         The function returns a list of all the tags found in the HDF5 files in the
         storage directory that fall (even partially) within the range of MJD specified
-        by `mjd_range`. The function is quite fast because it uses a cache instead of
-        reading the HDF5 files themselves.
+        by `mjd_range`. The range can either be:
 
-        You can pass a :class:`.Tag` object instead of a MJD time range.
+        1. A pair of floating-point values, each representing a MJD date;
+        2. A pair of strings, each representing a date (e.g., ``2021-12-10 10:39:45``);
+        3. A pair of instances of ``astropy.time.Time``;
+        4. A single instance of the :class:`.Tag` class.
+
+        The list of tags is always sorted in chronological order.
+
+        The function is quite fast because it uses a cache instead of
+        reading the HDF5 files themselves.
         """
 
         # To check if a tag falls within mjd_range, we check
@@ -395,10 +435,13 @@ class DataStorage:
         """Load scientific data within a specified MJD time range
 
         This function operates in the same way as :meth:`.DataFile.load_sci`, but it
-        takes as input a time range (expressed in MJD) which can cross the HDF5 file
-        boundaries.
+        takes as input a time range that can cross the HDF5 file boundaries. The
+        parameter `mjd_time` range can be one of the following:
 
-        You can pass a :class:`.Tag` object instead of a MJD time range.
+        1. A pair of floating-point values, each representing a MJD date;
+        2. A pair of strings, each representing a date (e.g., ``2021-12-10 10:39:45``);
+        3. A pair of instances of ``astropy.time.Time``;
+        4. A single instance of the :class:`.Tag` class.
 
         Example::
 
@@ -420,10 +463,13 @@ class DataStorage:
         """Load housekeeping data within a specified MJD time range
 
         This function operates in the same way as :meth:`.DataFile.load_hk`, but it
-        takes as input a time range (expressed in MJD) which can cross the HDF5 file
-        boundaries.
+        takes as input a time range that can cross the HDF5 file boundaries.The
+        parameter `mjd_time` range can be one of the following:
 
-        You can pass a :class:`.Tag` object instead of a MJD time range.
+        1. A pair of floating-point values, each representing a MJD date;
+        2. A pair of strings, each representing a date (e.g., ``2021-12-10 10:39:45``);
+        3. A pair of instances of ``astropy.time.Time``;
+        4. A single instance of the :class:`.Tag` class.
 
         Example::
 
