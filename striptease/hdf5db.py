@@ -48,10 +48,10 @@ def extract_mjd_range(
         return (mjd_range.mjd_start, mjd_range.mjd_end)
 
     if isinstance(mjd_range[0], astropy.time.Time):
-        return (x.mjd for x in mjd_range)
+        return tuple(x.mjd for x in mjd_range)
 
     if isinstance(mjd_range[0], str):
-        return (astropy.time.Time(x).mjd for x in mjd_range)
+        return tuple(astropy.time.Time(x).mjd for x in mjd_range)
 
     return mjd_range  # Just return the tuple
 
