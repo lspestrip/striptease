@@ -439,4 +439,4 @@ class DataStorage:
             )
 
         """
-        return self._load(mjd_range, load_fn=lambda f: f.load_sci(*args, **kwargs))
+        return self._load(mjd_range, load_fn=lambda f: f.load_hk(*args, **kwargs))
