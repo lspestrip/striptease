@@ -41,20 +41,20 @@ CREATE TABLE IF NOT EXISTS files(
     ds.db.commit()
 
     def get_file_names(file_entries):
-        # ds._files_in_range returns a FileEntry type, but for these
+        # ds.files_in_range returns a FileEntry type, but for these
         # tests we are only interested in the name (first field)
         return [x[0] for x in file_entries]
 
-    assert get_file_names(ds._files_in_range((0.2, 0.8))) == ["a"]
-    assert get_file_names(ds._files_in_range((0.2, 1.8))) == ["a", "b"]
-    assert get_file_names(ds._files_in_range((0.2, 2.0))) == ["a", "b"]
-    assert get_file_names(ds._files_in_range((1.0, 1.9))) == ["a", "b"]
-    assert get_file_names(ds._files_in_range((8.4, 8.5))) == ["d"]
-    assert get_file_names(ds._files_in_range((0.0, 10.0))) == ["a", "b", "c", "d"]
+    assert get_file_names(ds.files_in_range((0.2, 0.8))) == ["a"]
+    assert get_file_names(ds.files_in_range((0.2, 1.8))) == ["a", "b"]
+    assert get_file_names(ds.files_in_range((0.2, 2.0))) == ["a", "b"]
+    assert get_file_names(ds.files_in_range((1.0, 1.9))) == ["a", "b"]
+    assert get_file_names(ds.files_in_range((8.4, 8.5))) == ["d"]
+    assert get_file_names(ds.files_in_range((0.0, 10.0))) == ["a", "b", "c", "d"]
 
     # Out-of-bounds times
-    assert not ds._files_in_range((-3.0, -1.0))
-    assert not ds._files_in_range((11.0, 12.0))
+    assert not ds.files_in_range((-3.0, -1.0))
+    assert not ds.files_in_range((11.0, 12.0))
 
     # A time falling within the gap in ]5.0, 8.0[
-    assert not ds._files_in_range((6.0, 7.0))
+    assert not ds.files_in_range((6.0, 7.0))

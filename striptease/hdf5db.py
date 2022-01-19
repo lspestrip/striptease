@@ -304,13 +304,18 @@ class DataStorage:
             for x in curs.fetchall()
         ]
 
-    def _files_in_range(
+    def files_in_range(
         self,
-        mjd_interval: Tuple[float, float],
+        mjd_range: Union[
+            Tuple[float, float],
+            Tuple[astropy.time.Time, astropy.time.Time],
+            Tuple[str, str],
+            Tag,
+        ],
     ) -> List[HDF5FileInfo]:
         """Return a list of the files that contain data within the MJD range"""
 
-        first_mjd, last_mjd = mjd_interval
+        first_mjd, last_mjd = extract_mjd_range(mjd_range)
 
         curs = self.db.cursor()
         # The WHERE clause considers three possibilities:
@@ -348,7 +353,7 @@ class DataStorage:
 
         start_mjd, end_mjd = extract_mjd_range(mjd_range)
         time, data = None, None
-        for cur_file in self._files_in_range((start_mjd, end_mjd)):
+        for cur_file in self.files_in_range((start_mjd, end_mjd)):
             hdf5_file = self._open_file(cur_file.path)
             hdf5_file.read_file_metadata(force=False)
 
@@ -431,7 +436,17 @@ class DataStorage:
             for row in curs.fetchall()
         ]
 
-    def load_sci(self, mjd_range: Union[Tuple[float, float], Tag], *args, **kwargs):
+    def load_sci(
+        self,
+        mjd_range: Union[
+            Tuple[float, float],
+            Tuple[astropy.time.Time, astropy.time.Time],
+            Tuple[str, str],
+            Tag,
+        ],
+        *args,
+        **kwargs,
+    ):
         """Load scientific data within a specified MJD time range
 
         This function operates in the same way as :meth:`.DataFile.load_sci`, but it
