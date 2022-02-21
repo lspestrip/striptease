@@ -204,14 +204,14 @@ class PSProcedure(StripProcedure):
 
             # …and then acquire the curves
             try:
-                Ifor = get_sequence_of_biases(unit_test_data, ps, "IFVF") * 1e6
+                Ifor = get_sequence_of_biases(unit_test_data, ps, "IFVF")
             except KeyError:
                 log.warning(f"IFVF does not exist for {pol_name} {ps}")
                 self.conn.log(
                     message=f"IFVF does not exist for {pol_name} {ps} in unit-level tests. "
                     "Using a synthetic curve instead"
                 )
-                Ifor = get_sequence_of_biases(None, ps, "IFVF") * 1e6
+                Ifor = get_sequence_of_biases(None, ps, "IFVF")
 
             Ifor *= 1e6  # Convert from A to µA
 
@@ -232,7 +232,7 @@ class PSProcedure(StripProcedure):
                         pol_name, phsw_index=pin, vpin_adu=None, ipin_adu=adu
                     )
                     self.conn.set_hk_scan(cur_board)
-                    self.conn.log(message=f"Set I={i:.1f} uA = {adu} ADU")
+                    self.conn.log(message=f"Set I={i:.1f} µA = {adu} ADU")
                     wait_with_tag(
                         conn=self.command_emitter,
                         seconds=5,
