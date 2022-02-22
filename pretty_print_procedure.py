@@ -97,7 +97,7 @@ def main():
     parser.add_argument(
         "--types",
         "-t",
-        default="command,log,tag_start,tag_end,wait",
+        default="command,log,tag_start,tag_stop,wait",
         metavar="LIST",
         help="""Types of commands to be included in the output table,
         specified as a set of strings separated by a comma. Valid
