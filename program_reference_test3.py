@@ -56,7 +56,8 @@ class ReferenceTestProcedure(StripProcedure):
                 # set phsw modulation to default bias
                 for h in range(4):
                     with StripTag(
-                        conn=self.command_emitter, name=f"ref3_set_pol_state{polname}"
+                        conn=self.command_emitter,
+                        name=f"ref3_set_pol{polname}_phsw_default_end",
                     ):
                         self.conn.set_phsw_status(
                             polarimeter=polname,
@@ -68,7 +69,7 @@ class ReferenceTestProcedure(StripProcedure):
                 wait_with_tag(
                     conn=self.conn,
                     seconds=self.wait_time_s,
-                    name="ref3_acquisition_default_pol{polname}",
+                    name=f"ref3_acquisition_pol{polname}_phsw_default_end",
                 )
 
         ####################################################################################################################
@@ -91,7 +92,9 @@ class ReferenceTestProcedure(StripProcedure):
                     )
 
         wait_with_tag(
-            conn=self.conn, seconds=self.long_wait_time_s, name="ref3_wait_PHSW_default"
+            conn=self.conn,
+            seconds=self.long_wait_time_s,
+            name="ref3_acquisition_phsw_default",
         )
 
         # RUN 2
@@ -99,7 +102,7 @@ class ReferenceTestProcedure(StripProcedure):
 
             with StripTag(
                 conn=self.command_emitter,
-                name=f"ref3_set_pol_{polname}_phsw_{h}_antidefault",
+                name=f"ref3_set_pol{polname}_phsw_{h}_default_inv",
             ):
                 for h, s in enumerate(
                     [
@@ -116,7 +119,7 @@ class ReferenceTestProcedure(StripProcedure):
         wait_with_tag(
             conn=self.conn,
             seconds=self.long_wait_time_s,
-            name="ref3_wait_PHSW_antidefault",
+            name="ref3_acquisition_phsw_default_inv",
         )
 
 

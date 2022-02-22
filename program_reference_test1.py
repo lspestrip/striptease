@@ -32,7 +32,7 @@ class ReferenceTestProcedure(StripProcedure):
 
         for cur_board, pol_idx, polname in polarimeter_iterator(args.board):
             self.conn.log(message=f"turning on {polname} for reference procedure 1…")
-            with StripTag(conn=self.command_emitter, name=f"ref1_turnon_pol_{polname}"):
+            with StripTag(conn=self.command_emitter, name=f"ref1_turnon_pol{polname}"):
 
                 turnon_proc.set_board_horn_polarimeter(
                     new_board=cur_board,
@@ -50,9 +50,7 @@ class ReferenceTestProcedure(StripProcedure):
                 message=f"reference procedure 1 for {polname} has been completed, turning {polname} off…"
             )
 
-            with StripTag(
-                conn=self.command_emitter, name=f"ref1_turnoff_pol_{polname}"
-            ):
+            with StripTag(conn=self.command_emitter, name=f"ref1_turnoff_pol{polname}"):
                 # turn off polarimeter
                 turnoff_proc.set_board_horn_polarimeter(
                     new_board=cur_board,

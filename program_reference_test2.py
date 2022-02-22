@@ -47,10 +47,11 @@ class ReferenceTestProcedure(StripProcedure):
 
             self.conn.log(message="ref2_set phsw state to default bias")
             # set phsw modulation to default bias
-            for h in range(4):
-                with StripTag(
-                    conn=self.command_emitter, name=f"ref2_set_pol_state{polname}"
-                ):
+            with StripTag(
+                conn=self.command_emitter,
+                name=f"ref2_set_pol{polname}_phsw_default_end",
+            ):
+                for h in range(4):
                     self.conn.set_phsw_status(
                         polarimeter=polname,
                         phsw_index=h,
@@ -61,7 +62,7 @@ class ReferenceTestProcedure(StripProcedure):
             wait_with_tag(
                 conn=self.conn,
                 seconds=self.wait_time_s,
-                name=f"ref2_acquisition_default_pol{polname}",
+                name=f"ref2_acquisition_pol{polname}_phsw_default_end",
             )
 
 

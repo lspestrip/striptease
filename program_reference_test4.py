@@ -55,7 +55,8 @@ class ReferenceTestProcedure(StripProcedure):
                 # set phsw modulation to default bias
                 for h in range(4):
                     with StripTag(
-                        conn=self.command_emitter, name=f"ref4_set_pol_state{polname}"
+                        conn=self.command_emitter,
+                        name=f"ref4_set_pol{polname}_phsw_default_end",
                     ):
                         self.conn.set_phsw_status(
                             polarimeter=polname,
@@ -67,7 +68,7 @@ class ReferenceTestProcedure(StripProcedure):
                 wait_with_tag(
                     conn=self.conn,
                     seconds=self.wait_time_s,
-                    name="ref4_acquisition_default_pol{polname}",
+                    name=f"ref4_acquisition_pol{polname}_phsw_default_end",
                 )
 
         ####################################################################################################################
@@ -77,10 +78,9 @@ class ReferenceTestProcedure(StripProcedure):
 
         # STATE 1
         for cur_board, pol_idx, polname in polarimeter_iterator(args.board):
-
             with StripTag(
                 conn=self.command_emitter,
-                name=f"ref4_set_pol_{polname}_phsw_STATE1",
+                name=f"ref4_set_pol{polname}_phsw_unsw0101",
             ):
                 for h, s in enumerate(
                     [
@@ -95,15 +95,16 @@ class ReferenceTestProcedure(StripProcedure):
                     )
 
         wait_with_tag(
-            conn=self.conn, seconds=self.long_wait_time_s, name="ref4_wait_PHSW_STATE1"
+            conn=self.conn,
+            seconds=self.long_wait_time_s,
+            name="ref4_acquisition_phsw_unsw0101",
         )
 
         # STATE 2
         for cur_board, pol_idx, polname in polarimeter_iterator(args.board):
-
             with StripTag(
                 conn=self.command_emitter,
-                name=f"ref4_set_pol_{polname}_phsw_STATE2",
+                name=f"ref4_set_pol{polname}_phsw_unsw1010",
             ):
                 for h, s in enumerate(
                     [
@@ -118,17 +119,17 @@ class ReferenceTestProcedure(StripProcedure):
                     )
 
         wait_with_tag(
-            conn=self.conn, seconds=self.long_wait_time_s, name="ref4_wait_PHSW_STATE2"
+            conn=self.conn,
+            seconds=self.long_wait_time_s,
+            name="ref4_acquisition_phsw_unsw1010",
         )
 
         # STATE 3
         for cur_board, pol_idx, polname in polarimeter_iterator(args.board):
-
             with StripTag(
                 conn=self.command_emitter,
-                name=f"ref4_set_pol_{polname}_phsw_STATE3",
+                name=f"ref4_set_pol{polname}_phsw_unsw1001",
             ):
-
                 for h, s in enumerate(
                     [
                         PhswPinMode.STILL_NO_SIGNAL,
@@ -142,17 +143,17 @@ class ReferenceTestProcedure(StripProcedure):
                     )
 
         wait_with_tag(
-            conn=self.conn, seconds=self.long_wait_time_s, name="ref4_wait_PHSW_STATE3"
+            conn=self.conn,
+            seconds=self.long_wait_time_s,
+            name="ref4_acquisition_phsw_unsw1001",
         )
 
         # STATE 4
         for cur_board, pol_idx, polname in polarimeter_iterator(args.board):
-
             with StripTag(
                 conn=self.command_emitter,
-                name=f"ref4_set_pol_{polname}_phsw_STATE4",
+                name=f"ref4_set_pol_{polname}_phsw_unsw0110",
             ):
-
                 for h, s in enumerate(
                     [
                         PhswPinMode.STILL_SIGNAL,
@@ -166,7 +167,9 @@ class ReferenceTestProcedure(StripProcedure):
                     )
 
         wait_with_tag(
-            conn=self.conn, seconds=self.long_wait_time_s, name="ref4_wait_PHSW_STATE4"
+            conn=self.conn,
+            seconds=self.long_wait_time_s,
+            name="ref4_acquisition_phsw_unsw0110",
         )
 
 
