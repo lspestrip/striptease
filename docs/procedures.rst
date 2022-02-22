@@ -98,6 +98,20 @@ For a real-world example of test procedure, have a look at
 `program_pinchoff.py
 <https://github.com/lspestrip/striptease/blob/master/program_pinchoff.py>`_.
 
+Pretty-printing test procedures
+-------------------------------
+
+When debugging a procedure, it is useful to have a quick look of the
+commands it contains. Striptease provides a program,
+``pretty_print_procedure.py``, that outputs the list of commands in a
+procedure using colors. The following demo shows how to use it:
+
+.. asciinema:: pretty-print-table-94x26.cast
+   :preload: 1
+   :cols: 118
+   :rows: 26
+
+
 Module contents
 ----------------------------------
 
