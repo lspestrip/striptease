@@ -2,8 +2,6 @@
 
 set -e
 
-readonly warm_biases="./data/default_biases_warm.xlsx"
-readonly cryo_biases="./data/default_biases_cryo.xlsx"
 readonly output_dir="$1"
 
 function create_board_script {
@@ -12,17 +10,20 @@ function create_board_script {
 	basename="$3"
 
         echo "Creating turnon/turnoff procedures for $pol"
-	python3 program_turnon.py \
-            --bias-table-file "$warm_biases" \
-            --output "${basename}_turnon_warm.json" \
-            --board $board \
-            $pol
-	python3 program_turnon.py \
-            --bias-table-file "$warm_biases" \
-            --output "${basename}_turnoff_warm.json" \
-            --board $board \
-            --turnoff \
-            $pol
+        for condition in warm cryo; do
+            biases="./data/default_biases_${condition}.xlsx"
+            python3 program_turnon.py \
+                --bias-table-file "$biases" \
+                --output "${basename}_turnon_${condition}.json" \
+                --board $board \
+                $pol
+            python3 program_turnon.py \
+                --bias-table-file "$biases" \
+                --output "${basename}_turnoff_${condition}.json" \
+                --board $board \
+                --turnoff \
+                $pol
+        done
 }
 
 if [ "$output_dir" == "" ]; then

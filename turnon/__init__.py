@@ -1,4 +1,5 @@
 import os.path
+from pathlib import Path
 from typing import Optional
 
 from web.rest.base import Connection
@@ -539,11 +540,19 @@ class TurnOnOffProcedure(StripProcedure):
             bias_file_name=self.bias_file_name,
         )
 
-        current_time = datetime.now().strftime("%A %Y-%m-%d %H:%M:%S (%Z)")
+        current_time = datetime.now().strftime("%A %Y-%m-%d %H:%M:%S")
         board_setup.log(
             f"Here begins the turnon procedure for polarimeter {self.horn}, "
             + f"created on {current_time} using program_turnon.py"
         )
+
+        if self.bias_file_name:
+            board_setup.log(
+                "The biases are taken from {}".format(
+                    Path(self.bias_file_name).absolute()
+                )
+            )
+
         board_setup.log(f"We are using the setup for board {self.board}")
         if self.polarimeter:
             board_setup.log(
