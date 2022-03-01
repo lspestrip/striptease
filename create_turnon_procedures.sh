@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 readonly output_dir="$1"
 
 function create_board_script {
