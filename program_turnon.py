@@ -4,6 +4,8 @@
 import logging as log
 import re
 
+from rich.logging import RichHandler
+
 from turnon import TurnOnOffProcedure
 from striptease import BOARD_TO_W_BAND_POL
 
@@ -62,6 +64,20 @@ Usage example:
         help="Name of the board to use",
     )
     parser.add_argument(
+        "--zero-bias",
+        action="store_true",
+        default=False,
+        help="Only set the LNAs to zero bias instead of turning them on to full nominal bias",
+    )
+    parser.add_argument(
+        "--bias-table-file",
+        metavar="FILE",
+        type=str,
+        default=None,
+        required=True,
+        help="Path to the Excel file containing the biases to use",
+    )
+    parser.add_argument(
         "--turnoff",
         action="store_true",
         default=False,
@@ -77,7 +93,6 @@ Usage example:
         help="Name of the file where to write the output (in JSON format). "
         "If not provided, the output will be sent to stdout.",
     )
-    parser.add_argument("--bias-steps", dest="bias_steps", action="append")
     parser.add_argument(
         "--wait-time-sec",
         metavar="VALUE",
@@ -90,9 +105,16 @@ Usage example:
 
     args = parser.parse_args()
 
-    log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
+    log.basicConfig(
+        level=log.INFO, format="%(message)s", datefmt="[%X]", handlers=[RichHandler()]
+    )
 
-    proc = TurnOnOffProcedure(waittime_s=args.waittime_s, turnon=not args.turnoff)
+    proc = TurnOnOffProcedure(
+        waittime_s=args.waittime_s,
+        turnon=not args.turnoff,
+        zero_bias=args.zero_bias,
+        bias_file_name=args.bias_table_file,
+    )
     for cur_horn, cur_polarimeter in unroll_polarimeters(args.polarimeters):
         log.info("Processing horn %s, polarimeter %s", cur_horn, cur_polarimeter)
         proc.set_board_horn_polarimeter(args.board, cur_horn, cur_polarimeter)

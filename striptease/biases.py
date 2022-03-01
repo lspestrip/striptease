@@ -121,7 +121,7 @@ class InstrumentBiases:
                 / "default_biases_warm.xlsx"
             )
 
-        logging.info("Loading default biases from file %s", filename)
+        logging.info('Loading default biases from file "%s"', filename)
         sheets = pd.read_excel(
             filename, header=0, index_col=0, sheet_name=["Biases", "Modules"]
         )

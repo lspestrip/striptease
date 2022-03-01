@@ -1,4 +1,6 @@
 import os.path
+from typing import Optional
+
 from web.rest.base import Connection
 from collections import namedtuple
 from datetime import datetime
@@ -64,6 +66,7 @@ class SetupBoard(object):
         instrument_biases=None,
         board_name="R",
         pol_list=None,
+        bias_file_name: Optional[str] = None,
     ):
 
         self.post_command = post_command
@@ -118,7 +121,9 @@ class SetupBoard(object):
         if instrument_biases is not None:
             self.ib = instrument_biases
         else:
-            self.ib = InstrumentBiases()
+            assert bias_file_name
+            log.info(f'Loading instrument biases from file "{bias_file_name}"')
+            self.ib = InstrumentBiases(filename=bias_file_name)
 
     def board_setup(self):
         url = self.conf.get_rest_base() + "/slo"
@@ -479,7 +484,14 @@ def biases_to_str(biases):
 
 
 class TurnOnOffProcedure(StripProcedure):
-    def __init__(self, waittime_s=5, stable_acquisition_time_s=120, turnon=True):
+    def __init__(
+        self,
+        waittime_s=5,
+        stable_acquisition_time_s=120,
+        turnon=True,
+        zero_bias: bool = False,
+        bias_file_name: Optional[str] = None,
+    ):
         super(TurnOnOffProcedure, self).__init__()
         self.board = None
         self.horn = None
@@ -487,8 +499,10 @@ class TurnOnOffProcedure(StripProcedure):
         self.waittime_s = waittime_s
         self.stable_acquisition_time_s = stable_acquisition_time_s
         self.turnon = turnon
+        self.zero_bias = zero_bias
         self.on_boards = set()
         self.off_boards = set()
+        self.bias_file_name = bias_file_name
 
     def set_board_horn_polarimeter(self, new_board, new_horn, new_pol=None):
         self.board = new_board
@@ -519,7 +533,10 @@ class TurnOnOffProcedure(StripProcedure):
 
         assert not (self.horn is None)
         board_setup = SetupBoard(
-            config=self.conf, board_name=self.board, post_command=self.command_emitter
+            config=self.conf,
+            board_name=self.board,
+            post_command=self.command_emitter,
+            bias_file_name=self.bias_file_name,
         )
 
         current_time = datetime.now().strftime("%A %Y-%m-%d %H:%M:%S (%Z)")
@@ -601,8 +618,16 @@ class TurnOnOffProcedure(StripProcedure):
                 board_setup.set_phsw_status(self.horn, idx, status=7)
 
         # 6
+        if self.zero_bias:
+            steps = [0.0]
+        else:
+            steps = [0.0, 0.5, 1.0]
+        board_setup.log(
+            f"Going to turn on the amplifiers in {len(steps)} step(s): {steps}"
+        )
+
         for lna in ("HA3", "HA2", "HA1", "HB3", "HB2", "HB1"):
-            for step_idx, cur_step in enumerate([0.0, 0.5, 1.0]):
+            for step_idx, cur_step in enumerate(steps):
                 with StripTag(
                     conn=self.command_emitter,
                     name=f"VD_SET_{self.horn}_{lna}",
@@ -645,7 +670,10 @@ class TurnOnOffProcedure(StripProcedure):
 
         assert self.horn
         board_setup = SetupBoard(
-            config=self.conf, board_name=self.board, post_command=self.command_emitter
+            config=self.conf,
+            board_name=self.board,
+            post_command=self.command_emitter,
+            bias_file_name=self.bias_file_name,
         )
 
         current_time = datetime.now().strftime("%A %Y-%m-%d %H:%M:%S (%Z)")
