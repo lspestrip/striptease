@@ -594,10 +594,10 @@ class TurnOnOffProcedure(StripProcedure):
 
         # 4
         if self.polarimeter:
-            biases = self.biases.get_biases(polarimeter_name=self.polarimeter)
+            biases = board_setup.ib.get_biases(polarimeter_name=self.polarimeter)
             board_setup.log(f"{self.polarimeter}: {biases_to_str(biases)}")
         else:
-            biases = self.biases.get_biases(module_name=self.horn)
+            biases = board_setup.ib.get_biases(module_name=self.horn)
             board_setup.log(f"{self.horn}: {biases_to_str(biases)}")
 
         for (index, vpin, ipin) in zip(

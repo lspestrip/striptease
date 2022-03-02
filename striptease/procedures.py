@@ -7,7 +7,6 @@ import sys
 
 from config import Config
 from striptease.stripconn import StripConnection
-from striptease.biases import InstrumentBiases
 
 
 def dump_procedure_as_json(outf, obj, indent_level=0, use_newlines=True):
@@ -87,7 +86,6 @@ class StripProcedure:
 
     def __init__(self):
         self.command_history = []
-        self.biases = InstrumentBiases()
 
         with StripConnection() as conn:
             # We need to load the configuration from the server, as it
