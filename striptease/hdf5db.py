@@ -371,7 +371,9 @@ class DataStorage:
                         time[-1] < cur_time[0]
                     ), f"Non-consecutive times in {mjd_range}"
 
-                time = np.concatenate((time, cur_time))
+                time = astropy.time.Time(
+                    np.concatenate((time.mjd, cur_time.mjd)), format="mjd"
+                )
                 data = np.concatenate((data, cur_data))
 
         return time, data
