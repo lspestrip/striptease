@@ -25,7 +25,7 @@ class PinchOffAnalysis:
             "3": "HB2",
             "5": "HB3",
         }
-        self.quad = lambda x, a, b, c: a * x ** 2 + b * x + c
+        self.quad = lambda x, a, b, c: a * x**2 + b * x + c
         self.lin = lambda x, a, b: a * x + b
 
     #        self.verification_tags = ['STABLE_ACQUISITION_%s' % p for p in self.get_tested_polarimeters()] + \
@@ -108,7 +108,7 @@ class PinchOffAnalysis:
         import numpy as np
 
         residuals = yvalues - function(xvalues, *parameters[0])
-        ss_res = np.sum(residuals ** 2)
+        ss_res = np.sum(residuals**2)
         ss_tot = np.sum((yvalues - np.mean(yvalues)) ** 2)
         return 1.0 - (ss_res / ss_tot)
 
