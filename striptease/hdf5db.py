@@ -366,7 +366,11 @@ class DataStorage:
                 time = cur_time
                 data = cur_data
             else:
-                assert time[-1] < cur_time[0], f"Non-consecutive times in {mjd_range}"
+                if len(time) > 0:
+                    assert (
+                        time[-1] < cur_time[0]
+                    ), f"Non-consecutive times in {mjd_range}"
+
                 time = np.concatenate((time, cur_time))
                 data = np.concatenate((data, cur_data))
 
