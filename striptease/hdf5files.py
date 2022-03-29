@@ -1,6 +1,5 @@
 # -*- encoding: utf-8 -*-
 
-from collections import namedtuple
 from io import BytesIO
 from pathlib import Path
 from typing import List, Set
@@ -15,6 +14,7 @@ from astropy.time import Time
 import csv
 import h5py
 import numpy as np
+from dataclasses import dataclass
 from scipy.interpolate import interp1d
 
 from .biases import BiasConfiguration
@@ -65,9 +65,14 @@ class HDF5ReadError(Exception):
 #: - ``start_comment``: comment put at the start
 #:
 #: - ``end_comment``: comment put at the end
-Tag = namedtuple(
-    "Tag", ["id", "mjd_start", "mjd_end", "name", "start_comment", "end_comment"]
-)
+@dataclass
+class Tag:
+    id: int
+    mjd_start: float
+    mjd_end: float
+    name: str
+    start_comment: str
+    end_comment: str
 
 
 def check_group_and_subgroup(group, subgroup):
