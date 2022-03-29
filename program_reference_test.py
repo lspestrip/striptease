@@ -149,7 +149,7 @@ if __name__ == "__main__":
 
 Usage example:
 
-    python3 program_turnon.py G0 G4
+    python3 program_reference_test.py G0 G4
 """,
     )
     parser.add_argument(
