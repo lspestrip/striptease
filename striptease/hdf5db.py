@@ -366,7 +366,7 @@ class DataStorage:
                 time = cur_time
                 data = cur_data
             else:
-                if len(time) > 0:
+                if len(time) > 0 and len(cur_time) > 0:
                     assert (
                         time[-1] < cur_time[0]
                     ), f"Non-consecutive times in {mjd_range}"
