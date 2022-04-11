@@ -44,6 +44,7 @@ def load_unit_level_test(
     pol_unittest_associations,
     pol_name: str,
     no_unit_level_tests: bool,
+    cryo: bool,
 ) -> Tuple[Optional[int], Optional[UnitTestDC]]:
     """Given the Excel table and a polarimeter, load the associated unit-level test
 
@@ -54,7 +55,7 @@ def load_unit_level_test(
     if no_unit_level_tests:
         return None, None
 
-    test_number = pol_unittest_associations.loc[pol_name]["RT"]
+    test_number = pol_unittest_associations.loc[pol_name]["CRYO" if cryo else "RT"]
     log.info("Going to download unit-level test {}".format(test_number))
 
     try:
@@ -95,7 +96,7 @@ class PSProcedure(StripProcedure):
         forward_test: bool,
         turn_on: bool,
         no_unit_level_tests: bool,
-        bias_file_name: str,
+        cryo: bool,
     ):
         super(PSProcedure, self).__init__()
         data_file_path = (
@@ -108,7 +109,12 @@ class PSProcedure(StripProcedure):
         self.forward_test = forward_test
         self.turn_on = turn_on
         self.no_unit_level_tests = no_unit_level_tests
-        self.bias_file_name = bias_file_name
+        self.cryo = cryo
+        self.bias_file_name = (
+            Path(__file__).parent
+            / "data"
+            / ("default_biases_{}.xlsx".format("cryo" if cryo else "warm"))
+        )
 
     def _stable_acquisition(self, pol_name: str, state: str, proc_number: int):
         assert (
@@ -292,6 +298,7 @@ class PSProcedure(StripProcedure):
                 self.pol_unittest_associations,
                 pol_name,
                 no_unit_level_tests=self.no_unit_level_tests,
+                cryo=self.cryo,
             )
 
             if self.no_unit_level_tests:
@@ -369,6 +376,7 @@ class PSProcedure(StripProcedure):
                 self.pol_unittest_associations,
                 pol_name,
                 no_unit_level_tests=self.no_unit_level_tests,
+                cryo=self.cryo,
             )
 
             if self.no_unit_level_tests:
@@ -453,9 +461,11 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "bias_file_name",
-        type=str,
-        help="Excel file containing the turnon biases (either warm or cryo)",
+        "--warm",
+        default=False,
+        action="store_true",
+        help="""Run the procedure assuming warm conditions (the default is to
+        use cryogenic biases).""",
     )
 
     parser.add_argument(
@@ -495,7 +505,7 @@ if __name__ == "__main__":
         forward_test=args.forward_test,
         turn_on=args.turn_on,
         no_unit_level_tests=args.no_unit_level_tests,
-        bias_file_name=args.bias_file_name,
+        cryo=not args.warm,
     )
 
     if args.procedure == 1:
