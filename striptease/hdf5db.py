@@ -64,7 +64,7 @@ def create_storage_db(db: sqlite3.Connection):
         """
 CREATE TABLE IF NOT EXISTS files(
     path TEXT,
-    size_in_bytes NUMBER,
+    size_in_bytes INTEGER,
     first_sample REAL,
     last_sample REAL
 )

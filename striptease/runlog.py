@@ -41,10 +41,10 @@ def connect_to_run_log() -> sqlite3.Connection:
 CREATE TABLE IF NOT EXISTS run_log(
     start_time TEXT,
     end_time TEXT,
-    wait_time_s NUMBER,
-    wait_cmd_time_s NUMBER,
+    wait_time_s REAL,
+    wait_cmd_time_s REAL,
     full_path TEXT,
-    number_of_commands NUMBER,
+    number_of_commands INTEGER,
     zstd_json_procedure BLOB
 )
 """

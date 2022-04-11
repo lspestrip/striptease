@@ -23,7 +23,7 @@ def test_hdf5db(tmp_path: str):
         """
 CREATE TABLE IF NOT EXISTS files(
     path TEXT,
-    size_in_bytes NUMBER,
+    size_in_bytes INTEGER,
     first_sample REAL,
     last_sample REAL
 )
