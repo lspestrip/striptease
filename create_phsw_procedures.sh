@@ -4,6 +4,7 @@ set -e
 
 readonly pre_acquisition_time_proc1_s=60
 readonly pre_acquisition_time_proc2_s=1800
+readonly bias_file_name=./data/default_biases_warm.xlsx
 
 readonly output_dir="$1"
 
@@ -27,40 +28,40 @@ for ult_case in ult no_ult; do
     for board in R O Y G B V I; do
             python3 program_phsw_curves.py \
                     --pre-acquisition-time $pre_acquisition_time_proc1_s \
-                    --output "${output_dir}/phsw_curves_${board}_1_${ult_case}.json" \
+                    --output "${output_dir}/phsw_curves_${board}_1_${ult_case}_warm.json" \
                     ${ult_switch} \
-                    1 $board
+                    $bias_file_name 1 $board
 
             python3 program_phsw_curves.py \
                     --pre-acquisition-time $pre_acquisition_time_proc2_s \
                     --turn-on \
-                    --output "${output_dir}/phsw_curves_${board}_2_${ult_case}_turnon.json" \
+                    --output "${output_dir}/phsw_curves_${board}_2_${ult_case}_turnon_warm.json" \
                     ${ult_switch} \
-                    2 $board
+                    $bias_file_name 2 $board
 
             python3 program_phsw_curves.py \
                     --pre-acquisition-time $pre_acquisition_time_proc2_s \
-                    --output "${output_dir}/phsw_curves_${board}_2_${ult_case}_no_turnon.json" \
+                    --output "${output_dir}/phsw_curves_${board}_2_${ult_case}_no_turnon_warm.json" \
                     ${ult_switch} \
-                    2 $board
+                    $bias_file_name 2 $board
     done
 
     python3 program_phsw_curves.py \
             --pre-acquisition-time $pre_acquisition_time_proc1_s \
-            --output "${output_dir}/phsw_curves_all_1_${ult_case}.json" \
+            --output "${output_dir}/phsw_curves_all_1_${ult_case}_warm.json" \
             ${ult_switch} \
-            1
+            $bias_file_name 1
 
     python3 program_phsw_curves.py \
             --pre-acquisition-time $pre_acquisition_time_proc2_s \
             --turn-on \
-            --output "${output_dir}/phsw_curves_all_2_${ult_case}_turnon.json" \
+            --output "${output_dir}/phsw_curves_all_2_${ult_case}_turnon_warm.json" \
             ${ult_switch} \
-            2
+            $bias_file_name 2
 
     python3 program_phsw_curves.py \
             --pre-acquisition-time $pre_acquisition_time_proc2_s \
-            --output "${output_dir}/phsw_curves_all_2_${ult_case}_no_turnon.json" \
+            --output "${output_dir}/phsw_curves_all_2_${ult_case}_no_turnon_warm.json" \
             ${ult_switch} \
-            2
+            $bias_file_name 2
 done

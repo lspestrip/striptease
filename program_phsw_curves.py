@@ -95,6 +95,7 @@ class PSProcedure(StripProcedure):
         forward_test: bool,
         turn_on: bool,
         no_unit_level_tests: bool,
+        bias_file_name: str,
     ):
         super(PSProcedure, self).__init__()
         data_file_path = (
@@ -107,6 +108,7 @@ class PSProcedure(StripProcedure):
         self.forward_test = forward_test
         self.turn_on = turn_on
         self.no_unit_level_tests = no_unit_level_tests
+        self.bias_file_name = bias_file_name
 
     def _stable_acquisition(self, pol_name: str, state: str, proc_number: int):
         assert (
@@ -257,9 +259,16 @@ class PSProcedure(StripProcedure):
     def run_proc1(self):
         calibr = CalibrationTables()
         turnon_proc = TurnOnOffProcedure(
-            waittime_s=1.0, turnon=True, stable_acquisition_time_s=600
+            waittime_s=1.0,
+            turnon=True,
+            stable_acquisition_time_s=600,
+            bias_file_name=self.bias_file_name,
         )
-        turnoff_proc = TurnOnOffProcedure(waittime_s=1.0, turnon=False)
+        turnoff_proc = TurnOnOffProcedure(
+            waittime_s=1.0,
+            turnon=False,
+            bias_file_name=self.bias_file_name,
+        )
         for cur_board, pol_idx, pol_name in polarimeter_iterator(args.board):
             # turnon pol
             with StripTag(
@@ -326,7 +335,11 @@ class PSProcedure(StripProcedure):
         calibr = CalibrationTables()
 
         if self.turn_on:
-            turnon_proc = TurnOnOffProcedure(waittime_s=1.0, turnon=True)
+            turnon_proc = TurnOnOffProcedure(
+                waittime_s=1.0,
+                turnon=True,
+                bias_file_name=self.bias_file_name,
+            )
             with StripTag(conn=self.command_emitter, name="phsw_proc2_turnon_pol"):
                 for cur_board, pol_idx, pol_name in polarimeter_iterator(args.board):
 
@@ -440,6 +453,12 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "bias_file_name",
+        type=str,
+        help="Excel file containing the turnon biases (either warm or cryo)",
+    )
+
+    parser.add_argument(
         "procedure",
         type=int,
         help="Procedure to generate, either 1 or 2",
@@ -476,6 +495,7 @@ if __name__ == "__main__":
         forward_test=args.forward_test,
         turn_on=args.turn_on,
         no_unit_level_tests=args.no_unit_level_tests,
+        bias_file_name=args.bias_file_name,
     )
 
     if args.procedure == 1:

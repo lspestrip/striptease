@@ -177,11 +177,11 @@ class InstrumentBiases:
             polarimeter_name = self.module_name_to_polarimeter(module_name)
 
         if not (polarimeter_name in self.biases):
-            valid_names = sorted(
-                ", ".join(['"{0}"'.format(x) for x in self.biases.keys()])
+            valid_names = ", ".join(
+                ['"{0}"'.format(x) for x in sorted(self.biases.keys())]
             )
             raise ValueError(
-                f"Unknown polarimeter '{polarimeter_name}', valid values are {valid_names}"
+                f"Unknown polarimeter '{polarimeter_name}' in 'InstrumentBiases.get_biases', valid values are {valid_names}"
             )
         if param_hk is not None:
             result = self.biases[polarimeter_name][param_hk]
@@ -318,9 +318,11 @@ class ReferenceBiases:
         """
 
         if not (polarimeter_name in self.data):
-            values = sorted(", ".join(self.data.keys()))
+            valid_names = ", ".join(
+                ['"{0}"'.format(x) for x in sorted(self.biases.keys())]
+            )
             raise ValueError(
-                f"Unknown polarimeter {polarimeter_name}, valid values are {values}"
+                f"Unknown polarimeter {polarimeter_name} in 'get_biases', valid values are {valid_names}"
             )
 
         return self.data[polarimeter_name]
