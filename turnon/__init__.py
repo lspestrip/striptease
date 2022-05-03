@@ -239,17 +239,17 @@ class SetupBoard(object):
         cmd["pol"] = polarimeter
 
         cmd["base_addr"] = f"DET{detector_idx}_BIAS"
-        cmd["data"] = [bias]
+        cmd["data"] = [int(bias)]
         if not self.post_command(url, cmd):
             return
 
         cmd["base_addr"] = f"DET{detector_idx}_OFFS"
-        cmd["data"] = [offset]
+        cmd["data"] = [int(offset)]
         if not self.post_command(url, cmd):
             return
 
         cmd["base_addr"] = f"DET{detector_idx}_GAIN"
-        cmd["data"] = [gain]
+        cmd["data"] = [int(gain)]
         if not self.post_command(url, cmd):
             return
 
@@ -583,16 +583,6 @@ class TurnOnOffProcedure(StripProcedure):
             board_setup.enable_electronics(polarimeter=self.horn)
             board_setup.log("The electronics has been enabled")
 
-        # 3
-        for idx in (0, 1, 2, 3):
-            with StripTag(
-                conn=self.command_emitter,
-                name=f"DETECTOR_TURN_ON_{self.horn}_{idx}",
-                comment=f"Turning on detector {idx} in {self.horn}",
-            ):
-                board_setup.turn_on_detector(self.horn, idx)
-
-        # 4
         if self.polarimeter:
             biases = board_setup.ib.get_biases(polarimeter_name=self.polarimeter)
             board_setup.log(f"{self.polarimeter}: {biases_to_str(biases)}")
@@ -600,6 +590,22 @@ class TurnOnOffProcedure(StripProcedure):
             biases = board_setup.ib.get_biases(module_name=self.horn)
             board_setup.log(f"{self.horn}: {biases_to_str(biases)}")
 
+        # 3
+        for idx in (0, 1, 2, 3):
+            with StripTag(
+                conn=self.command_emitter,
+                name=f"DETECTOR_TURN_ON_{self.horn}_{idx}",
+                comment=f"Turning on detector {idx} in {self.horn}",
+            ):
+                board_setup.turn_on_detector(
+                    self.horn,
+                    idx,
+                    bias=getattr(biases, f"det{idx}_bias"),
+                    offset=getattr(biases, f"det{idx}_offset"),
+                    gain=getattr(biases, f"det{idx}_gain"),
+                )
+
+        # 4
         for (index, vpin, ipin) in zip(
             range(4),
             [biases.vpin0, biases.vpin1, biases.vpin2, biases.vpin3],
