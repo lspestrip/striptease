@@ -245,13 +245,13 @@ class SetupBoard(object):
 
         cmd["base_addr"] = f"DET{detector_idx}_OFFS"
         cmd["data"] = [offset]
-        # if not self.post_command(url, cmd):
-        #    return
+        if not self.post_command(url, cmd):
+            return
 
         cmd["base_addr"] = f"DET{detector_idx}_GAIN"
         cmd["data"] = [gain]
-        # if not self.post_command(url, cmd):
-        #    return
+        if not self.post_command(url, cmd):
+            return
 
     def set_phsw_status(self, polarimeter, phsw_idx, status):
         assert phsw_idx in [0, 1, 2, 3]
