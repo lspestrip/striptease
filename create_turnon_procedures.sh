@@ -47,5 +47,9 @@ for board in R O Y G B V I; do
 	create_board_script $board $board "$output_dir/${board}_all"
 done
 
-./join_scripts.py $(ls "$output_dir"/*_all_turnon.json | sort) > "$output_dir"/all_turnon.json
-./join_scripts.py $(ls "$output_dir"/*_all_turnoff.json | sort) > "$output_dir"/all_turnoff.json
+for condition in cryo warm; do
+    ./join_scripts.py $(ls "$output_dir"/*_all_turnon_${condition}.json | sort) \
+                      > "$output_dir"/all_turnon_${condition}.json
+    ./join_scripts.py $(ls "$output_dir"/*_all_turnoff_${condition}.json | sort) \
+                      > "$output_dir"/all_turnoff_${condition}.json
+end
