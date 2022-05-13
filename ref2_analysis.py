@@ -24,7 +24,7 @@ import sys
 from astropy.time import Time
 from mako.template import Template
 from pathlib import Path
-from striptease import DataStorage, Tag, STRIP_BOARD_NAMES, polarimeter_iterator
+from striptease import DataStorage, Tag, polarimeter_iterator
 import numpy as np
 import numpy
 from datetime import datetime
@@ -182,17 +182,11 @@ def main():
         result_jason = {}  # type: Dict[str, Dict[str, Dict[str, Any]]]
         cur_result_jason = {}  # type: Dict[str, Any]
 
-        for letter in STRIP_BOARD_NAMES + ["W"]:
-            for i in range(0, 7):
-                pol = f"{letter}{i}"
-                logging.info(f"polarimeter {pol}")
-                try:
-                    cur_result_report.append((pol, analyzed_data(ds, r[0], pol)))
-                    cur_result_jason[pol] = analyzed_data(ds, r[0], pol)
-                except Exception as exc:
-                    logging.warning(
-                        f'something did not work with polarimeter "{pol}": {exc}'
-                    )
+        for pol in polarimeter_iterator():
+            logging.info(f"polarimeter {pol}")
+            cur_result_report.append((pol, analyzed_data(ds, r[0], pol)))
+            cur_result_jason[pol] = analyzed_data(ds, r[0], pol)
+
         result_report.append((r[0], r[1], cur_result_report))
         result_jason[f"{r[0]}, {r[1]}"] = cur_result_jason
 
