@@ -85,15 +85,21 @@ def main():
         "curves": {},
     }
 
+    num_of_tags = 0
     for pin in pins:
         my_tags = get_iv_tags(ds, (start_time, end_time), pol_name, pin)
         logging.info(f"Pin{pin}: {len(my_tags)} tags")
-        my_result = analyze_hk(ds, my_tags, pol_name, pin)
-        data["curves"][f"pin{pin}"] = my_result
+        if len(my_tags) > 0:
+            my_result = analyze_hk(ds, my_tags, pol_name, pin)
+            data["curves"][f"pin{pin}"] = my_result
+            num_of_tags += len(my_tags)
 
-    logging.info("Creating file JSON")
-    with open(output_dir / f"phsw_curve_{pol_name}.json", "wt") as outf:
-        json.dump(data, outf)
+    if num_of_tags > 0:
+        logging.info("Creating file JSON")
+        with open(output_dir / f"phsw_curve_{pol_name}.json", "wt") as outf:
+            json.dump(data, outf)
+    else:
+        logging.warning("No tags found, skipping JSON creation")
 
 
 if __name__ == "__main__":
