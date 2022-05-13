@@ -52,4 +52,4 @@ for condition in cryo warm; do
                       > "$output_dir"/all_turnon_${condition}.json
     ./join_scripts.py $(ls "$output_dir"/*_all_turnoff_${condition}.json | sort) \
                       > "$output_dir"/all_turnoff_${condition}.json
-end
+done
