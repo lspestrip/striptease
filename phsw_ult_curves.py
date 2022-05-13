@@ -27,9 +27,7 @@ def analyze_data(test: u.UnitTest, pin: str):
     mydata = u.load_unit_test_data(test)
     mydataPin = mydata.components[f"PS{pin}"].curves["IFVF"]
     for value in mydataPin:
-        single = {}
-        single["V"] = float(value[0][1])
-        single["I"] = float(value[0][0])
+        single = {"V": float(value[0][1]), "I": float(value[0][0])}
         result.append(single)
     return result
 
@@ -57,6 +55,7 @@ def main():
         "polarimeter": pol_name,
         "analysis_date": str(datetime.now()),
         "cryogenic": "false",
+        "ult_test_number": test.metadata["id"],
         "operator": test.metadata["operators"],
         "curves": {},
     }

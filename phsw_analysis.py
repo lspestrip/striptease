@@ -116,10 +116,10 @@ def main():
             g_proc1 = plt.scatter(i["V"], i["I"], c="red", s=5, label="Proc1")
         for j in ULT:
             g_procULT = plt.scatter(j["V"], j["I"], c="blue", s=5, label="ProcULT")
-        plt.xlabel("Tensione [V]")
-        plt.ylabel("Corrente [A]")
+        plt.xlabel("Voltage [V]")
+        plt.ylabel("Current [A]")
         plt.legend(handles=[g_proc1, g_procULT], loc="upper left", title="Legenda")
-        plt.title(f"Curve VI - {pol_name} - pin{pin}")
+        plt.title(f"VI curve for {pol_name}, pin {pin}")
         plt_file_name = output_dir / f"{pol_name}_pin{pin}_plt_P1eULT.pdf"
         plt.savefig(plt_file_name, bbox_inches="tight")
 
@@ -129,8 +129,8 @@ def main():
             g_proc1 = plt.scatter(i["V"], i["I"], c="red", s=5, label="Proc1")
         for j in proc2:
             g_proc2 = plt.scatter(j["V"], j["I"], c="blue", s=5, label="Proc2")
-        plt.xlabel("Tensione [V]")
-        plt.ylabel("Corrente [A]")
+        plt.xlabel("Voltage [V]")
+        plt.ylabel("Current [A]")
         plt.legend(handles=[g_proc1, g_proc2], loc="upper left", title="Legenda")
         plt.title(f"Curve VI - {pol_name} - pin{pin}")
         plt_file_name = output_dir / f"{pol_name}_pin{pin}_plt_P1eP2.pdf"

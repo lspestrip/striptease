@@ -13,7 +13,7 @@ from rich.logging import RichHandler
 import json
 
 
-def tags_curve(
+def get_iv_tags(
     ds: DataStorage, data_range: Tuple[str, str], pol_name: str, pin: int
 ) -> List[Tag]:
     tags = ds.get_tags(data_range)
@@ -67,7 +67,7 @@ def main():
     start_time = sys.argv[2]
     end_time = sys.argv[3]
     pol_name = sys.argv[4]
-    pins = sys.argv[5]
+    pins = [int(x) for x in sys.argv[5].split(",")]
     output_dir = Path(sys.argv[6])
     output_dir.mkdir(exist_ok=True, parents=True)
 
@@ -75,15 +75,18 @@ def main():
     ds = DataStorage(storage_path)
 
     data = {
+        "storage_path": storage_path,
         "polarimeter": pol_name,
         "analysis_date": str(datetime.now()),
         "cryogenic": "false",
+        "start_date": start_time,
+        "end_date": end_time,
+        "pins": pins,
         "curves": {},
     }
 
-    pins = [int(x) for x in pins.split(",")]
     for pin in pins:
-        my_tags = tags_curve(ds, (start_time, end_time), pol_name, pin)
+        my_tags = get_iv_tags(ds, (start_time, end_time), pol_name, pin)
         logging.info(f"Pin{pin}: {len(my_tags)} tags")
         my_result = analyze_hk(ds, my_tags, pol_name, pin)
         data["curves"][f"pin{pin}"] = my_result
