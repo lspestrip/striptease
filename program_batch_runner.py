@@ -87,9 +87,12 @@ def send_message_to_telegram(args, message: str):
     if args.no_telegram or args.dry_run:
         return
 
-    telegram_send.send(
-        conf=args.telegram_conf, parse_mode="markdown", messages=[message]
-    )
+    configurations = args.telegram_conf
+    if not configurations:
+        configurations = [None]
+
+    for cur_conf in configurations:
+        telegram_send.send(conf=cur_conf, parse_mode="markdown", messages=[message])
 
 
 def main(stdscr):
