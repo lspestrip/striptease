@@ -7,6 +7,10 @@ import json
 import time
 from datetime import datetime
 from pathlib import Path
+import socket
+
+import astropy
+import telegram_send
 
 from striptease import StripConnection, append_to_run_log
 
@@ -15,6 +19,7 @@ cur_json_procedure = []
 DEFAULT_WAIT_TIME_S = 0.5
 
 
+premature_quit = False
 warnings = []
 
 
@@ -78,9 +83,22 @@ def close_tags(stdscr, conn):
     return False
 
 
+def send_message_to_telegram(args, message: str):
+    if args.no_telegram or args.dry_run:
+        return
+
+    configurations = args.telegram_conf
+    if not configurations:
+        configurations = [None]
+
+    for cur_conf in configurations:
+        telegram_send.send(conf=cur_conf, parse_mode="markdown", messages=[message])
+
+
 def main(stdscr):
     global args
     global cur_json_procedure
+    global premature_quit
 
     curses.start_color()
     curses.use_default_colors()
@@ -213,6 +231,7 @@ def main(stdscr):
                 prompt(stdscr, "Are you sure you want to quit? (y/n)")
                 choice = readkey(stdscr)
                 if choice.upper() == "Y":
+                    premature_quit = True
                     break
             elif key == ord("l"):
                 # Log message
@@ -306,18 +325,73 @@ next command. Default is {DEFAULT_WAIT_TIME_S}
         "script. (Default is forcing the server to keep all the data acquired "
         "during the procedure in one HDF file.)",
     )
+    parser.add_argument(
+        "--telegram-conf",
+        metavar="FILE",
+        type=str,
+        nargs="+",
+        default=None,
+        help="Path to the configuration file used by telegram-send to send "
+        "messages to a Telegram chat or group. You can use this switch more "
+        "than once and send the same message to multiple chats/groups.",
+    )
+    parser.add_argument(
+        "--no-telegram",
+        action="store_true",
+        default=False,
+        help="Avoid sending messages to Telegram using telegram-send (see also "
+        "the switch --telegram-conf)",
+    )
 
     args = parser.parse_args()
 
     for cur_file in args.json_files:
-        with open(cur_file, "rt") as fp:
+        cur_file = Path(cur_file)
+        with cur_file.open("rt") as fp:
             cur_json_procedure = json.load(fp)
 
         start_time = datetime.now()
+        send_message_to_telegram(
+            args,
+            (
+                "Starting a new acquisition on `{host}`, commands are read from `{cur_file}` "
+                "({num_of_commands} commands). The system date is {datetime} (MJD: {mjd})"
+            ).format(
+                host=socket.gethostname(),
+                cur_file=cur_file.absolute(),
+                num_of_commands=len(cur_json_procedure),
+                datetime=start_time,
+                mjd=astropy.time.Time(start_time).mjd,
+            ),
+        )
+
         curses.wrapper(main)
         end_time = datetime.now()
 
-        print(f"The command took {end_time - start_time} to complete")
+        if premature_quit:
+            end_message = (
+                "The acquisition for `{name}` on `{hostname}` was "
+                "*interrupted by the user* after {time}. The MJD range "
+                "is {mjd_start}–{mjd_end}."
+            )
+
+        else:
+            end_message = (
+                "The acquisition for `{name}` on `{hostname}` was *completed*, "
+                "and it took {time} to complete. The MJD range "
+                "is {mjd_start}–{mjd_end}."
+            )
+
+        end_message = end_message.format(
+            name=cur_file.name,
+            hostname=socket.gethostname(),
+            time=end_time - start_time,
+            mjd_start=astropy.time.Time(start_time).mjd,
+            mjd_end=astropy.time.Time(end_time).mjd,
+        )
+
+        send_message_to_telegram(args, end_message)
+        print(end_message)
 
         if not args.dry_run:
             append_to_run_log(
