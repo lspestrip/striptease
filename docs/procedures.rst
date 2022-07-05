@@ -112,6 +112,41 @@ procedure using colors. The following demo shows how to use it:
    :rows: 26
 
 
+Sending messages with Telegram
+------------------------------
+
+The program ``program_batch_runner.py`` has the ability to send
+messages through Telegram whenever a test is
+started/stopped/completed. To use this feature, you must first
+configure the service ``telegram-send`` (which is installed
+automatically with Striptease) so that it knows where messages should
+be sent.
+
+You should run the following command to send messages to a group::
+
+  telegram-send --configure-group
+
+and follow the instructions; this requires you to add the bot
+``StripSystemLevelTests`` to the group.
+
+If you want to send the same messages to more than one
+group/chat/channel, you can call ``telegram-send`` with the flag
+``--config FILENAME`` and save each time a new configuration file::
+
+  telegram-send --config conf1.txt --configure-group
+  telegram-send --config conf2.txt --configure-group
+
+When you call ``program_batch_runner.py``, you can use the switch
+``--telegram-conf`` more than once to specify the configuration for
+each group/channel/chat::
+
+  ./program_batch_runner.py --telegram-conf=conf1.txt --telegram-conf=conf2.txt script.json
+
+If you want to prevent the program from sending messages to Telegram,
+use the switch ``--no-telegram``. Messages will *not* be sent in
+«dry-run» mode (see above).
+
+
 Module contents
 ----------------------------------
 
