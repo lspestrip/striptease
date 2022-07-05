@@ -84,7 +84,7 @@ def close_tags(stdscr, conn):
 
 
 def send_message_to_telegram(args, message: str):
-    if args.no_telegram:  # or args.dry_run:
+    if args.no_telegram or args.dry_run:
         return
 
     telegram_send.send(
