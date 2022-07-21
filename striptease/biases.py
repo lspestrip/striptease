@@ -37,6 +37,18 @@ BiasConfiguration = namedtuple(
         "id3",
         "id4",
         "id5",
+        "det0_bias",
+        "det1_bias",
+        "det2_bias",
+        "det3_bias",
+        "det0_offset",
+        "det1_offset",
+        "det2_offset",
+        "det3_offset",
+        "det0_gain",
+        "det1_gain",
+        "det2_gain",
+        "det3_gain",
     ],
 )
 
@@ -219,6 +231,18 @@ class InstrumentBiases:
                 id3=self.biases[polarimeter_name]["ID3"],
                 id4=self.biases[polarimeter_name]["ID4"],
                 id5=self.biases[polarimeter_name]["ID5"],
+                det0_bias=self.biases[polarimeter_name]["DET0_BIAS"],
+                det1_bias=self.biases[polarimeter_name]["DET1_BIAS"],
+                det2_bias=self.biases[polarimeter_name]["DET2_BIAS"],
+                det3_bias=self.biases[polarimeter_name]["DET3_BIAS"],
+                det0_offset=self.biases[polarimeter_name]["DET0_OFFSET"],
+                det1_offset=self.biases[polarimeter_name]["DET1_OFFSET"],
+                det2_offset=self.biases[polarimeter_name]["DET2_OFFSET"],
+                det3_offset=self.biases[polarimeter_name]["DET3_OFFSET"],
+                det0_gain=self.biases[polarimeter_name]["DET0_GAIN"],
+                det1_gain=self.biases[polarimeter_name]["DET1_GAIN"],
+                det2_gain=self.biases[polarimeter_name]["DET2_GAIN"],
+                det3_gain=self.biases[polarimeter_name]["DET3_GAIN"],
             )
         return result
 
