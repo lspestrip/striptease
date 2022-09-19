@@ -18,6 +18,6 @@ pre-commit~=2.15.0
 openpyxl~=3.0.9
 rich~=10.14.0
 pyzstd~=0.15.0
-mako~=1.1.6
+mako~=1.2.2
 sphinxcontrib.asciinema~=0.3.3
 telegram-send~=0.34
