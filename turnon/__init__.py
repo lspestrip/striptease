@@ -511,6 +511,7 @@ class TurnOnOffProcedure(StripProcedure):
         waittime_s=5,
         stable_acquisition_time_s=120,
         turnon=True,
+        det_offset: Optional[int] = None,
         zero_bias: bool = False,
         bias_file_name: Optional[str] = None,
     ):
@@ -521,6 +522,7 @@ class TurnOnOffProcedure(StripProcedure):
         self.waittime_s = waittime_s
         self.stable_acquisition_time_s = stable_acquisition_time_s
         self.turnon = turnon
+        self.det_offset = det_offset
         self.zero_bias = zero_bias
         self.on_boards = set()
         self.off_boards = set()
@@ -622,7 +624,9 @@ class TurnOnOffProcedure(StripProcedure):
                     self.horn,
                     idx,
                     bias=getattr(biases, f"det{idx}_bias"),
-                    offset=getattr(biases, f"det{idx}_offset"),
+                    offset=getattr(biases, f"det{idx}_offset")
+                    if not self.det_offset
+                    else self.det_offset,
                     gain=getattr(biases, f"det{idx}_gain"),
                 )
 
