@@ -84,6 +84,13 @@ Usage example:
         help="If this flag is present, the procedure will turn the polarimeter *off*",
     )
     parser.add_argument(
+        "--det-offset",
+        default=None,
+        type=int,
+        help="Value of the ADC offset to be passed to all the polarimeters. "
+        "If not specified, the value will be taken from the Excel tables",
+    )
+    parser.add_argument(
         "--output",
         "-o",
         metavar="FILENAME",
@@ -113,6 +120,7 @@ Usage example:
         waittime_s=args.waittime_s,
         turnon=not args.turnoff,
         zero_bias=args.zero_bias,
+        det_offset=args.det_offset,
         bias_file_name=args.bias_table_file,
     )
     for cur_horn, cur_polarimeter in unroll_polarimeters(args.polarimeters):
