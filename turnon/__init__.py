@@ -187,9 +187,23 @@ class SetupBoard(object):
         cmd["pol"] = polarimeter
         cmd["type"] = "DAQ"
         cmd["data"] = [1]
-
         if not self.post_command(url, cmd):
-            return
+            print(
+                "WARNING: command PRE_EN gave an error",
+                file=sys.stderr,
+                flush=True,
+            )
+
+        cmd["base_addr"] = "DAC_EN"
+        cmd["pol"] = polarimeter
+        cmd["type"] = "DAQ"
+        cmd["data"] = [1]
+        if not self.post_command(url, cmd):
+            print(
+                "WARNING: command DAC_EN gave an error",
+                file=sys.stderr,
+                flush=True,
+            )
 
     def enable_all_electronics(self, mode=5):
         for (p, _) in self.pols:
@@ -205,6 +219,13 @@ class SetupBoard(object):
         cmd["timeout"] = 500
 
         cmd["pol"] = polarimeter
+
+        cmd["base_addr"] = "DAC_EN"
+        cmd["type"] = "DAQ"
+        cmd["data"] = [0]
+
+        if not self.post_command(url, cmd):
+            return
 
         cmd["base_addr"] = "PRE_EN"
         cmd["type"] = "DAQ"
