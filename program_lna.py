@@ -4,6 +4,7 @@
 from abc import ABC, abstractmethod
 from ast import literal_eval
 from copy import copy
+from datetime import datetime
 import logging as log
 from typing import Dict, List, Union
 
@@ -19,7 +20,7 @@ from turnon import SetupBoard, TurnOnOffProcedure
 DEFAULT_TEST_NAME = "PRETUNE"
 DEFAULT_BIAS_FILENAME = "data/default_biases_warm.xlsx"
 DEFAULT_TUNING_FILENAME = "data/pretuning.xlsx"
-DEFAULT_ACQUISITON_TIME_S = 5
+DEFAULT_ACQUISITION_TIME_S = 5
 DEFAULT_WAIT_TIME_S = 1
 DEFAULT_POLARIMETERS = [polarimeter for _, _, polarimeter in polarimeter_iterator()]
 
@@ -248,9 +249,12 @@ class LNATestProcedure(StripProcedure):
                  test_polarimeters: List[str] = [polarimeter for _, _, polarimeter in polarimeter_iterator()],
                  turnon_polarimeters: Union[List[str], None] = None,
                  bias_file_name: str = "data/default_biases_warm.xlsx",
-                 stable_acquisition_time = DEFAULT_ACQUISITON_TIME_S,
+                 stable_acquisition_time = DEFAULT_ACQUISITION_TIME_S,
                  turnon_acqisition_time = DEFAULT_WAIT_TIME_S,
-                 turnon_wait_time = DEFAULT_WAIT_TIME_S):
+                 turnon_wait_time = DEFAULT_WAIT_TIME_S,
+                 message = "",
+                 hk_scan=True,
+                 phsw_status="77"):
         super(LNATestProcedure, self).__init__()
         self.test_name = test_name
         self.scanners = scanners
@@ -264,6 +268,9 @@ class LNATestProcedure(StripProcedure):
         self.stable_acquisition_time = stable_acquisition_time 
         self.turnon_acqisition_time = turnon_acqisition_time 
         self.turnon_wait_time = turnon_wait_time 
+        self.message = message
+        self.hk_scan = hk_scan
+        self.phsw_status = phsw_status
 
         self._setup_boards = {}      # A dictionary of SetupBoard objects (one for each board), used to reset LNA biases to default values during the procedure
         for board in set(map(get_polarimeter_board, self.turnon_polarimeters)):
@@ -274,12 +281,16 @@ class LNATestProcedure(StripProcedure):
         with StripTag(conn=self.conn, name=f"{self.test_name}",
                       comment=f"{self.test_name} test: scan idrain and detector offset on polarimeters "
                               f"{self.test_polarimeters}, with {self.turnon_polarimeters} turned on."):
+            self.conn.log(message=self.message, level="INFO")
             # Turn on all polarimeters and set all the B legs to zero bias
             with StripTag(conn=self.conn, name=f"{self.test_name}_TURNON_LEG_HA",
                           comment="Turnon polarimeters and set leg HB to zero bias."):
                 with StripTag(conn=self.conn, name=f"{self.test_name}_TURNON_POLARIMETERS",
                               comment=f"Turnon polarimeters {self.turnon_polarimeters}."):
                     self._turnon()
+                with StripTag(conn=self.conn, name=f"{self.test_name}_SET_PHSW_LEG_HA",
+                              comment=f"Turnon polarimeters {self.turnon_polarimeters}."):
+                    self._reset_phsw(leg="HA")
                 with StripTag(conn=self.conn, name=f"{self.test_name}_ZERO_BIAS_LEG_HB",
                               comment="Set leg HB to zero bias."):
                     self._zero_bias(leg="HB")
@@ -342,9 +353,11 @@ class LNATestProcedure(StripProcedure):
                                           f"idrain={idrain}, offset={offset}."):
                         self.conn.set_id(polarimeter, lna, idrain)
                         self._set_offset(polarimeter, offset)
+                if self.hk_scan:
+                    self.conn.set_hk_scan(allboards=True)
                 wait_with_tag(conn=self.conn, seconds=self.stable_acquisition_time,
                               name=f"{self.test_name}_TEST_LNA_{lna}_{i}_ACQ",
-                              comment=f"Test LNA {lna}: step {i}, stable acquisition")  # TODO: Add command to read housekeeping
+                              comment=f"Test LNA {lna}: step {i}, stable acquisition")
             i += 1
 
         # Reset LNA
@@ -404,9 +417,16 @@ class LNATestProcedure(StripProcedure):
         for polarimeter in self.test_polarimeters:
             with StripTag(conn=self.command_emitter, name=f"{self.test_name}_RESET_PHSW_{leg}_{polarimeter}",
                           comment=f"Reset phase switch on leg {leg}: polarimeter {polarimeter}."):
-                for phsw_index in self._get_phsw_from_leg(leg):
-                    self.conn.set_phsw_status(polarimeter, phsw_index, PhswPinMode.NOMINAL_SWITCHING)
-
+                phase_switches = self._get_phsw_from_leg(leg)
+                if self.phsw_status == "77":
+                    for phsw_index in phase_switches:
+                        self.conn.set_phsw_status(polarimeter, phsw_index, PhswPinMode.NOMINAL_SWITCHING)
+                elif self.phsw_status == "56":
+                    self.conn.set_phsw_status(polarimeter, phase_switches[0], PhswPinMode.STILL_SIGNAL)
+                    self.conn.set_phsw_status(polarimeter, phase_switches[1], PhswPinMode.STILL_NO_SIGNAL)
+                elif self.phsw_status == "65":
+                    self.conn.set_phsw_status(polarimeter, phase_switches[0], PhswPinMode.STILL_NO_SIGNAL)
+                    self.conn.set_phsw_status(polarimeter, phase_switches[1], PhswPinMode.STILL_SIGNAL)
 
     def _zero_bias(self, leg: str):
         """Set vdrain and phase switch biases to zero for all LNAs on all polarimeters on the specified leg.
@@ -440,14 +460,12 @@ class LNATestProcedure(StripProcedure):
                                             turnon=turnon, bias_file_name=self.bias_file_name)
         for polarimeter in self.turnon_polarimeters:
             turnonoff_proc.set_board_horn_polarimeter(new_board=get_polarimeter_board(polarimeter), new_horn=polarimeter, new_pol=None)
+            turnonoff_proc.run()
+            self.command_emitter.command_list += turnonoff_proc.get_command_list()
+            turnonoff_proc.clear_command_list()
             if turnon:
-                turnonoff_proc.run_turnon(stable_acquisition_time_s=self.turnon_acqisition_time)
                 self.conn.set_pol_mode(polarimeter, CLOSED_LOOP_MODE)   # QUESTION: is this in the right place?
-            else:
-                turnonoff_proc.run_turnoff()
 
-        self.command_emitter.command_list += turnonoff_proc.get_command_list()
-        turnonoff_proc.clear_command_list()
 
 def read_cell(excel_file, polarimeter: str, lna: str) -> Scanner2D:
     row = excel_file[polarimeter]
@@ -554,13 +572,26 @@ Usage examples:
             f'The default is "{DEFAULT_BIAS_FILENAME}"'
     )
     parser.add_argument(
+        "--no-hk-scan",
+        action="store_false",
+        dest="hk_scan",
+        help="Don't generate a hk scan command at the beginnign of stable acquistions."
+    )
+    parser.add_argument(
+        "--phsw-status",
+        type=str,
+        dest="phsw_status",
+        default="77",
+        help="Status of turned-on phase switch pins. Can be 77 (the default), 56 or 65."
+    )
+    parser.add_argument(
         "--stable-acquisition-time",
         metavar="SECONDS",
-        default=DEFAULT_WAIT_TIME_S,
+        default=DEFAULT_ACQUISITION_TIME_S,
         type=int,
         dest="stable_acquisition_time",
         help="Number of seconds to measure after the polarimeter biases have been "
-            f"set up (default: {DEFAULT_ACQUISITON_TIME_S}s)"
+            f"set up (default: {DEFAULT_ACQUISITION_TIME_S}s)"
     )
     parser.add_argument(
         "--turnon-acquisition-time",
@@ -599,6 +630,8 @@ Usage examples:
     args = parser.parse_args()
     log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
 
+    assert(args.phsw_status == "77" or args.phsw_status == "56" or args.phsw_status == "65")
+
     scanners = read_excel(args.tuning_filename, args.dummy_polarimeter)
 
     if args.test_polarimeters[0] == "all":
@@ -606,9 +639,20 @@ Usage examples:
     if args.turnon_polarimeters != None and args.turnon_polarimeters[0] == "all":
         args.turnon_polarimeters = DEFAULT_POLARIMETERS
 
+    message = f"Here begins the {args.test_name} procedure to test LNA biases, " \
+              f"generated on {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}.\n" \
+              f"Tested polarimeters: {args.test_polarimeters}.\n"\
+              f"Extra turned-on polarimeters: {args.turnon_polarimeters}.\n"\
+              f"Bias file: {args.bias_file_name}.\n"\
+              f"Tuning file: {args.tuning_filename}.\n"\
+              f"Dummy polarimeter: {args.dummy_polarimeter}.\n"\
+              f"Stable acquisition time: {args.stable_acquisition_time}s.\n"\
+              f"Turnon wait time: {args.turnon_wait_time}s.\n"\
+              f"Turnon acquisition time: {args.turnon_acquisition_time}s.\n"
+
     proc = LNATestProcedure(test_name=args.test_name, scanners=scanners, test_polarimeters=args.test_polarimeters,
         turnon_polarimeters=args.turnon_polarimeters, bias_file_name=args.bias_file_name,
         stable_acquisition_time=args.stable_acquisition_time, turnon_acqisition_time=args.turnon_acquisition_time,
-        turnon_wait_time=args.turnon_wait_time)
+        turnon_wait_time=args.turnon_wait_time, message=message, hk_scan=args.hk_scan, phsw_status=args.phsw_status)
     proc.run()
     proc.output_json(args.output_filename)
