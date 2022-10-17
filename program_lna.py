@@ -354,7 +354,7 @@ class LNATestProcedure(StripProcedure):
                         self.conn.set_id(polarimeter, lna, idrain)
                         self._set_offset(polarimeter, offset)
                 if self.hk_scan:
-                    self.conn.set_hk_scan(allboards=True)
+                    self.conn.set_hk_scan(allboards=True)   # QUESTION: all, turned-on or tested boards?
                 wait_with_tag(conn=self.conn, seconds=self.stable_acquisition_time,
                               name=f"{self.test_name}_TEST_LNA_{lna}_{i}_ACQ",
                               comment=f"Test LNA {lna}: step {i}, stable acquisition")
@@ -436,8 +436,9 @@ class LNATestProcedure(StripProcedure):
         for polarimeter in self.test_polarimeters:
             with StripTag(conn=self.command_emitter, name=f"{self.test_name}_ZERO_BIAS_LEG_{leg}_{polarimeter}",
                           comment=f"Set leg {leg} to zero bias: polarimeter {polarimeter}."):
-                for lna in leg + "1", leg + "2", leg + "3":
-                    self.conn.set_vd(polarimeter, lna, value_adu=0)
+                # QUESTION: Set vdrain to zero?
+                #for lna in leg + "1", leg + "2", leg + "3":
+                #    self.conn.set_vd(polarimeter, lna, value_adu=0)
                 for phsw_index in self._get_phsw_from_leg(leg):
                     self.conn.set_phsw_status(polarimeter, phsw_index, PhswPinMode.STILL_NO_SIGNAL)
 
@@ -648,7 +649,7 @@ Usage examples:
               f"Dummy polarimeter: {args.dummy_polarimeter}.\n"\
               f"Stable acquisition time: {args.stable_acquisition_time}s.\n"\
               f"Turnon wait time: {args.turnon_wait_time}s.\n"\
-              f"Turnon acquisition time: {args.turnon_acquisition_time}s.\n"
+              f"Turnon acquisition time: {args.turnon_acquisition_time}s."
 
     proc = LNATestProcedure(test_name=args.test_name, scanners=scanners, test_polarimeters=args.test_polarimeters,
         turnon_polarimeters=args.turnon_polarimeters, bias_file_name=args.bias_file_name,
