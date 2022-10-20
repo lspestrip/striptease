@@ -11,6 +11,7 @@ from typing import Dict, List, Union
 import numpy as np
 import pandas as pd
 
+from calibration import CalibrationTables
 from striptease import StripTag
 from striptease.procedures import StripProcedure
 from striptease.stripconn import wait_with_tag
@@ -278,6 +279,8 @@ class LNATestProcedure(StripProcedure):
             self._setup_boards[board] = SetupBoard(config=self.conf, post_command=self.command_emitter,
                 board_name=board, bias_file_name=self.bias_file_name)
 
+        self._calibr = CalibrationTables()
+
     def run(self):
         with StripTag(conn=self.conn, name=f"{self.test_name}",
                       comment=f"{self.test_name} test: scan idrain and detector offset on polarimeters "
@@ -352,7 +355,10 @@ class LNATestProcedure(StripProcedure):
                                   name=f"{self.test_name}_TEST_LNA_{lna}_{i}_{polarimeter}",
                                   comment=f"Test LNA {lna}: step {i}, polarimeter {polarimeter}:"
                                           f"idrain={idrain}, offset={offset}."):
-                        self.conn.set_id(polarimeter, lna, idrain)
+                        idrain_adu = self._calibr.physical_units_to_adu(
+                            polarimeter=polarimeter, hk="idrain",
+                            component=lna, value=idrain)
+                        self.conn.set_id(polarimeter, lna, idrain_adu)
                         self._set_offset(polarimeter, offset)
                 if self.hk_scan:
                     self.conn.set_hk_scan(boards = self._test_boards)
