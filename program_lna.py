@@ -272,8 +272,9 @@ class LNATestProcedure(StripProcedure):
         self.hk_scan = hk_scan
         self.phsw_status = phsw_status
 
+        self._test_boards = set(map(get_polarimeter_board, self.test_polarimeters))
         self._setup_boards = {}      # A dictionary of SetupBoard objects (one for each board), used to reset LNA biases to default values during the procedure
-        for board in set(map(get_polarimeter_board, self.turnon_polarimeters)):
+        for board in self._test_boards:
             self._setup_boards[board] = SetupBoard(config=self.conf, post_command=self.command_emitter,
                 board_name=board, bias_file_name=self.bias_file_name)
 
@@ -354,7 +355,7 @@ class LNATestProcedure(StripProcedure):
                         self.conn.set_id(polarimeter, lna, idrain)
                         self._set_offset(polarimeter, offset)
                 if self.hk_scan:
-                    self.conn.set_hk_scan(allboards=True)   # QUESTION: all, turned-on or tested boards?
+                    self.conn.set_hk_scan(boards = self._test_boards)
                 wait_with_tag(conn=self.conn, seconds=self.stable_acquisition_time,
                               name=f"{self.test_name}_TEST_LNA_{lna}_{i}_ACQ",
                               comment=f"Test LNA {lna}: step {i}, stable acquisition")
