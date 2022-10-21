@@ -15,7 +15,7 @@ from calibration import CalibrationTables
 from striptease import StripTag
 from striptease.procedures import StripProcedure
 from striptease.stripconn import wait_with_tag
-from striptease.utilities import CLOSED_LOOP_MODE, PhswPinMode, get_polarimeter_board, polarimeter_iterator
+from striptease.utilities import CLOSED_LOOP_MODE, STRIP_BOARD_NAMES, PhswPinMode, get_polarimeter_board, polarimeter_iterator
 from turnon import SetupBoard, TurnOnOffProcedure
 
 DEFAULT_TEST_NAME = "PRETUNE"
@@ -254,7 +254,7 @@ class LNATestProcedure(StripProcedure):
                  turnon_acqisition_time = DEFAULT_WAIT_TIME_S,
                  turnon_wait_time = DEFAULT_WAIT_TIME_S,
                  message = "",
-                 hk_scan=True,
+                 hk_scan_boards=STRIP_BOARD_NAMES,
                  phsw_status="77"):
         super(LNATestProcedure, self).__init__()
         self.test_name = test_name
@@ -270,7 +270,7 @@ class LNATestProcedure(StripProcedure):
         self.turnon_acqisition_time = turnon_acqisition_time 
         self.turnon_wait_time = turnon_wait_time 
         self.message = message
-        self.hk_scan = hk_scan
+        self.hk_scan_boards = hk_scan_boards
         self.phsw_status = phsw_status
 
         self._test_boards = set(map(get_polarimeter_board, self.test_polarimeters))
@@ -360,8 +360,7 @@ class LNATestProcedure(StripProcedure):
                             component=lna, value=idrain)
                         self.conn.set_id(polarimeter, lna, idrain_adu)
                         self._set_offset(polarimeter, offset)
-                if self.hk_scan:
-                    self.conn.set_hk_scan(boards = self._test_boards)
+                self.conn.set_hk_scan(boards = self.hk_scan_boards)
                 wait_with_tag(conn=self.conn, seconds=self.stable_acquisition_time,
                               name=f"{self.test_name}_TEST_LNA_{lna}_{i}_ACQ",
                               comment=f"Test LNA {lna}: step {i}, stable acquisition")
@@ -443,7 +442,7 @@ class LNATestProcedure(StripProcedure):
         for polarimeter in self.test_polarimeters:
             with StripTag(conn=self.command_emitter, name=f"{self.test_name}_ZERO_BIAS_LEG_{leg}_{polarimeter}",
                           comment=f"Set leg {leg} to zero bias: polarimeter {polarimeter}."):
-                # QUESTION: Set vdrain to zero?
+                # QUESTION: Set vdrain to zero? YES!
                 #for lna in leg + "1", leg + "2", leg + "3":
                 #    self.conn.set_vd(polarimeter, lna, value_adu=0)
                 for phsw_index in self._get_phsw_from_leg(leg):
@@ -556,7 +555,7 @@ Usage examples:
         metavar="POLARIMETER",
         type=str,
         nargs="+",
-        default=None,
+        default=[],
         help="Name of the polarimeters/module to turn on. Valid names "
             'are "G4", "W3", etc. Can be "all", and by default it is equal '
             "to test-polarimeters.",
@@ -580,10 +579,15 @@ Usage examples:
             f'The default is "{DEFAULT_BIAS_FILENAME}"'
     )
     parser.add_argument(
-        "--no-hk-scan",
-        action="store_false",
-        dest="hk_scan",
-        help="Don't generate a hk scan command at the beginnign of stable acquistions."
+        "--hk-scan-boards",
+        metavar="BOARD",
+        dest="hk_scan_boards",
+        default=["test"],
+        type=str,
+        nargs="+",
+        help="The list of boards to scan housekeeping on before stable acquisition. "
+             'Can be "test" for boards under testing (the default), '
+             '"turnon" for turned-on ones, "all", "none" or a list of boards.'
     )
     parser.add_argument(
         "--phsw-status",
@@ -644,13 +648,24 @@ Usage examples:
 
     if args.test_polarimeters[0] == "all":
         args.test_polarimeters = DEFAULT_POLARIMETERS
-    if args.turnon_polarimeters != None and args.turnon_polarimeters[0] == "all":
+    if args.turnon_polarimeters != [] and args.turnon_polarimeters[0] == "all":
         args.turnon_polarimeters = DEFAULT_POLARIMETERS
+    args.turnon_polarimeters = list(dict.fromkeys(args.turnon_polarimeters + args.test_polarimeters)) # Make sure that all tested polarimeters are also turned on
+
+    if args.hk_scan_boards == [] or args.hk_scan_boards[0] == "none":
+        args.hk_scan_boards = []
+    elif args.hk_scan_boards[0] == "all":
+        args.hk_scan_boards = STRIP_BOARD_NAMES
+    elif args.hk_scan_boards[0] == "test":
+        args.hk_scan_boards = list(set(map(get_polarimeter_board, args.test_polarimeters)))
+    elif args.hk_scan_boards[0] == "turnon":
+        args.hk_scan_boards = list(set(map(get_polarimeter_board, args.turnon_polarimeters)))
 
     message = f"Here begins the {args.test_name} procedure to test LNA biases, " \
               f"generated on {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}.\n" \
               f"Tested polarimeters: {args.test_polarimeters}.\n"\
-              f"Extra turned-on polarimeters: {args.turnon_polarimeters}.\n"\
+              f"Turned-on polarimeters: {args.turnon_polarimeters}.\n"\
+              f"Housekeeping scanned on boards: {args.hk_scan_boards}.\n"\
               f"Bias file: {args.bias_file_name}.\n"\
               f"Tuning file: {args.tuning_filename}.\n"\
               f"Dummy polarimeter: {args.dummy_polarimeter}.\n"\
@@ -661,6 +676,6 @@ Usage examples:
     proc = LNATestProcedure(test_name=args.test_name, scanners=scanners, test_polarimeters=args.test_polarimeters,
         turnon_polarimeters=args.turnon_polarimeters, bias_file_name=args.bias_file_name,
         stable_acquisition_time=args.stable_acquisition_time, turnon_acqisition_time=args.turnon_acquisition_time,
-        turnon_wait_time=args.turnon_wait_time, message=message, hk_scan=args.hk_scan, phsw_status=args.phsw_status)
+        turnon_wait_time=args.turnon_wait_time, message=message, hk_scan_boards=args.hk_scan_boards, phsw_status=args.phsw_status)
     proc.run()
     proc.output_json(args.output_filename)
