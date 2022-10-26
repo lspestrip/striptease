@@ -15,7 +15,9 @@ from calibration import CalibrationTables
 from striptease import StripTag
 from striptease.procedures import StripProcedure
 from striptease.stripconn import wait_with_tag
-from striptease.utilities import CLOSED_LOOP_MODE, STRIP_BOARD_NAMES, PhswPinMode, get_polarimeter_board, polarimeter_iterator
+from striptease.utilities import CLOSED_LOOP_MODE, STRIP_BOARD_NAMES, PhswPinMode, \
+                                 get_polarimeter_board, polarimeter_iterator
+
 from turnon import SetupBoard, TurnOnOffProcedure
 
 DEFAULT_TEST_NAME = "PRETUNE"
@@ -89,23 +91,27 @@ class GridScanner(Scanner2D):
         self.x_current_step = 0
         self.y_current_step = 0
 
+        self.index = [self.x_current_step, self.y_current_step]
+
     def next(self) -> bool:
         if self.first_call:
             self.first_call = False
             return True
 
-        if self.y_current_step == self.y_nsteps: # Last row in the column
-            if self.x_current_step == self.x_nsteps:   # Last column in the grid
+        if self.y_current_step == self.y_nsteps:        # Last row in the column
+            if self.x_current_step == self.x_nsteps:    # Last column in the grid
                 return False
             else:                                       # Not last column in the grid
                 self.x += self.delta_x
                 self.x_current_step += 1
                 self.y = copy(self.y_start)
                 self.y_current_step = 0
+                self.index = [self.x_current_step, self.y_current_step]
                 return True
         else:                                           # Not last row in the column
             self.y += self.delta_y
             self.y_current_step += 1
+            self.index = [self.x_current_step, self.y_current_step]
             return True
  
     def reset(self) -> None:
@@ -115,6 +121,7 @@ class GridScanner(Scanner2D):
 
         self.x_current_step = 0
         self.y_current_step = 0
+        self.index = [self.x_current_step, self.y_current_step]
 
 class RasterScanner(Scanner2D):
     """A scanner that explores parameters on a grid \"boustrophedically\",
@@ -147,6 +154,8 @@ class RasterScanner(Scanner2D):
         self.y_current_step = 0
         self.y_direction = +1
 
+        self.index = [self.x_current_step, self.y_current_step]
+
     def next(self) -> bool:
         if self.first_call:
             self.first_call = False
@@ -160,10 +169,12 @@ class RasterScanner(Scanner2D):
                 self.x_current_step += 1
                 self.y_direction *= -1                  # Invert the direction of the y scan
                 self.y_current_step = 0
+                self.index = [self.x_current_step, self.y_current_step]
                 return True
         else:                                           # Not last row in the column
             self.y += self.y_direction * self.delta_y
             self.y_current_step += 1
+            self.index = [self.x_current_step, self.y_current_step]
             return True
  
     def reset(self) -> None:
@@ -174,6 +185,8 @@ class RasterScanner(Scanner2D):
         self.x_current_step = 0
         self.y_current_step = 0
         self.y_direction = +1
+
+        self.index = [self.x_current_step, self.y_current_step]
 
 class SpiralScanner(Scanner2D):
     """A scanner that explores parameters on a grid "spirally",
@@ -202,6 +215,8 @@ class SpiralScanner(Scanner2D):
         self.steps = 1
         self.first_call = True
 
+        self.index = [self.n_arm, self.step]
+
     def next(self) -> bool:
         if self.first_call:
             self.first_call = False
@@ -227,6 +242,8 @@ class SpiralScanner(Scanner2D):
             if self.n_arm % 2 == 1:
                 self.steps += 1
 
+        self.index = [self.n_arm, self.step]
+
         return True
  
     def reset(self) -> None:
@@ -237,6 +254,8 @@ class SpiralScanner(Scanner2D):
         self.n_arm = 1
         self.step = 1
         self.steps = 1
+
+        self.index = [self.n_arm, self.step]
 
 class LNATestProcedure(StripProcedure):
     """A procedure that sets idrain and offset for polarimeters one LNA at a time, with only one leg active.
@@ -350,9 +369,11 @@ class LNATestProcedure(StripProcedure):
                     if scanner.next() == False:    # Exit when the first scanner reaches an end
                         end = True
                     idrain = int(scanner.x)
+                    idrain_step = scanner.index[0]
                     offset = scanner.y.astype(int)
+                    offset_step = scanner.index[1]
                     with StripTag(conn=self.command_emitter,
-                                  name=f"{self.test_name}_TEST_LNA_{lna}_{i}_{polarimeter}",
+                                  name=f"{self.test_name}_TEST_LNA_{lna}_{i}_{polarimeter}_{idrain_step}_{offset_step}",
                                   comment=f"Test LNA {lna}: step {i}, polarimeter {polarimeter}:"
                                           f"idrain={idrain}, offset={offset}."):
                         idrain_adu = self._calibr.physical_units_to_adu(
@@ -472,7 +493,6 @@ class LNATestProcedure(StripProcedure):
             turnonoff_proc.clear_command_list()
             if turnon:
                 self.conn.set_pol_mode(polarimeter, CLOSED_LOOP_MODE)   # QUESTION: is this in the right place?
-
 
 def read_cell(excel_file, polarimeter: str, lna: str) -> Scanner2D:
     row = excel_file[polarimeter]
