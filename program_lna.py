@@ -317,7 +317,7 @@ class LNATestProcedure(StripProcedure):
                 with StripTag(conn=self.conn, name=f"{self.test_name}_ZERO_BIAS_LEG_HB",
                               comment="Set leg HB to zero bias."):
                     self._zero_bias(leg="HB")
-        
+
             # Scan the leg A
             with StripTag(conn=self.conn, name=f"{self.test_name}_TEST_LEG_HA", comment="Run test on leg HA."):
                 self._test_leg(leg="HA")
@@ -327,9 +327,7 @@ class LNATestProcedure(StripProcedure):
                           comment="Reset leg HB and set leg HA to zero bias."):
                 with StripTag(conn=self.conn, name=f"{self.test_name}_RESET_LEG_HB",
                             comment="Reset leg HB to default biases."):
-                    for lna in "HB1", "HB2", "HB3":
-                        self._reset_lna(lna)
-                    self._reset_phsw(leg="HB")
+                    self._reset_leg(leg="HB")
                 with StripTag(conn=self.conn, name=f"{self.test_name}_ZERO_BIAS_LEG_HA",
                               comment="Set leg HA to zero bias."):
                     self._zero_bias(leg="HA")
@@ -337,6 +335,17 @@ class LNATestProcedure(StripProcedure):
             # Scan the leg B
             with StripTag(conn=self.conn, name=f"{self.test_name}_TEST_LEG_HB", comment="Run test on leg HB."):
                 self._test_leg(leg="HB")
+
+            # Set leg B to zero bias
+            with StripTag(conn=self.conn, name=f"{self.test_name}_ZERO_BIAS_LEG_HB",
+                          comment="Set leg HB to zero bias."):
+                self._zero_bias(leg="HB")
+
+            # Perform a detector offset test
+            with StripTag(conn=self.conn, name=f"{self.test_name}_TEST_DET_OFFS",
+                          comment="Perform a detector offset test."):
+                self._test_offset()
+            
 
             # Turn off all polarimeters
             with StripTag(conn=self.conn, name=f"{self.test_name}_TURNOFF", comment="Turn off polarimeters."):
@@ -365,7 +374,7 @@ class LNATestProcedure(StripProcedure):
             with StripTag(conn=self.command_emitter, name=f"{self.test_name}_TEST_LNA_{lna}_{i}",
                           comment=f"Test LNA {lna}: step {i}."):
                 for polarimeter in self.test_polarimeters:
-                    scanner = scanners[polarimeter][lna]
+                    scanner = self.scanners[polarimeter][lna]
                     if scanner.next() == False:    # Exit when the first scanner reaches an end
                         end = True
                     idrain = int(scanner.x)
@@ -419,7 +428,7 @@ class LNATestProcedure(StripProcedure):
             self.conn.post_command(url, cmd)
 
     def _reset_lna(self, lna: str):
-        """Reset the idrain and the offsets of the LNA to the default value for each polarimeter.
+        """Reset the idrain, vgate and the offsets of the LNA to the default value for each polarimeter.
         
         Args:
         - `lna` (`str`): the LNA to reset."""
@@ -428,6 +437,7 @@ class LNATestProcedure(StripProcedure):
                           comment=f"Reset LNA {lna}: polarimeter {polarimeter}."):
                 setup_board = self._setup_boards[get_polarimeter_board(polarimeter)]
                 setup_board.setup_ID(polarimeter, lna)
+                setup_board.setup_VD(polarimeter, lna)
                 default_offsets = np.array([
                     setup_board.ib.get_biases(module_name=polarimeter, param_hk=f"DET{detector_idx}_OFFSET")
                     for detector_idx in range(0, 4)
@@ -439,6 +449,11 @@ class LNATestProcedure(StripProcedure):
             return (0, 1)
         elif leg == "HB":
             return (2, 3)
+
+    def _reset_leg(self, leg: str):
+        self._reset_phsw(leg)
+        for lna in map(lambda x: leg + x, ("1", "2", "3")):
+            self._reset_lna(lna)
 
     def _reset_phsw(self, leg: str):
         for polarimeter in self.test_polarimeters:
@@ -463,11 +478,25 @@ class LNATestProcedure(StripProcedure):
         for polarimeter in self.test_polarimeters:
             with StripTag(conn=self.command_emitter, name=f"{self.test_name}_ZERO_BIAS_LEG_{leg}_{polarimeter}",
                           comment=f"Set leg {leg} to zero bias: polarimeter {polarimeter}."):
-                # QUESTION: Set vdrain to zero? YES!
-                #for lna in leg + "1", leg + "2", leg + "3":
-                #    self.conn.set_vd(polarimeter, lna, value_adu=0)
+                for lna in leg + "1", leg + "2", leg + "3":
+                    self.conn.set_vd(polarimeter, lna, value_adu=0)
+                    self.conn.set_id(polarimeter, lna, value_adu=0)
                 for phsw_index in self._get_phsw_from_leg(leg):
                     self.conn.set_phsw_status(polarimeter, phsw_index, PhswPinMode.STILL_NO_SIGNAL)
+
+    def _test_offset(self):
+        for offset in range(0, 4095, 819):
+            with StripTag(conn=self.command_emitter, name=f"{self.test_name}_TEST_DET_OFFS_{offset}",
+                          comment=f"Test detector offset: offset={offset}."):
+                for polarimeter in self.test_polarimeters:
+                    with StripTag(conn=self.command_emitter,
+                                  name=f"{self.test_name}_TEST_DET_OFFS_{offset}_{polarimeter}",
+                                  comment=f"Test detector offset: offset={offset}, polarimeter {polarimeter}."):
+                        self._set_offset(polarimeter, [offset] * 4)
+                self.conn.set_hk_scan(boards = self.hk_scan_boards)
+                wait_with_tag(conn=self.conn, seconds=self.stable_acquisition_time,
+                              name=f"{self.test_name}_TEST_DET_OFFS_{offset}_ACQ",
+                              comment=f"Test detector offset: offset={offset}, stable acquisition.")
 
     def _turnon(self):
         """Turn on all the polarimeters specified in self.polarimeters"""
@@ -492,7 +521,7 @@ class LNATestProcedure(StripProcedure):
             self.command_emitter.command_list += turnonoff_proc.get_command_list()
             turnonoff_proc.clear_command_list()
             if turnon:
-                self.conn.set_pol_mode(polarimeter, CLOSED_LOOP_MODE)   # QUESTION: is this in the right place?
+                self.conn.set_pol_mode(polarimeter, CLOSED_LOOP_MODE)
 
 def read_cell(excel_file, polarimeter: str, lna: str) -> Scanner2D:
     row = excel_file[polarimeter]
