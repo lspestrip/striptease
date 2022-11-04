@@ -27,6 +27,56 @@ DEFAULT_ACQUISITION_TIME_S = 5
 DEFAULT_WAIT_TIME_S = 1
 DEFAULT_POLARIMETERS = [polarimeter for _, _, polarimeter in polarimeter_iterator()]
 
+class Scanner1D(ABC):
+    def __init__(self, label: str):
+        self.label = label
+
+    @abstractmethod
+    def next(self) -> bool:
+        ...
+
+    @abstractmethod
+    def reset(self) -> None:
+        ...
+
+    @property
+    @abstractmethod
+    def index(self) -> int:
+        ...
+
+class LinearScanner(Scanner1D):
+    def __init__(self, start: Union[float, np.ndarray], stop: Union[float, np.ndarray],
+                 nsteps: int, label: str):
+        self.start = start
+        self.stop = stop
+        self.nsteps = nsteps
+        self._delta = (stop - start) / nsteps
+
+        self.x = copy(start)
+
+        self._first_call = True
+        self._current_step = 0
+
+    def next(self) -> bool:
+        if self._first_call:
+            self._first_call = False
+            return True
+
+        if self._current_step == self.nsteps:
+            return False
+
+        self.x += self._delta
+        self._current_step += 1
+        return True
+
+    def reset(self) -> None:
+        self.x = copy(self.start)
+        self._first_call = True
+        self._current_step = 0
+
+    @property
+    def index(self) -> int: return self._current_step
+
 class Scanner2D(ABC):
     """Abstract base class representing a scanning strategy to explore a 2D plane.
     
@@ -46,6 +96,11 @@ class Scanner2D(ABC):
     @abstractmethod
     def reset(self) -> None:
         """Reset the scanner by setting `self.x` and `self.y` to the initial values."""
+        ...
+
+    @property
+    @abstractmethod
+    def index(self) -> List[int]:
         ...
 
     def plot(self):
@@ -91,8 +146,6 @@ class GridScanner(Scanner2D):
         self.x_current_step = 0
         self.y_current_step = 0
 
-        self.index = [self.x_current_step, self.y_current_step]
-
     def next(self) -> bool:
         if self.first_call:
             self.first_call = False
@@ -106,12 +159,10 @@ class GridScanner(Scanner2D):
                 self.x_current_step += 1
                 self.y = copy(self.y_start)
                 self.y_current_step = 0
-                self.index = [self.x_current_step, self.y_current_step]
                 return True
         else:                                           # Not last row in the column
             self.y += self.delta_y
             self.y_current_step += 1
-            self.index = [self.x_current_step, self.y_current_step]
             return True
  
     def reset(self) -> None:
@@ -121,7 +172,9 @@ class GridScanner(Scanner2D):
 
         self.x_current_step = 0
         self.y_current_step = 0
-        self.index = [self.x_current_step, self.y_current_step]
+
+    @property
+    def index(self) -> List[int]: return [self.x_current_step, self.y_current_step]
 
 class RasterScanner(Scanner2D):
     """A scanner that explores parameters on a grid \"boustrophedically\",
@@ -154,8 +207,6 @@ class RasterScanner(Scanner2D):
         self.y_current_step = 0
         self.y_direction = +1
 
-        self.index = [self.x_current_step, self.y_current_step]
-
     def next(self) -> bool:
         if self.first_call:
             self.first_call = False
@@ -169,12 +220,10 @@ class RasterScanner(Scanner2D):
                 self.x_current_step += 1
                 self.y_direction *= -1                  # Invert the direction of the y scan
                 self.y_current_step = 0
-                self.index = [self.x_current_step, self.y_current_step]
                 return True
         else:                                           # Not last row in the column
             self.y += self.y_direction * self.delta_y
             self.y_current_step += 1
-            self.index = [self.x_current_step, self.y_current_step]
             return True
  
     def reset(self) -> None:
@@ -186,7 +235,8 @@ class RasterScanner(Scanner2D):
         self.y_current_step = 0
         self.y_direction = +1
 
-        self.index = [self.x_current_step, self.y_current_step]
+    @property
+    def index(self) -> List[int]: return [self.x_current_step, self.y_current_step]
 
 class SpiralScanner(Scanner2D):
     """A scanner that explores parameters on a grid "spirally",
@@ -215,8 +265,6 @@ class SpiralScanner(Scanner2D):
         self.steps = 1
         self.first_call = True
 
-        self.index = [self.n_arm, self.step]
-
     def next(self) -> bool:
         if self.first_call:
             self.first_call = False
@@ -242,8 +290,6 @@ class SpiralScanner(Scanner2D):
             if self.n_arm % 2 == 1:
                 self.steps += 1
 
-        self.index = [self.n_arm, self.step]
-
         return True
  
     def reset(self) -> None:
@@ -255,7 +301,8 @@ class SpiralScanner(Scanner2D):
         self.step = 1
         self.steps = 1
 
-        self.index = [self.n_arm, self.step]
+    @property
+    def index(self) -> List[int]: self.index = [self.n_arm, self.step]
 
 class LNATestProcedure(StripProcedure):
     """A procedure that sets idrain and offset for polarimeters one LNA at a time, with only one leg active.
