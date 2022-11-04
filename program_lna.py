@@ -532,18 +532,26 @@ class LNATestProcedure(StripProcedure):
                     self.conn.set_phsw_status(polarimeter, phsw_index, PhswPinMode.STILL_NO_SIGNAL)
 
     def _test_offset(self):
-        for offset in range(0, 4095, 819):
-            with StripTag(conn=self.command_emitter, name=f"{self.test_name}_TEST_DET_OFFS_{offset}",
-                          comment=f"Test detector offset: offset={offset}."):
+        end = False
+        i = 0
+        while not end:
+            with StripTag(conn=self.command_emitter, name=f"{self.test_name}_TEST_DET_OFFS_{i}",
+                          comment=f"Test detector offset: step {i}."):
                 for polarimeter in self.test_polarimeters:
+                    scanner = self.scanners[polarimeter]["Offset"]
+                    if scanner.next() == False:    # Exit when the first scanner reaches an end
+                        end = True
+                    offset = scanner.x.astype(int)
                     with StripTag(conn=self.command_emitter,
-                                  name=f"{self.test_name}_TEST_DET_OFFS_{offset}_{polarimeter}",
-                                  comment=f"Test detector offset: offset={offset}, polarimeter {polarimeter}."):
-                        self._set_offset(polarimeter, [offset] * 4)
+                                  name=f"{self.test_name}_TEST_DET_OFFS_{i}_{polarimeter}",
+                                  comment=f"Test detector offset: step {i}, polarimeter {polarimeter}, "
+                                          f"offset={offset}"):
+                        self._set_offset(polarimeter, offset)
                 self.conn.set_hk_scan(boards = self.hk_scan_boards)
                 wait_with_tag(conn=self.conn, seconds=self.stable_acquisition_time,
-                              name=f"{self.test_name}_TEST_DET_OFFS_{offset}_ACQ",
-                              comment=f"Test detector offset: offset={offset}, stable acquisition.")
+                              name=f"{self.test_name}_TEST_DET_OFFS_{i}_ACQ",
+                              comment=f"Test detector offset: step {i}, offset={offset}, stable acquisition.")
+            i += 1
 
     def _turnon(self):
         """Turn on all the polarimeters specified in self.polarimeters"""
@@ -570,26 +578,29 @@ class LNATestProcedure(StripProcedure):
             if turnon:
                 self.conn.set_pol_mode(polarimeter, CLOSED_LOOP_MODE)
 
-def read_cell(excel_file, polarimeter: str, lna: str) -> Scanner2D:
+def read_cell(excel_file, polarimeter: str, test: str) -> Scanner2D:
     row = excel_file[polarimeter]
-    scanner_class = globals()[row[(lna, "Scanner")]]
-    arguments_str = row[(lna, "Arguments")]
+    scanner_class = globals()[row[(test, "Scanner")]]
+    arguments_str = row[(test, "Arguments")]
     arguments = list(map(literal_eval, arguments_str.split(";")))
     for i in range(len(arguments)):
         if isinstance(arguments[i], list):
             arguments[i] = np.asarray(arguments[i], dtype=float)
-    return scanner_class(*arguments, x_label="idrain", y_label="offset")
+    if test == "Offset":
+        return scanner_class(*arguments, label="offset")
+    else:
+        return scanner_class(*arguments, x_label="idrain", y_label="offset")
 
 def read_excel(filename: str, dummy_polarimeter: bool = False) -> Dict[str, Dict[str, Scanner2D]]:
     excel_file = pd.read_excel(filename, header=(0, 1), index_col=0).to_dict(orient="index")
     scanners = {}
-    for polarimeter in set(excel_file) - {"DUMMY"}: # Iterate over all polarimeterx except the DUMMY one
+    for polarimeter in set(excel_file) - {"DUMMY"}: # Iterate over all polarimeters except the DUMMY one
         scanners[polarimeter] = {}
-        for lna in "HA1", "HA2", "HA3", "HB1", "HB2", "HB3":
+        for test in "HA1", "HA2", "HA3", "HB1", "HB2", "HB3", "Offset":
             if dummy_polarimeter:
-                scanners[polarimeter][lna] = read_cell(excel_file, "DUMMY", lna)
+                scanners[polarimeter][test] = read_cell(excel_file, "DUMMY", test)
             else:
-                scanners[polarimeter][lna] = read_cell(excel_file, polarimeter, lna)
+                scanners[polarimeter][test] = read_cell(excel_file, polarimeter, test)
     return scanners
 
 if __name__ == "__main__":
