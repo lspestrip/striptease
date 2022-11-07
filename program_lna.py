@@ -27,6 +27,8 @@ DEFAULT_ACQUISITION_TIME_S = 5
 DEFAULT_WAIT_TIME_S = 1
 DEFAULT_POLARIMETERS = [polarimeter for _, _, polarimeter in polarimeter_iterator()]
 
+# One dimensional scanners
+
 class Scanner1D(ABC):
     def __init__(self, label: str):
         self.label = label
@@ -76,6 +78,8 @@ class LinearScanner(Scanner1D):
 
     @property
     def index(self) -> int: return self._current_step
+
+# Two dimensional scanners
 
 class Scanner2D(ABC):
     """Abstract base class representing a scanning strategy to explore a 2D plane.
@@ -303,6 +307,8 @@ class SpiralScanner(Scanner2D):
 
     @property
     def index(self) -> List[int]: self.index = [self.n_arm, self.step]
+
+# Test procedure
 
 class LNATestProcedure(StripProcedure):
     """A procedure that sets idrain and offset for polarimeters one LNA at a time, with only one leg active.
@@ -578,7 +584,9 @@ class LNATestProcedure(StripProcedure):
             if turnon:
                 self.conn.set_pol_mode(polarimeter, CLOSED_LOOP_MODE)
 
-def read_cell(excel_file, polarimeter: str, test: str) -> Scanner2D:
+# User interface
+
+def read_cell(excel_file, polarimeter: str, test: str) -> Union[Scanner2D, Scanner1D]:
     row = excel_file[polarimeter]
     scanner_class = globals()[row[(test, "Scanner")]]
     arguments_str = row[(test, "Arguments")]
