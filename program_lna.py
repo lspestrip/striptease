@@ -421,15 +421,15 @@ class LNATestProcedure(StripProcedure):
         """
         
         # Test LNA using scanner
-        end = False
         i = 0
-        while not end:
+        test_polarimeters = copy(self.test_polarimeters)
+        while test_polarimeters != []:
             with StripTag(conn=self.command_emitter, name=f"{self.test_name}_TEST_LNA_{lna}_{i}",
                           comment=f"Test LNA {lna}: step {i}."):
-                for polarimeter in self.test_polarimeters:
+                for polarimeter in test_polarimeters:
                     scanner = self.scanners[polarimeter][lna]
-                    if scanner.next() == False:    # Exit when the first scanner reaches an end
-                        end = True
+                    if scanner.next() == False:    # The scan is over for this polarimeter: remove it from the list
+                        test_polarimeters.remove(polarimeter)
                     idrain = int(scanner.x)
                     idrain_step = scanner.index[0]
                     offset = scanner.y.astype(int)
@@ -538,15 +538,15 @@ class LNATestProcedure(StripProcedure):
                     self.conn.set_phsw_status(polarimeter, phsw_index, PhswPinMode.STILL_NO_SIGNAL)
 
     def _test_offset(self):
-        end = False
         i = 0
-        while not end:
+        test_polarimeters = copy(self.test_polarimeters)
+        while test_polarimeters != []:
             with StripTag(conn=self.command_emitter, name=f"{self.test_name}_TEST_DET_OFFS_{i}",
                           comment=f"Test detector offset: step {i}."):
-                for polarimeter in self.test_polarimeters:
+                for polarimeter in test_polarimeters:
                     scanner = self.scanners[polarimeter]["Offset"]
-                    if scanner.next() == False:    # Exit when the first scanner reaches an end
-                        end = True
+                    if scanner.next() == False:    # The scan is over for this polarimeter: remove it from the list
+                        test_polarimeters.remove(polarimeter)
                     offset = scanner.x.astype(int)
                     with StripTag(conn=self.command_emitter,
                                   name=f"{self.test_name}_TEST_DET_OFFS_{i}_{polarimeter}",
@@ -556,7 +556,7 @@ class LNATestProcedure(StripProcedure):
                 self.conn.set_hk_scan(boards = self.hk_scan_boards)
                 wait_with_tag(conn=self.conn, seconds=self.stable_acquisition_time,
                               name=f"{self.test_name}_TEST_DET_OFFS_{i}_ACQ",
-                              comment=f"Test detector offset: step {i}, offset={offset}, stable acquisition.")
+                              comment=f"Test detector offset: step {i}, stable acquisition.")
             i += 1
 
     def _turnon(self):
