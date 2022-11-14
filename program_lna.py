@@ -56,15 +56,10 @@ class LinearScanner(Scanner1D):
 
         self.x = copy(start)
 
-        self._first_call = True
         self._current_step = 0
 
     def next(self) -> bool:
-        if self._first_call:
-            self._first_call = False
-            return True
-
-        if self._current_step == self.nsteps:
+        if self._current_step >= self.nsteps:
             return False
 
         self.x += self._delta
@@ -73,7 +68,6 @@ class LinearScanner(Scanner1D):
 
     def reset(self) -> None:
         self.x = copy(self.start)
-        self._first_call = True
         self._current_step = 0
 
     @property
@@ -146,17 +140,12 @@ class GridScanner(Scanner2D):
         self.x = copy(x_start)
         self.y = copy(y_start)
 
-        self.first_call = True
         self.x_current_step = 0
         self.y_current_step = 0
 
     def next(self) -> bool:
-        if self.first_call:
-            self.first_call = False
-            return True
-
-        if self.y_current_step == self.y_nsteps:        # Last row in the column
-            if self.x_current_step == self.x_nsteps:    # Last column in the grid
+        if self.y_current_step >= self.y_nsteps:        # Last row in the column
+            if self.x_current_step >= self.x_nsteps:    # Last column in the grid
                 return False
             else:                                       # Not last column in the grid
                 self.x += self.delta_x
@@ -172,7 +161,6 @@ class GridScanner(Scanner2D):
     def reset(self) -> None:
         self.x = copy(self.x_start)
         self.y = copy(self.y_start)
-        self.first_call = True
 
         self.x_current_step = 0
         self.y_current_step = 0
@@ -206,18 +194,13 @@ class RasterScanner(Scanner2D):
         self.x = copy(x_start)
         self.y = copy(y_start)
 
-        self.first_call = True
         self.x_current_step = 0
         self.y_current_step = 0
         self.y_direction = +1
 
     def next(self) -> bool:
-        if self.first_call:
-            self.first_call = False
-            return True
-
-        if self.y_current_step == self.y_nsteps: # Last row in the column
-            if self.x_current_step == self.x_nsteps:   # Last column in the grid
+        if self.y_current_step >= self.y_nsteps: # Last row in the column
+            if self.x_current_step >= self.x_nsteps:   # Last column in the grid
                 return False
             else:                                       # Not last column in the grid
                 self.x += self.delta_x
@@ -233,7 +216,6 @@ class RasterScanner(Scanner2D):
     def reset(self) -> None:
         self.x = copy(self.x_start)
         self.y = copy(self.y_start)
-        self.first_call = True
 
         self.x_current_step = 0
         self.y_current_step = 0
@@ -267,13 +249,8 @@ class SpiralScanner(Scanner2D):
         self.n_arms = n_arms
         self.step = 1
         self.steps = 1
-        self.first_call = True
 
     def next(self) -> bool:
-        if self.first_call:
-            self.first_call = False
-            return True
-
         if self.n_arm > self.n_arms:    # End of the spiral
             return False
 
@@ -299,7 +276,6 @@ class SpiralScanner(Scanner2D):
     def reset(self) -> None:
         self.x = copy(self.x_start)
         self.y = copy(self.y_start)
-        self.first_call = True
 
         self.n_arm = 1
         self.step = 1
@@ -442,12 +418,11 @@ class LNATestProcedure(StripProcedure):
         i = 0
         test_polarimeters = copy(self.test_polarimeters)
         while test_polarimeters != []:
+            next_test_polarimeters = []
             with StripTag(conn=self.command_emitter, name=f"{self.test_name}_TEST_LNA_{lna}_{i}",
                           comment=f"Test LNA {lna}: step {i}."):
                 for polarimeter in test_polarimeters:
                     scanner = self.scanners[polarimeter][lna]
-                    if scanner.next() == False:    # The scan is over for this polarimeter: remove it from the list
-                        test_polarimeters.remove(polarimeter)
                     idrain = int(scanner.x)
                     idrain_step = scanner.index[0]
                     offset = scanner.y.astype(int)
@@ -461,10 +436,13 @@ class LNATestProcedure(StripProcedure):
                             component=lna, value=idrain)
                         self.conn.set_id(polarimeter, lna, idrain_adu)
                         self._set_offset(polarimeter, offset)
-                self.conn.set_hk_scan(boards = self.hk_scan_boards)
+                    if scanner.next() == True:    # The scan is not over for this polarimeter: add it to the next test list
+                        next_test_polarimeters.append(polarimeter)
+                self.conn.set_hk_scan(boards = self.hk_scan_boards)     # QUESTION: dynamic hk_scan boards?
                 wait_with_tag(conn=self.conn, seconds=self.stable_acquisition_time,
                               name=f"{self.test_name}_TEST_LNA_{lna}_{i}_ACQ",
                               comment=f"Test LNA {lna}: step {i}, stable acquisition")
+            test_polarimeters = next_test_polarimeters
             i += 1
 
         # Reset LNA
@@ -563,22 +541,24 @@ class LNATestProcedure(StripProcedure):
         i = 0
         test_polarimeters = copy(self.test_polarimeters)
         while test_polarimeters != []:
+            next_test_polarimeters = []
             with StripTag(conn=self.command_emitter, name=f"{self.test_name}_TEST_DET_OFFS_{i}",
                           comment=f"Test detector offset: step {i}."):
                 for polarimeter in test_polarimeters:
                     scanner = self.scanners[polarimeter]["Offset"]
-                    if scanner.next() == False:    # The scan is over for this polarimeter: remove it from the list
-                        test_polarimeters.remove(polarimeter)
                     offset = scanner.x.astype(int)
                     with StripTag(conn=self.command_emitter,
                                   name=f"{self.test_name}_TEST_DET_OFFS_{i}_{polarimeter}",
                                   comment=f"Test detector offset: step {i}, polarimeter {polarimeter}, "
                                           f"offset={offset}"):
                         self._set_offset(polarimeter, offset)
+                    if scanner.next() == True:    # The scan is not over for this polarimeter: add it to the next test list
+                        next_test_polarimeters.append(polarimeter)
                 self.conn.set_hk_scan(boards = self.hk_scan_boards)
                 wait_with_tag(conn=self.conn, seconds=self.stable_acquisition_time,
                               name=f"{self.test_name}_TEST_DET_OFFS_{i}_ACQ",
                               comment=f"Test detector offset: step {i}, stable acquisition.")
+            test_polarimeters = next_test_polarimeters
             i += 1
 
     def _turnon(self):
