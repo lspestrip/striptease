@@ -373,6 +373,11 @@ class LNATestProcedure(StripProcedure):
                               comment="Set leg HB to zero bias."):
                     self._zero_bias(leg="HB")
 
+                self.conn.set_hk_scan(boards = self.hk_scan_boards)
+                wait_with_tag(conn=self.conn, seconds=self.stable_acquisition_time,
+                              name=f"{self.test_name}_TURNON_LEG_HA_ACQ",
+                              comment="Turnon leg HA: stable acquisition.")
+
             # Scan the leg A
             with StripTag(conn=self.conn, name=f"{self.test_name}_TEST_LEG_HA", comment="Run test on leg HA."):
                 self._test_leg(leg="HA")
@@ -386,6 +391,11 @@ class LNATestProcedure(StripProcedure):
                 with StripTag(conn=self.conn, name=f"{self.test_name}_ZERO_BIAS_LEG_HA",
                               comment="Set leg HA to zero bias."):
                     self._zero_bias(leg="HA")
+
+                self.conn.set_hk_scan(boards = self.hk_scan_boards)
+                wait_with_tag(conn=self.conn, seconds=self.stable_acquisition_time,
+                              name=f"{self.test_name}_TURNON_LEG_HB_ACQ",
+                              comment="Turnon leg HA: stable acquisition.")
 
             # Scan the leg B
             with StripTag(conn=self.conn, name=f"{self.test_name}_TEST_LEG_HB", comment="Run test on leg HB."):
