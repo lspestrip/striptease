@@ -385,7 +385,8 @@ class LNATestProcedure(StripProcedure):
             # Perform a detector offset test
             with StripTag(conn=self.conn, name=f"{self.test_name}_TEST_DET_OFFS",
                           comment="Perform a detector offset test."):
-                self._test_offset()
+                self._test(func=lambda self, polarimeter, step: self._test_offset(polarimeter, step),
+                           tag=f"{self.test_name}_TEST_DET_OFFS", comment="Test detector offset")
 
             # Reset detector offsets to default value
             with StripTag(conn=self.command_emitter, name=f"{self.test_name}_RESET_OFFS",
@@ -404,51 +405,55 @@ class LNATestProcedure(StripProcedure):
         Args:
         - `leg` (`str`): the leg to run the test on. Can be "HA" or "HB"."""
         for lna in (f"{leg}{i}" for i in range(1, 4)):
+            # Test LNA
             with StripTag(conn=self.conn, name=f"{self.test_name}_TEST_LNA_{lna}"):
-                self._test_lna(lna)
+                self._test(func=lambda self, polarimeter, step: self._test_lna(polarimeter, step, lna),
+                          tag=f"{self.test_name}_TEST_LNA_{lna}", comment=f"Test LNA {lna}")
+            # Reset LNA
+            with StripTag(conn=self.conn, name=f"{self.test_name}_RESET_LNA_{lna}",
+                          comment=f"Reset LNA {lna} to default biases."):
+                self._reset_lna(lna)
 
-    def _test_lna(self, lna: str):
+    def _test(self, func, tag: str, comment: str):
+        step = 0
+        test_polarimeters = copy(self.test_polarimeters)
+        while test_polarimeters != []:
+            next_test_polarimeters = []
+            with StripTag(conn=self.command_emitter, name=f"{tag}_{step}",
+                          comment=f"{comment}: step {step}"):
+                for polarimeter in test_polarimeters:
+                    scanner = func(self, polarimeter, step)
+                    if scanner.next() == True:    # The scan is not over for this polarimeter: add it to the next test list
+                        next_test_polarimeters.append(polarimeter)
+                self.conn.set_hk_scan(boards = self.hk_scan_boards) # QUESTION: dynamic hk_scan boards or not?
+                wait_with_tag(conn=self.conn, seconds=self.stable_acquisition_time,
+                              name=f"{tag}_{step}_ACQ",
+                              comment=f"{comment}: step {step}, stable acquisition")
+            test_polarimeters = next_test_polarimeters
+            step += 1
+
+    def _test_lna(self, polarimeter, step, lna: str) -> Scanner2D:
         """Test one LNA on all polarimeters changing idrain and offset according to a scanning strategy.
     
         Args:
         - `lna` (`str`): the LNA to test.
         """
-        
-        # Test LNA using scanner
-        i = 0
-        test_polarimeters = copy(self.test_polarimeters)
-        while test_polarimeters != []:
-            next_test_polarimeters = []
-            with StripTag(conn=self.command_emitter, name=f"{self.test_name}_TEST_LNA_{lna}_{i}",
-                          comment=f"Test LNA {lna}: step {i}."):
-                for polarimeter in test_polarimeters:
-                    scanner = self.scanners[polarimeter][lna]
-                    idrain = int(scanner.x)
-                    idrain_step = scanner.index[0]
-                    offset = scanner.y.astype(int)
-                    offset_step = scanner.index[1]
-                    with StripTag(conn=self.command_emitter,
-                                  name=f"{self.test_name}_TEST_LNA_{lna}_{i}_{polarimeter}_{idrain_step}_{offset_step}",
-                                  comment=f"Test LNA {lna}: step {i}, polarimeter {polarimeter}:"
-                                          f"idrain={idrain}, offset={offset}."):
-                        idrain_adu = self._calibr.physical_units_to_adu(
-                            polarimeter=polarimeter, hk="idrain",
-                            component=lna, value=idrain)
-                        self.conn.set_id(polarimeter, lna, idrain_adu)
-                        self._set_offset(polarimeter, offset)
-                    if scanner.next() == True:    # The scan is not over for this polarimeter: add it to the next test list
-                        next_test_polarimeters.append(polarimeter)
-                self.conn.set_hk_scan(boards = self.hk_scan_boards)     # QUESTION: dynamic hk_scan boards?
-                wait_with_tag(conn=self.conn, seconds=self.stable_acquisition_time,
-                              name=f"{self.test_name}_TEST_LNA_{lna}_{i}_ACQ",
-                              comment=f"Test LNA {lna}: step {i}, stable acquisition")
-            test_polarimeters = next_test_polarimeters
-            i += 1
 
-        # Reset LNA
-        with StripTag(conn=self.conn, name=f"{self.test_name}_RESET_LNA_{lna}",
-                      comment=f"Reset LNA {lna} to default biases."):
-            self._reset_lna(lna)
+        scanner = self.scanners[polarimeter][lna]
+        idrain = int(scanner.x)
+        idrain_step = scanner.index[0]
+        offset = scanner.y.astype(int)
+        offset_step = scanner.index[1]
+        with StripTag(conn=self.command_emitter,
+                      name=f"{self.test_name}_TEST_LNA_{lna}_{step}_{polarimeter}_{idrain_step}_{offset_step}",
+                      comment=f"Test LNA {lna}: step {step}, polarimeter {polarimeter}:"
+                              f"idrain={idrain}, offset={offset}."):
+            idrain_adu = self._calibr.physical_units_to_adu(
+                polarimeter=polarimeter, hk="idrain",
+                component=lna, value=idrain)
+            self.conn.set_id(polarimeter, lna, idrain_adu)
+            self._set_offset(polarimeter, offset)
+        return scanner
 
     def _set_offset(self, polarimeter: str, offset: np.ndarray):
         """Set the offset for all detectors on the specified polarimeter.
@@ -537,29 +542,15 @@ class LNATestProcedure(StripProcedure):
                 for phsw_index in self._get_phsw_from_leg(leg):
                     self.conn.set_phsw_status(polarimeter, phsw_index, PhswPinMode.STILL_NO_SIGNAL)
 
-    def _test_offset(self):
-        i = 0
-        test_polarimeters = copy(self.test_polarimeters)
-        while test_polarimeters != []:
-            next_test_polarimeters = []
-            with StripTag(conn=self.command_emitter, name=f"{self.test_name}_TEST_DET_OFFS_{i}",
-                          comment=f"Test detector offset: step {i}."):
-                for polarimeter in test_polarimeters:
-                    scanner = self.scanners[polarimeter]["Offset"]
-                    offset = scanner.x.astype(int)
-                    with StripTag(conn=self.command_emitter,
-                                  name=f"{self.test_name}_TEST_DET_OFFS_{i}_{polarimeter}",
-                                  comment=f"Test detector offset: step {i}, polarimeter {polarimeter}, "
-                                          f"offset={offset}"):
-                        self._set_offset(polarimeter, offset)
-                    if scanner.next() == True:    # The scan is not over for this polarimeter: add it to the next test list
-                        next_test_polarimeters.append(polarimeter)
-                self.conn.set_hk_scan(boards = self.hk_scan_boards)
-                wait_with_tag(conn=self.conn, seconds=self.stable_acquisition_time,
-                              name=f"{self.test_name}_TEST_DET_OFFS_{i}_ACQ",
-                              comment=f"Test detector offset: step {i}, stable acquisition.")
-            test_polarimeters = next_test_polarimeters
-            i += 1
+    def _test_offset(self, polarimeter, step) -> Scanner1D:
+        scanner = self.scanners[polarimeter]["Offset"]
+        offset = scanner.x.astype(int)
+        with StripTag(conn=self.command_emitter,
+                      name=f"{self.test_name}_TEST_DET_OFFS_{step}_{polarimeter}",
+                      comment=f"Test detector offset: step {step}, polarimeter {polarimeter}, "
+                              f"offset={offset}"):
+            self._set_offset(polarimeter, offset)
+        return scanner
 
     def _turnon(self):
         """Turn on all the polarimeters specified in self.polarimeters"""
