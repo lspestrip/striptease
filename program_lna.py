@@ -400,6 +400,12 @@ class LNATestProcedure(StripProcedure):
             with StripTag(conn=self.conn, name=f"{self.test_name}_TEST_DET_OFFS",
                           comment="Perform a detector offset test."):
                 self._test_offset()
+
+            # Reset detector offsets to default value
+            with StripTag(conn=self.command_emitter, name=f"{self.test_name}_RESET_OFFS",
+                        comment=f"Reset detector offsets."):
+                for polarimeter in self.test_polarimeters:
+                    self._reset_offset(polarimeter)
             
             if (self.turnoff):
                 # Turn off all polarimeters
@@ -482,6 +488,14 @@ class LNATestProcedure(StripProcedure):
             cmd["data"] = [int(offset[detector_idx])]
             self.conn.post_command(url, cmd)
 
+    def _reset_offset(self, polarimeter: str):
+        setup_board = self._setup_boards[get_polarimeter_board(polarimeter)]
+        default_offsets = np.array([
+            setup_board.ib.get_biases(module_name=polarimeter, param_hk=f"DET{detector_idx}_OFFSET")
+            for detector_idx in range(0, 4)
+        ])
+        self._set_offset(polarimeter, default_offsets)
+
     def _reset_lna(self, lna: str):
         """Reset the idrain, vgate and the offsets of the LNA to the default value for each polarimeter.
         
@@ -493,11 +507,7 @@ class LNATestProcedure(StripProcedure):
                 setup_board = self._setup_boards[get_polarimeter_board(polarimeter)]
                 setup_board.setup_ID(polarimeter, lna)
                 setup_board.setup_VD(polarimeter, lna)
-                default_offsets = np.array([
-                    setup_board.ib.get_biases(module_name=polarimeter, param_hk=f"DET{detector_idx}_OFFSET")
-                    for detector_idx in range(0, 4)
-                ])
-                self._set_offset(polarimeter, default_offsets)
+                self._reset_offset(polarimeter)
 
     def _get_phsw_from_leg(self, leg: str):
         if leg == "HA":
