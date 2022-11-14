@@ -327,7 +327,8 @@ class LNATestProcedure(StripProcedure):
                  turnon_wait_time = DEFAULT_WAIT_TIME_S,
                  message = "",
                  hk_scan_boards=STRIP_BOARD_NAMES,
-                 phsw_status="77"):
+                 phsw_status="77",
+                 turnoff=False):
         super(LNATestProcedure, self).__init__()
         self.test_name = test_name
         self.scanners = scanners
@@ -344,6 +345,7 @@ class LNATestProcedure(StripProcedure):
         self.message = message
         self.hk_scan_boards = hk_scan_boards
         self.phsw_status = phsw_status
+        self.turnoff = turnoff
 
         self._test_boards = set(map(get_polarimeter_board, self.test_polarimeters))
         self._setup_boards = {}      # A dictionary of SetupBoard objects (one for each board), used to reset LNA biases to default values during the procedure
@@ -399,10 +401,10 @@ class LNATestProcedure(StripProcedure):
                           comment="Perform a detector offset test."):
                 self._test_offset()
             
-
-            # Turn off all polarimeters
-            with StripTag(conn=self.conn, name=f"{self.test_name}_TURNOFF", comment="Turn off polarimeters."):
-                self._turnoff()
+            if (self.turnoff):
+                # Turn off all polarimeters
+                with StripTag(conn=self.conn, name=f"{self.test_name}_TURNOFF", comment="Turn off polarimeters."):
+                    self._turnoff()
 
     def _test_leg(self, leg: str):
         """Run the test on the specified leg on all polarimeters, from LNA 1 to 3.
@@ -753,6 +755,12 @@ Usage examples:
         dest="dummy_polarimeter",
         help="Test all polarimeters using the scanning strategy of the DUMMY one."
     )
+    parser.add_argument(
+        "--turnoff",
+        action="store_true",
+        dest="turnoff",
+        help="Turnoff all boards after the test."
+    )
 
     args = parser.parse_args()
     log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
@@ -786,11 +794,13 @@ Usage examples:
               f"Dummy polarimeter: {args.dummy_polarimeter}.\n"\
               f"Stable acquisition time: {args.stable_acquisition_time}s.\n"\
               f"Turnon wait time: {args.turnon_wait_time}s.\n"\
-              f"Turnon acquisition time: {args.turnon_acquisition_time}s."
+              f"Turnon acquisition time: {args.turnon_acquisition_time}s.\n"\
+              f"Turnoff at end of test: {args.turnoff}."
 
     proc = LNATestProcedure(test_name=args.test_name, scanners=scanners, test_polarimeters=args.test_polarimeters,
         turnon_polarimeters=args.turnon_polarimeters, bias_file_name=args.bias_file_name,
         stable_acquisition_time=args.stable_acquisition_time, turnon_acqisition_time=args.turnon_acquisition_time,
-        turnon_wait_time=args.turnon_wait_time, message=message, hk_scan_boards=args.hk_scan_boards, phsw_status=args.phsw_status)
+        turnon_wait_time=args.turnon_wait_time, message=message, hk_scan_boards=args.hk_scan_boards, phsw_status=args.phsw_status,
+        turnoff=args.turnoff)
     proc.run()
     proc.output_json(args.output_filename)
