@@ -639,6 +639,8 @@ def parse_polarimeters(polarimeters: List[str]) -> List[str]:
 
 if __name__ == "__main__":
     from argparse import ArgumentParser, RawDescriptionHelpFormatter
+    import subprocess
+    import sys
 
     parser = ArgumentParser(
         description="Produce a command sequence to test the LNAs on one or more polarimeters",
@@ -795,8 +797,19 @@ Usage examples:
     elif args.hk_scan_boards[0] == "turnon":
         args.hk_scan_boards = list(set(map(get_polarimeter_board, args.turnon_polarimeters)))
 
+    commit = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.rstrip("\n")
+    status = subprocess.run(["git", "status", "--untracked-files=no", "--porcelain"], capture_output=True, text=True).stdout
+    if status == "":
+        status = "No change."
+    else:
+        status = "\n" + status
+        status = '\t'.join(status.splitlines(True))
+
     message = f"Here begins the {args.test_name} procedure to test LNA biases, " \
               f"generated on {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}.\n" \
+              f"Argv: {sys.argv}.\n" \
+              f"Git commit: {commit}.\n" \
+              f"Git status: {status}" \
               f"Tested polarimeters: {args.test_polarimeters}.\n"\
               f"Turned-on polarimeters: {args.turnon_polarimeters}.\n"\
               f"Housekeeping scanned on boards: {args.hk_scan_boards}.\n"\
