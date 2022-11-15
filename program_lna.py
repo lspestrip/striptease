@@ -16,7 +16,7 @@ from striptease import StripTag
 from striptease.procedures import StripProcedure
 from striptease.stripconn import wait_with_tag
 from striptease.utilities import CLOSED_LOOP_MODE, STRIP_BOARD_NAMES, PhswPinMode, \
-                                 get_polarimeter_board, polarimeter_iterator
+                                 get_polarimeter_board, normalize_polarimeter_name, polarimeter_iterator
 
 from turnon import SetupBoard, TurnOnOffProcedure
 
@@ -604,6 +604,39 @@ def read_excel(filename: str, dummy_polarimeter: bool = False) -> Dict[str, Dict
                 scanners[polarimeter][test] = read_cell(excel_file, polarimeter, test)
     return scanners
 
+def parse_polarimeters(polarimeters: List[str]) -> List[str]:
+    """Parse a list of polarimeters, boards, "Q" (all Q polarimeters), "W" (all W polarimeters)
+    and (e.g.) "OQ", "OW" (all Q or W polarimeters in board O), and return a list of polarimeter names."""
+    if polarimeters == []:
+        return []
+    if polarimeters[0] == "all":
+        return DEFAULT_POLARIMETERS
+
+    parsed_polarimeters = []
+    for item in polarimeters:
+        try:
+            if normalize_polarimeter_name(item) in map(normalize_polarimeter_name, DEFAULT_POLARIMETERS):
+                parsed_polarimeters.append(item)
+                continue
+        except KeyError:
+            pass
+        if item in STRIP_BOARD_NAMES:
+            parsed_polarimeters += [polarimeter
+                for _, _, polarimeter in polarimeter_iterator(boards=[item])]
+        elif item == "Q":
+            parsed_polarimeters += [polarimeter
+                for _, _, polarimeter in polarimeter_iterator(include_w_band=False)]
+        elif item == "W":
+            parsed_polarimeters += [polarimeter
+                for _, _, polarimeter in polarimeter_iterator(include_q_band=False)]
+        elif item[1] == "Q":
+            parsed_polarimeters += [polarimeter
+                for _, _, polarimeter in polarimeter_iterator(boards=[item[0]], include_w_band=False)]
+        elif item[1] == "W":
+            parsed_polarimeters += [polarimeter
+                for _, _, polarimeter in polarimeter_iterator(boards=[item[0]], include_q_band=False)]
+    return list(dict.fromkeys(parsed_polarimeters)) # Remove duplicate polarimeters
+
 if __name__ == "__main__":
     from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
@@ -640,8 +673,7 @@ Usage examples:
         --turnon-polarimeters all \\
         --bias-from-dummy-polarimeter
 """)
-    parser.add_argument(
-        "--output", "-o",
+    parser.add_argument("--output", "-o",
         metavar="FILENAME",
         type=str,
         dest="output_filename",
@@ -649,27 +681,26 @@ Usage examples:
         help="Name of the file where to write the output (in JSON format). "
         "If not provided, the output will be sent to stdout.",
     )
-    parser.add_argument(
-        "--test-polarimeters",
+    parser.add_argument("--test-polarimeters",
         metavar="POLARIMETER",
         type=str,
         nargs="+",
         default=DEFAULT_POLARIMETERS,
         help="Name of the polarimeters/module to test. Valid names "
-            'are "G4", "W3", etc. Can be "all" (which is the default).',
+            'are "G4", "W3", "O" (meaning all polarimeters in board O), "OQ" (meaning all Q polarimeters '
+            'in board Q), "OW" (meaning the W polarimeter on board O), "Q" (meaning all Q polarimeters) or "W" '
+            '(meaning all W polarimeters). Can be "all" (which is the default).',
     )
-    parser.add_argument(
-        "--turnon-polarimeters",
+    parser.add_argument("--turnon-polarimeters",
         metavar="POLARIMETER",
         type=str,
         nargs="+",
         default=[],
         help="Name of the polarimeters/module to turn on. Valid names "
-            'are "G4", "W3", etc. Can be "all", and by default it is equal '
+            'are the same of test-polarimeters. Can be "all", and by default it is equal '
             "to test-polarimeters.",
     )
-    parser.add_argument(
-        "--test-name",
+    parser.add_argument("--test-name",
         metavar="STRING",
         type=str,
         dest="test_name",
@@ -677,8 +708,7 @@ Usage examples:
         help="The name of the test, to be put at the beginning of each tag. "
             f'The default is "{DEFAULT_TEST_NAME}".'
     )
-    parser.add_argument(
-        "--bias-file-name",
+    parser.add_argument("--bias-file-name",
         metavar="FILENAME",
         type=str,
         dest="bias_file_name",
@@ -686,8 +716,7 @@ Usage examples:
         help="Excel file containing the biases to be used when turning on the polarimeters. "
             f'The default is "{DEFAULT_BIAS_FILENAME}"'
     )
-    parser.add_argument(
-        "--hk-scan-boards",
+    parser.add_argument("--hk-scan-boards",
         metavar="BOARD",
         dest="hk_scan_boards",
         default=["test"],
@@ -697,15 +726,13 @@ Usage examples:
              'Can be "test" for boards under testing (the default), '
              '"turnon" for turned-on ones, "all", "none" or a list of boards.'
     )
-    parser.add_argument(
-        "--phsw-status",
+    parser.add_argument("--phsw-status",
         type=str,
         dest="phsw_status",
         default="77",
         help="Status of turned-on phase switch pins. Can be 77 (the default), 56 or 65."
     )
-    parser.add_argument(
-        "--stable-acquisition-time",
+    parser.add_argument("--stable-acquisition-time",
         metavar="SECONDS",
         default=DEFAULT_ACQUISITION_TIME_S,
         type=int,
@@ -713,8 +740,7 @@ Usage examples:
         help="Number of seconds to measure after the polarimeter biases have been "
             f"set up (default: {DEFAULT_ACQUISITION_TIME_S}s)"
     )
-    parser.add_argument(
-        "--turnon-acquisition-time",
+    parser.add_argument("--turnon-acquisition-time",
         metavar="SECONDS",
         default=DEFAULT_WAIT_TIME_S,
         type=int,
@@ -722,8 +748,7 @@ Usage examples:
         help="Number of seconds to measure after the polarimeters have been "
             f"turned on (default: {DEFAULT_WAIT_TIME_S}s)"
     )
-    parser.add_argument(
-        "--turnon-wait-time",
+    parser.add_argument("--turnon-wait-time",
         metavar="SECONDS",
         default=DEFAULT_WAIT_TIME_S,
         type=int,
@@ -731,8 +756,7 @@ Usage examples:
         help="Number of seconds to wait between turnon commands "
             f"set up (default: {DEFAULT_WAIT_TIME_S}s)"
     )
-    parser.add_argument(
-        "--tuning-file",
+    parser.add_argument("--tuning-file",
         metavar="FILENAME",
         type=str,
         dest="tuning_filename",
@@ -740,14 +764,12 @@ Usage examples:
         help="Run the test using the scanners contained in an Excel file. "
             f'The default is "{DEFAULT_TUNING_FILENAME}".'
     )
-    parser.add_argument(
-        "--bias-from-dummy-polarimeter",
+    parser.add_argument("--bias-from-dummy-polarimeter",
         action="store_true",
         dest="dummy_polarimeter",
         help="Test all polarimeters using the scanning strategy of the DUMMY one."
     )
-    parser.add_argument(
-        "--turnoff",
+    parser.add_argument("--turnoff",
         action="store_true",
         dest="turnoff",
         help="Turnoff all boards after the test."
@@ -760,10 +782,8 @@ Usage examples:
 
     scanners = read_excel(args.tuning_filename, args.dummy_polarimeter)
 
-    if args.test_polarimeters[0] == "all":
-        args.test_polarimeters = DEFAULT_POLARIMETERS
-    if args.turnon_polarimeters != [] and args.turnon_polarimeters[0] == "all":
-        args.turnon_polarimeters = DEFAULT_POLARIMETERS
+    args.test_polarimeters = parse_polarimeters(args.test_polarimeters)
+    args.turnon_polarimeters = parse_polarimeters(args.turnon_polarimeters)
     args.turnon_polarimeters = list(dict.fromkeys(args.turnon_polarimeters + args.test_polarimeters)) # Make sure that all tested polarimeters are also turned on
 
     if args.hk_scan_boards == [] or args.hk_scan_boards[0] == "none":
