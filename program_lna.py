@@ -800,7 +800,7 @@ Usage examples:
     commit = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.rstrip("\n")
     status = subprocess.run(["git", "status", "--untracked-files=no", "--porcelain"], capture_output=True, text=True).stdout
     if status == "":
-        status = "No change."
+        status = "No change.\n"
     else:
         status = "\n" + status
         status = '\t'.join(status.splitlines(True))
