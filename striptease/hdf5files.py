@@ -44,6 +44,14 @@ HDF5_FILE_SUFFIXES = (
 )
 
 
+def _unsigned_to_signed(arr):
+    # Convert every "unsigned" integer into a "signed" integer
+    new_dtype = [
+        (name, str(arr.dtype[name]).replace("uint", "int")) for name in arr.dtype.names
+    ]
+    return arr.astype(new_dtype)
+
+
 class HDF5ReadError(Exception):
     """Raised when a HDF5 file does not matches the specifications"""
 
@@ -526,7 +534,7 @@ class DataFile:
         hk_data = datahk["value"]
         return hk_time, hk_data
 
-    def load_sci(self, polarimeter, data_type, detector=[]):
+    def load_sci(self, polarimeter, data_type, detector=[], check_overflow=True):
         """Loads scientific data from one detector of a given polarimeter
 
         Args:
@@ -544,12 +552,17 @@ class DataFile:
                 no value is provided for this parameter, all the four
                 detectors will be returned.
 
+            check_overflow (bool): If ``True``, the sign of ``PWR`` data
+                will be checked that they do not overflow the
+                ``numpy.int32`` type.
+
         Returns:
 
              A tuple containing two NumPy arrays: the stream of times
              (using the astropy.time.Time datatype), and the stream of
-             data. For multiple detectors, the latter will be a list
-             of tuples, where each column is named either ``DEMnn`` or
+             data (*always* represented as a ``numpy.int32`` array).
+             For multiple detectors, the latter will be a list of
+             tuples, where each column is named either ``DEMnn`` or
              ``PWRnn``, where ``nn`` is the name of the detector.
 
 
@@ -585,7 +598,7 @@ class DataFile:
 
         data_type = data_type.upper()
 
-        scidata = self.hdf5_file[polarimeter]["pol_data"]
+        scidata = _unsigned_to_signed(self.hdf5_file[polarimeter]["pol_data"])
 
         scitime = Time(scidata["m_jd"], format="mjd")
 
@@ -601,7 +614,14 @@ class DataFile:
 
             column_selector = tuple([f"{data_type}{x}" for x in detector])
 
-        return scitime, scidata[column_selector]
+        converted_data = scidata[column_selector]
+        if data_type == "PWR" and check_overflow:
+            for cur_field in converted_data.dtype.names:
+                assert np.all(
+                    converted_data[cur_field] >= 0
+                ), f"Field {cur_field} has out-of-bounds values"
+
+        return scitime, converted_data
 
     def get_average_biases(
         self, polarimeter, time_range=None, calibration_tables=None
