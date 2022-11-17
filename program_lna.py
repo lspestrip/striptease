@@ -371,7 +371,7 @@ class LNATestProcedure(StripProcedure):
                 self.conn.set_hk_scan(boards = self.hk_scan_boards)
                 wait_with_tag(conn=self.conn, seconds=self.stable_acquisition_time,
                               name=f"{self.test_name}_TURNON_LEG_HB_ACQ",
-                              comment="Turnon leg HA: stable acquisition.")
+                              comment="Turnon leg HB: stable acquisition.")
 
             # Scan the leg B
             with StripTag(conn=self.conn, name=f"{self.test_name}_TEST_LEG_HB", comment="Run test on leg HB."):
