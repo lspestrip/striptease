@@ -15,7 +15,7 @@ from calibration import CalibrationTables
 from striptease import StripTag
 from striptease.procedures import StripProcedure
 from striptease.stripconn import wait_with_tag
-from striptease.utilities import CLOSED_LOOP_MODE, STRIP_BOARD_NAMES, PhswPinMode, \
+from striptease.utilities import CLOSED_LOOP_MODE, OPEN_LOOP_MODE, STRIP_BOARD_NAMES, PhswPinMode, \
                                  get_polarimeter_board, normalize_polarimeter_name, polarimeter_iterator
 
 from turnon import SetupBoard, TurnOnOffProcedure
@@ -304,7 +304,8 @@ class LNATestProcedure(StripProcedure):
                  message = "",
                  hk_scan_boards=STRIP_BOARD_NAMES,
                  phsw_status="77",
-                 turnoff=False):
+                 turnoff=False,
+                 open_loop=False):
         super(LNATestProcedure, self).__init__()
         self.test_name = test_name
         self.scanners = scanners
@@ -322,6 +323,7 @@ class LNATestProcedure(StripProcedure):
         self.hk_scan_boards = hk_scan_boards
         self.phsw_status = phsw_status
         self.turnoff = turnoff
+        self.open_loop = open_loop
 
         self._test_boards = set(map(get_polarimeter_board, self.test_polarimeters))
         self._setup_boards = {}      # A dictionary of SetupBoard objects (one for each board), used to reset LNA biases to default values during the procedure
@@ -407,8 +409,11 @@ class LNATestProcedure(StripProcedure):
         for lna in (f"{leg}{i}" for i in range(1, 4)):
             # Test LNA
             with StripTag(conn=self.conn, name=f"{self.test_name}_TEST_LNA_{lna}"):
-                self._test(func=lambda self, polarimeter, step: self._test_lna(polarimeter, step, lna),
-                          tag=f"{self.test_name}_TEST_LNA_{lna}", comment=f"Test LNA {lna}")
+                if self.open_loop:
+                    func = lambda self, polarimeter, step: self._test_open_loop(polarimeter, step, lna)
+                else:
+                    func = lambda self, polarimeter, step: self._test_closed_loop(polarimeter, step, lna)
+                self._test(func=func, tag=f"{self.test_name}_TEST_LNA_{lna}", comment=f"Test LNA {lna}")
             # Reset LNA
             with StripTag(conn=self.conn, name=f"{self.test_name}_RESET_LNA_{lna}",
                           comment=f"Reset LNA {lna} to default biases."):
@@ -432,7 +437,7 @@ class LNATestProcedure(StripProcedure):
             test_polarimeters = next_test_polarimeters
             step += 1
 
-    def _test_lna(self, polarimeter, step, lna: str) -> Scanner2D:
+    def _test_closed_loop(self, polarimeter, step, lna: str) -> Scanner2D:
         """Test one LNA on all polarimeters changing idrain and offset according to a scanning strategy.
     
         Args:
@@ -452,6 +457,29 @@ class LNATestProcedure(StripProcedure):
                 polarimeter=polarimeter, hk="idrain",
                 component=lna, value=idrain)
             self.conn.set_id(polarimeter, lna, idrain_adu)
+            self._set_offset(polarimeter, offset)
+        return scanner
+
+    def _test_open_loop(self, polarimeter, step, lna: str) -> Scanner2D:
+        """Test one LNA on all polarimeters changing vgate and offset according to a scanning strategy.
+    
+        Args:
+        - `lna` (`str`): the LNA to test.
+        """
+
+        scanner = self.scanners[polarimeter][lna]
+        vgate = int(scanner.x)
+        vgate_step = scanner.index[0]
+        offset = scanner.y.astype(int)
+        offset_step = scanner.index[1]
+        with StripTag(conn=self.command_emitter,
+                      name=f"{self.test_name}_TEST_LNA_{lna}_{step}_{polarimeter}_{vgate_step}_{offset_step}",
+                      comment=f"Test LNA {lna}: step {step}, polarimeter {polarimeter}:"
+                              f"vgate={vgate}, offset={offset}."):
+            vgate_adu = self._calibr.physical_units_to_adu(
+                polarimeter=polarimeter, hk="vgate",
+                component=lna, value=vgate)
+            self.conn.set_vg(polarimeter, lna, vgate_adu)
             self._set_offset(polarimeter, offset)
         return scanner
 
@@ -498,8 +526,11 @@ class LNATestProcedure(StripProcedure):
             with StripTag(conn=self.command_emitter, name=f"{self.test_name}_RESET_LNA_{lna}_{polarimeter}",
                           comment=f"Reset LNA {lna}: polarimeter {polarimeter}."):
                 setup_board = self._setup_boards[get_polarimeter_board(polarimeter)]
-                setup_board.setup_ID(polarimeter, lna)
                 setup_board.setup_VD(polarimeter, lna)
+                if self.open_loop:
+                    setup_board.setup_VG(polarimeter, lna)
+                else:
+                    setup_board.setup_ID(polarimeter, lna)
                 self._reset_offset(polarimeter)
 
     def _get_phsw_from_leg(self, leg: str):
@@ -538,7 +569,10 @@ class LNATestProcedure(StripProcedure):
                           comment=f"Set leg {leg} to zero bias: polarimeter {polarimeter}."):
                 for lna in leg + "1", leg + "2", leg + "3":
                     self.conn.set_vd(polarimeter, lna, value_adu=0)
-                    self.conn.set_id(polarimeter, lna, value_adu=0)
+                    if self.open_loop:
+                        self.conn.set_vg(polarimeter, lna, value_adu=0)
+                    else:
+                        self.conn.set_id(polarimeter, lna, value_adu=0)
                 for phsw_index in self._get_phsw_from_leg(leg):
                     self.conn.set_phsw_status(polarimeter, phsw_index, PhswPinMode.STILL_NO_SIGNAL)
 
@@ -575,12 +609,17 @@ class LNATestProcedure(StripProcedure):
             self.command_emitter.command_list += turnonoff_proc.get_command_list()
             turnonoff_proc.clear_command_list()
             if turnon:
-                self.conn.set_pol_mode(polarimeter, CLOSED_LOOP_MODE)
+                if self.open_loop:
+                    self.conn.set_pol_mode(polarimeter, OPEN_LOOP_MODE)
+                else:
+                    self.conn.set_pol_mode(polarimeter, CLOSED_LOOP_MODE)
 
 # User interface
 
-def read_cell(excel_file, polarimeter: str, test: str) -> Union[Scanner2D, Scanner1D]:
+def read_cell(excel_file, polarimeter: str, test: str, mode: str) -> Union[Scanner2D, Scanner1D]:
     row = excel_file[polarimeter]
+    if test != "Offset":
+        test += mode
     scanner_class = globals()[row[(test, "Scanner")]]
     arguments_str = row[(test, "Arguments")]
     arguments = list(map(literal_eval, arguments_str.split(";")))
@@ -592,16 +631,20 @@ def read_cell(excel_file, polarimeter: str, test: str) -> Union[Scanner2D, Scann
     else:
         return scanner_class(*arguments, x_label="idrain", y_label="offset")
 
-def read_excel(filename: str, dummy_polarimeter: bool = False) -> Dict[str, Dict[str, Scanner2D]]:
+def read_excel(filename: str, dummy_polarimeter: bool = False, open_loop: bool = False) -> Dict[str, Dict[str, Scanner2D]]:
     excel_file = pd.read_excel(filename, header=(0, 1), index_col=0).to_dict(orient="index")
     scanners = {}
+    if open_loop:
+        mode = " open loop"
+    else:
+        mode = " closed loop"
     for polarimeter in set(excel_file) - {"DUMMY"}: # Iterate over all polarimeters except the DUMMY one
         scanners[polarimeter] = {}
         for test in "HA1", "HA2", "HA3", "HB1", "HB2", "HB3", "Offset":
             if dummy_polarimeter:
-                scanners[polarimeter][test] = read_cell(excel_file, "DUMMY", test)
+                scanners[polarimeter][test] = read_cell(excel_file, "DUMMY", test, mode)
             else:
-                scanners[polarimeter][test] = read_cell(excel_file, polarimeter, test)
+                scanners[polarimeter][test] = read_cell(excel_file, polarimeter, test, mode)
     return scanners
 
 def parse_polarimeters(polarimeters: List[str]) -> List[str]:
@@ -776,13 +819,18 @@ Usage examples:
         dest="turnoff",
         help="Turnoff all boards after the test."
     )
+    parser.add_argument("--open-loop",
+        action="store_true",
+        dest="open_loop",
+        help="Run open loop test (instead of the default closed loop)."
+    )
 
     args = parser.parse_args()
     log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
 
     assert(args.phsw_status == "77" or args.phsw_status == "56" or args.phsw_status == "65")
 
-    scanners = read_excel(args.tuning_filename, args.dummy_polarimeter)
+    scanners = read_excel(args.tuning_filename, args.dummy_polarimeter, args.open_loop)
 
     args.test_polarimeters = parse_polarimeters(args.test_polarimeters)
     args.turnon_polarimeters = parse_polarimeters(args.turnon_polarimeters)
@@ -825,6 +873,6 @@ Usage examples:
         turnon_polarimeters=args.turnon_polarimeters, bias_file_name=args.bias_file_name,
         stable_acquisition_time=args.stable_acquisition_time, turnon_acqisition_time=args.turnon_acquisition_time,
         turnon_wait_time=args.turnon_wait_time, message=message, hk_scan_boards=args.hk_scan_boards, phsw_status=args.phsw_status,
-        turnoff=args.turnoff)
+        turnoff=args.turnoff, open_loop=args.open_loop)
     proc.run()
     proc.output_json(args.output_filename)
