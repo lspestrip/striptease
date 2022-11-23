@@ -616,10 +616,13 @@ class DataFile:
 
         converted_data = scidata[column_selector]
         if data_type == "PWR" and check_overflow:
-            for cur_field in converted_data.dtype.names:
-                assert np.all(
-                    converted_data[cur_field] >= 0
-                ), f"Field {cur_field} has out-of-bounds values"
+            if converted_data.dtype.names:
+                for cur_field in converted_data.dtype.names:
+                    assert np.all(
+                        converted_data[cur_field] >= 0
+                    ), f"Field {cur_field} has out-of-bounds values"
+            else:
+                assert np.all(converted_data >= 0), "Data have out-of-bounds values"
 
         return scitime, converted_data
 
