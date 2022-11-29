@@ -1,0 +1,264 @@
+# -*- encoding: utf-8 -*-
+
+from abc import ABC, abstractmethod
+from copy import copy
+from typing import List, Union
+
+import numpy as np
+
+# One dimensional scanners
+
+class Scanner1D(ABC):
+    def __init__(self, label: str):
+        self.label = label
+
+    @abstractmethod
+    def next(self) -> bool:
+        ...
+
+    @abstractmethod
+    def reset(self) -> None:
+        ...
+
+    @property
+    @abstractmethod
+    def index(self) -> int:
+        ...
+
+class LinearScanner(Scanner1D):
+    def __init__(self, start: Union[float, np.ndarray], stop: Union[float, np.ndarray],
+                 nsteps: int, label: str):
+        self.start = start
+        self.stop = stop
+        self.nsteps = nsteps
+        self._delta = (stop - start) / nsteps
+
+        self.x = copy(start)
+
+        self._current_step = 0
+
+    def next(self) -> bool:
+        if self._current_step >= self.nsteps:
+            return False
+
+        self.x += self._delta
+        self._current_step += 1
+        return True
+
+    def reset(self) -> None:
+        self.x = copy(self.start)
+        self._current_step = 0
+
+    @property
+    def index(self) -> int: return self._current_step
+
+# Two dimensional scanners
+
+class Scanner2D(ABC):
+    """Abstract base class representing a scanning strategy to explore a 2D plane.
+    
+    Args:
+    -`x_label`/`y_label` (`str`): the names of the x, y variables, to be used in the plot."""
+
+    def __init__(self, x_label: str = "x", y_label: str = "y"):
+        self.x_label = x_label
+        self.y_label = y_label
+
+    @abstractmethod
+    def next(self) -> bool:
+        """Return True if there is still a parameter pair to be tested, and set self.x and self.y accordingly.
+        Return False otherwise."""
+        ...
+
+    @abstractmethod
+    def reset(self) -> None:
+        """Reset the scanner by setting `self.x` and `self.y` to the initial values."""
+        ...
+
+    @property
+    @abstractmethod
+    def index(self) -> List[int]:
+        ...
+
+    def plot(self):
+        """Show a plot of the scanning strategy."""
+        from matplotlib import pyplot as plt
+        import numpy as np
+        res = []
+        while self.next() == True:
+            res.append((self.x, self.y))
+
+        res = np.asarray(res)
+        plt.plot(res[:, 0], res[:, 1], "-o")
+        plt.xlabel(self.x_label)
+        plt.ylabel(self.y_label)
+        plt.show()
+        self.reset()
+
+class GridScanner(Scanner2D):
+    """A scanner that explores parameters on a grid from down to up and from left to right
+
+    Args:
+    - `x_start`/`y_start` (`float | np.ndarray`): the starting parameters
+    - `x_stop`/`y_stop` (`float | np.ndarray`): the parameters at which the grid ends
+    - `x_nsteps`/`y_nsteps` (`int`): the number of steps
+    - `x_label`/`y_label` (`str`): the names of the x, y variables, to be used in the plot."""
+    def __init__(self, x_start: Union[float, np.ndarray], x_stop: Union[float, np.ndarray], x_nsteps: int,
+                 y_start: Union[float, np.ndarray], y_stop: Union[float, np.ndarray], y_nsteps: int,
+                 x_label: str = "x", y_label: str = "y"):
+        super(GridScanner, self).__init__(x_label, y_label)
+        self.x_start = x_start
+        self.x_stop = x_stop
+        self.x_nsteps = x_nsteps
+        self.delta_x = (x_stop - x_start) / x_nsteps
+        self.y_start = y_start
+        self.y_stop = y_stop
+        self.y_nsteps = y_nsteps
+        self.delta_y = (y_stop - y_start) / y_nsteps
+
+        self.x = copy(x_start)
+        self.y = copy(y_start)
+
+        self.x_current_step = 0
+        self.y_current_step = 0
+
+    def next(self) -> bool:
+        if self.y_current_step >= self.y_nsteps:        # Last row in the column
+            if self.x_current_step >= self.x_nsteps:    # Last column in the grid
+                return False
+            else:                                       # Not last column in the grid
+                self.x += self.delta_x
+                self.x_current_step += 1
+                self.y = copy(self.y_start)
+                self.y_current_step = 0
+                return True
+        else:                                           # Not last row in the column
+            self.y += self.delta_y
+            self.y_current_step += 1
+            return True
+ 
+    def reset(self) -> None:
+        self.x = copy(self.x_start)
+        self.y = copy(self.y_start)
+
+        self.x_current_step = 0
+        self.y_current_step = 0
+
+    @property
+    def index(self) -> List[int]: return [self.x_current_step, self.y_current_step]
+
+class RasterScanner(Scanner2D):
+    """A scanner that explores parameters on a grid \"boustrophedically\",
+    from down to up and viceversa alternating at every column.
+
+    Args:
+    - `x_start`/`y_start` (`float | np.ndarray`): the starting parameters
+    - `x_stop`/`y_stop` (`float | np.ndarray`): the parameters at which the grid ends
+    - `x_nsteps`/`y_nsteps` (`int`): the number of steps
+    """
+
+    def __init__(self, x_start: Union[float, np.ndarray], x_stop: Union[float, np.ndarray], x_nsteps: int,
+                 y_start: Union[float, np.ndarray], y_stop: Union[float, np.ndarray], y_nsteps: int,
+                 x_label: str = "x", y_label: str = "y"):
+        super(RasterScanner, self).__init__(x_label, y_label)
+        self.x_start = x_start
+        self.x_stop = x_stop
+        self.x_nsteps = x_nsteps
+        self.delta_x = (x_stop - x_start) / x_nsteps
+        self.y_start = y_start
+        self.y_stop = y_stop
+        self.y_nsteps = y_nsteps
+        self.delta_y = (y_stop - y_start) / y_nsteps
+
+        self.x = copy(x_start)
+        self.y = copy(y_start)
+
+        self.x_current_step = 0
+        self.y_current_step = 0
+        self.y_direction = +1
+
+    def next(self) -> bool:
+        if self.y_current_step >= self.y_nsteps: # Last row in the column
+            if self.x_current_step >= self.x_nsteps:   # Last column in the grid
+                return False
+            else:                                       # Not last column in the grid
+                self.x += self.delta_x
+                self.x_current_step += 1
+                self.y_direction *= -1                  # Invert the direction of the y scan
+                self.y_current_step = 0
+                return True
+        else:                                           # Not last row in the column
+            self.y += self.y_direction * self.delta_y
+            self.y_current_step += 1
+            return True
+ 
+    def reset(self) -> None:
+        self.x = copy(self.x_start)
+        self.y = copy(self.y_start)
+
+        self.x_current_step = 0
+        self.y_current_step = 0
+        self.y_direction = +1
+
+    @property
+    def index(self) -> List[int]: return [self.x_current_step, self.y_current_step]
+
+class SpiralScanner(Scanner2D):
+    """A scanner that explores parameters on a grid "spirally",
+    starting from a center and expanding step by step.
+
+    Args:
+    - `x_start`/`y_start` (`float | np.ndarray`): the starting parameters
+    - `x_step`/`y_step` (`float | np.ndarray`): the distance between two steps
+    - `n_arms` (`int`): the number of spiral arms to explore
+    """
+    def __init__(self, x_start: Union[float, np.ndarray], x_step: Union[float, np.ndarray],
+                 y_start: Union[float, np.ndarray], y_step: Union[float, np.ndarray], n_arms: int,
+                 x_label: str = "x", y_label: str = "y"):
+        super(SpiralScanner, self).__init__(x_label, y_label)
+        self.x_start = x_start
+        self.x_step = x_step
+        self.y_start = y_start
+        self.y_step = y_step
+        self.idrain = x_start
+        self.x = copy(x_start)
+        self.y = copy(y_start)
+
+        self.n_arm = 1
+        self.n_arms = n_arms
+        self.step = 1
+        self.steps = 1
+
+    def next(self) -> bool:
+        if self.n_arm > self.n_arms:    # End of the spiral
+            return False
+
+        # match-case would be useful (python 3.10)
+        if self.n_arm % 4 == 1:
+            self.y += self.y_step   # Up
+        elif self.n_arm % 4 == 2:
+            self.x += self.x_step # Right
+        elif self.n_arm % 4 == 3:
+            self.y -= self.y_step   # Down
+        elif self.n_arm % 4 == 0:
+            self.x -= self.x_step # Left
+        
+        self.step += 1
+        if self.step > self.steps:     # End of the arm
+            self.step = 1
+            self.n_arm += 1
+            if self.n_arm % 2 == 1:
+                self.steps += 1
+
+        return True
+ 
+    def reset(self) -> None:
+        self.x = copy(self.x_start)
+        self.y = copy(self.y_start)
+
+        self.n_arm = 1
+        self.step = 1
+        self.steps = 1
+
+    @property
+    def index(self) -> List[int]: self.index = [self.n_arm, self.step]
