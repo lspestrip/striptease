@@ -4,52 +4,19 @@
 from typing import Dict, List, Union
 
 import numpy as np
-from striptease.procedures import StripProcedure
 
 from striptease.utilities import STRIP_BOARD_NAMES, get_polarimeter_board, \
                                  normalize_polarimeter_name, polarimeter_iterator
 from tuning import scanners
+from tuning.procedures import OffsetTuningProcedure, StripState
 from tuning.scanners import Scanner1D, Scanner2D
-from tuning.procedures import LNAPretuningProcedure, OffsetTuningProcedure, StripState
 
-DEFAULT_TEST_NAME = "PRETUNE"
+DEFAULT_TEST_NAME = "DET_OFFS_TUNE"
 DEFAULT_BIAS_FILENAME = "data/default_biases_warm.xlsx"
 DEFAULT_TUNING_FILENAME = "data/pretuning.xlsx"
 DEFAULT_ACQUISITION_TIME_S = 5
 DEFAULT_WAIT_TIME_S = 1
 DEFAULT_POLARIMETERS = [polarimeter for _, _, polarimeter in polarimeter_iterator()]
-
-class LNAOffsetProcedure(StripProcedure):
-    def __init__(self, test_name: str, scanners: Dict[str, Scanner2D],
-                 test_polarimeters: List[str] = [polarimeter for _, _, polarimeter in polarimeter_iterator()],
-                 turnon_polarimeters: Union[List[str], None] = None,
-                 bias_file_name: str = "data/default_biases_warm.xlsx",
-                 stable_acquisition_time = DEFAULT_ACQUISITION_TIME_S,
-                 turnon_acqisition_time = DEFAULT_WAIT_TIME_S,
-                 turnon_wait_time = DEFAULT_WAIT_TIME_S,
-                 message = "",
-                 hk_scan_boards=STRIP_BOARD_NAMES,
-                 phsw_status="77",
-                 open_loop=False,
-                 start_state=StripState.OFF,
-                 end_state=StripState.ZERO_BIAS):
-        super().__init__()
-        self.lna_pretuning_procedure = LNAPretuningProcedure(
-            start_state=start_state, end_state=StripState.ZERO_BIAS,
-            test_name=test_name, test_polarimeters=test_polarimeters, turnon_polarimeters=turnon_polarimeters, bias_file_name=bias_file_name,
-            stable_acquisition_time=stable_acquisition_time, turnon_acqisition_time=turnon_acqisition_time, turnon_wait_time=turnon_wait_time,
-            message=message, hk_scan_boards=hk_scan_boards, open_loop=open_loop, scanners=scanners, phsw_status=phsw_status)
-        self.lna_pretuning_procedure.conn = self.conn
-        self.offset_tuning_procedure = OffsetTuningProcedure(
-            start_state=StripState.ZERO_BIAS, end_state=end_state,
-            test_name=test_name, test_polarimeters=test_polarimeters, turnon_polarimeters=turnon_polarimeters, bias_file_name=bias_file_name,
-            stable_acquisition_time=stable_acquisition_time, turnon_acqisition_time=turnon_acqisition_time, turnon_wait_time=turnon_wait_time,
-            message="", hk_scan_boards=hk_scan_boards, open_loop=open_loop, scanners=scanners)
-        self.offset_tuning_procedure.conn = self.conn
-
-    def run(self):
-        self.lna_pretuning_procedure.run()
-        self.offset_tuning_procedure.run()
 
 def read_cell(excel_file, polarimeter: str, test: str, mode: str) -> Union[Scanner2D, Scanner1D]:
     from ast import literal_eval
@@ -138,7 +105,7 @@ if __name__ == "__main__":
     import sys
 
     parser = ArgumentParser(
-        description="Produce a command sequence to test the LNAs on one or more polarimeters",
+        description="Produce a command sequence to test the detector offsets on one or more polarimeters",
         formatter_class=RawDescriptionHelpFormatter,
         epilog="""
 
@@ -146,7 +113,7 @@ Usage examples:
 
     # Test all polarimeters using the biases in data/pretuning.xlsx and
     # data/default_biases_warm.xlsx, naming the test "TUNE1"
-    python3 program_lna.py --test-name TUNE1
+    python3 program_offset_tuning.py --test-name TUNE1
 
     # Turn on and test polarimeters O1 and O2, using default biases from
     # file biases.xlsx
@@ -223,12 +190,6 @@ Usage examples:
              'Can be "test" for boards under testing (the default), '
              '"turnon" for turned-on ones, "all", "none" or a list of boards.'
     )
-    parser.add_argument("--phsw-status",
-        type=str,
-        dest="phsw_status",
-        default="77",
-        help="Status of turned-on phase switch pins. Can be 77 (the default), 56 or 65."
-    )
     parser.add_argument("--stable-acquisition-time",
         metavar="SECONDS",
         default=DEFAULT_ACQUISITION_TIME_S,
@@ -294,8 +255,6 @@ Usage examples:
     args = parser.parse_args()
     log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
 
-    assert(args.phsw_status == "77" or args.phsw_status == "56" or args.phsw_status == "65")
-
     test_scanners = read_excel(args.tuning_filename, args.dummy_polarimeter, args.open_loop)
 
     args.test_polarimeters = parse_polarimeters(args.test_polarimeters)
@@ -320,7 +279,7 @@ Usage examples:
         status = "\n" + status
         status = '\t'.join(status.splitlines(True))
 
-    message = f"Here begins the {args.test_name} procedure to test LNA biases, " \
+    message = f"Here begins the {args.test_name} procedure to test detector offsets, " \
               f"generated on {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}.\n" \
               f"Argv: {sys.argv}.\n" \
               f"Git commit: {commit}.\n" \
@@ -340,10 +299,10 @@ Usage examples:
     args.start_state = parse_state(args.start_state)
     args.end_state = parse_state(args.end_state)
 
-    proc = LNAOffsetProcedure(test_name=args.test_name, scanners=test_scanners, test_polarimeters=args.test_polarimeters,
+    proc = OffsetTuningProcedure(test_name=args.test_name, scanners=test_scanners, test_polarimeters=args.test_polarimeters,
         turnon_polarimeters=args.turnon_polarimeters, bias_file_name=args.bias_file_name,
         stable_acquisition_time=args.stable_acquisition_time, turnon_acqisition_time=args.turnon_acquisition_time,
-        turnon_wait_time=args.turnon_wait_time, message=message, hk_scan_boards=args.hk_scan_boards, phsw_status=args.phsw_status,
+        turnon_wait_time=args.turnon_wait_time, message=message, hk_scan_boards=args.hk_scan_boards,
         open_loop=args.open_loop, start_state=args.start_state, end_state=args.end_state)
     proc.run()
     proc.output_json(args.output_filename)
