@@ -20,10 +20,21 @@ DEFAULT_ACQUISITION_TIME_S = 5
 DEFAULT_WAIT_TIME_S = 1
 
 class StripState(IntEnum):
-    OFF = 0
-    DEFAULT = 1
-    ZERO_BIAS = 2
-    ON = 3
+    OFF = 0         # All required boards are turned off
+    DEFAULT = 1     # All required boards are turned on with default biases
+    ZERO_BIAS = 2   # All required boards are turned on with zero biases
+    ON = 3          # All required boards are turned on with unspecified biases
+
+def parse_state(state: str) -> StripState:
+        assert ["on", "off", "zero-bias", "default"].count(state) > 0
+        if state == "on":
+            return StripState.ON
+        elif state == "off":
+            return StripState.OFF
+        elif state == "zero-bias":
+            return StripState.ZERO_BIAS
+        elif state == "default":
+            return StripState.DEFAULT
 
 class TuningProcedure(StripProcedure, ABC):
     def __init__(self, start_state: StripState, end_state: StripState, turnon_zero_bias: bool, tag_comment: str,
@@ -217,7 +228,7 @@ class LNAPretuningProcedure(TuningProcedure):
     - `scanners` (`Dict[str, ScannerOneLNA]`): a dictionary that associates to each LNA the scanner to use
     - `polarimeters` (`List[str]`): a list with the names of the polarimeters to turn on and test. Default to all polarimeters.
     """
-    def __init__(self, test_name: str, scanners: Dict[str, Scanner2D],
+    def __init__(self, test_name: str, scanners: Dict[str, Union[Scanner1D, Scanner2D]],
                  test_polarimeters: List[str] = [polarimeter for _, _, polarimeter in polarimeter_iterator()],
                  turnon_polarimeters: Union[List[str], None] = None,
                  bias_file_name: str = "data/default_biases_warm.xlsx",
@@ -381,7 +392,7 @@ class LNAPretuningProcedure(TuningProcedure):
 
 # QUESTION: open/closed loop?
 class OffsetTuningProcedure(TuningProcedure):
-    def __init__(self, test_name: str, scanners: Dict[str, Scanner2D],
+    def __init__(self, test_name: str, scanners: Dict[str, Union[Scanner1D, Scanner2D]],
                  test_polarimeters: List[str] = [polarimeter for _, _, polarimeter in polarimeter_iterator()],
                  turnon_polarimeters: Union[List[str], None] = None,
                  bias_file_name: str = "data/default_biases_warm.xlsx",

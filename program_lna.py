@@ -3,12 +3,9 @@
 
 from typing import Dict, List, Union
 
-import numpy as np
 from striptease.procedures import StripProcedure
-
 from striptease.utilities import STRIP_BOARD_NAMES, get_polarimeter_board, \
                                  normalize_polarimeter_name, polarimeter_iterator
-from tuning import scanners
 from tuning.scanners import Scanner1D, Scanner2D
 from tuning.procedures import LNAPretuningProcedure, OffsetTuningProcedure, StripState
 
@@ -20,7 +17,7 @@ DEFAULT_WAIT_TIME_S = 1
 DEFAULT_POLARIMETERS = [polarimeter for _, _, polarimeter in polarimeter_iterator()]
 
 class LNAOffsetProcedure(StripProcedure):
-    def __init__(self, test_name: str, scanners: Dict[str, Scanner2D],
+    def __init__(self, test_name: str, scanners: Dict[str, Union[Scanner1D, Scanner2D]],
                  test_polarimeters: List[str] = [polarimeter for _, _, polarimeter in polarimeter_iterator()],
                  turnon_polarimeters: Union[List[str], None] = None,
                  bias_file_name: str = "data/default_biases_warm.xlsx",
@@ -50,41 +47,6 @@ class LNAOffsetProcedure(StripProcedure):
     def run(self):
         self.lna_pretuning_procedure.run()
         self.offset_tuning_procedure.run()
-
-def read_cell(excel_file, polarimeter: str, test: str, mode: str) -> Union[Scanner2D, Scanner1D]:
-    from ast import literal_eval
-
-    row = excel_file[polarimeter]
-    if test != "Offset":
-        test += mode
-    scanner_class = getattr(scanners, row[(test, "Scanner")])
-    arguments_str = row[(test, "Arguments")]
-    arguments = list(map(literal_eval, arguments_str.split(";")))
-    for i in range(len(arguments)):
-        if isinstance(arguments[i], list):
-            arguments[i] = np.asarray(arguments[i], dtype=float)
-    if test == "Offset":
-        return scanner_class(*arguments, label="offset")
-    else:
-        return scanner_class(*arguments, x_label="idrain", y_label="offset")
-
-def read_excel(filename: str, dummy_polarimeter: bool = False, open_loop: bool = False) -> Dict[str, Dict[str, Scanner2D]]:
-    import pandas as pd
-
-    excel_file = pd.read_excel(filename, header=(0, 1), index_col=0).to_dict(orient="index")
-    scanners = {}
-    if open_loop:
-        mode = " open loop"
-    else:
-        mode = " closed loop"
-    for polarimeter in set(excel_file) - {"DUMMY"}: # Iterate over all polarimeters except the DUMMY one
-        scanners[polarimeter] = {}
-        for test in "HA1", "HA2", "HA3", "HB1", "HB2", "HB3", "Offset":
-            if dummy_polarimeter:
-                scanners[polarimeter][test] = read_cell(excel_file, "DUMMY", test, mode)
-            else:
-                scanners[polarimeter][test] = read_cell(excel_file, polarimeter, test, mode)
-    return scanners
 
 def parse_polarimeters(polarimeters: List[str]) -> List[str]:
     """Parse a list of polarimeters, boards, "Q" (all Q polarimeters), "W" (all W polarimeters)
@@ -119,23 +81,15 @@ def parse_polarimeters(polarimeters: List[str]) -> List[str]:
                 for _, _, polarimeter in polarimeter_iterator(boards=[item[0]], include_q_band=False)]
     return list(dict.fromkeys(parsed_polarimeters)) # Remove duplicate polarimeters
 
-def parse_state(state: str) -> StripState:
-        assert ["on", "off", "zero-bias", "default"].count(state) > 0
-        if state == "on":
-            return StripState.ON
-        elif state == "off":
-            return StripState.OFF
-        elif state == "zero-bias":
-            return StripState.ZERO_BIAS
-        elif state == "default":
-            return StripState.DEFAULT
-
 if __name__ == "__main__":
     from argparse import ArgumentParser, RawDescriptionHelpFormatter
     from datetime import datetime
     import logging as log
     import subprocess
     import sys
+
+    from tuning.procedures import parse_state
+    from tuning.scanners import read_excel
 
     parser = ArgumentParser(
         description="Produce a command sequence to test the LNAs on one or more polarimeters",
