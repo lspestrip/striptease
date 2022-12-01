@@ -185,9 +185,7 @@ class TuningProcedure(StripProcedure, ABC):
                           comment=f"Set leg {leg} to zero bias: polarimeter {polarimeter}."):
                 for lna in leg + "1", leg + "2", leg + "3":
                     self.conn.set_vd(polarimeter, lna, value_adu=0)
-                    if self.open_loop:
-                        self.conn.set_vg(polarimeter, lna, value_adu=0)
-                    else:
+                    if not self.open_loop:
                         self.conn.set_id(polarimeter, lna, value_adu=0)
                 for phsw_index in self._get_phsw_from_leg(leg):
                     self.conn.set_phsw_status(polarimeter, phsw_index, PhswPinMode.STILL_NO_SIGNAL)
@@ -214,7 +212,7 @@ class TuningProcedure(StripProcedure, ABC):
             turnonoff_proc.run()
             self.command_emitter.command_list += turnonoff_proc.get_command_list()
             turnonoff_proc.clear_command_list()
-            if turnon:
+            if turnon:  # BUG: this is not run if staer state is not off
                 if self.open_loop:
                     self.conn.set_pol_mode(polarimeter, OPEN_LOOP_MODE)
                 else:
@@ -390,7 +388,6 @@ class LNAPretuningProcedure(TuningProcedure):
                     self.conn.set_phsw_status(polarimeter, phase_switches[0], PhswPinMode.STILL_NO_SIGNAL)
                     self.conn.set_phsw_status(polarimeter, phase_switches[1], PhswPinMode.STILL_SIGNAL)
 
-# QUESTION: open/closed loop?
 class OffsetTuningProcedure(TuningProcedure):
     def __init__(self, test_name: str, scanners: Dict[str, Union[Scanner1D, Scanner2D]],
                  test_polarimeters: List[str] = [polarimeter for _, _, polarimeter in polarimeter_iterator()],
