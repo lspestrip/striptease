@@ -11,7 +11,8 @@ from tuning.procedures import LNAPretuningProcedure, OffsetTuningProcedure, Stri
 
 DEFAULT_TEST_NAME = "PRETUNE"
 DEFAULT_BIAS_FILENAME = "data/default_biases_warm.xlsx"
-DEFAULT_TUNING_FILENAME = "data/pretuning.xlsx"
+DEFAULT_TUNING_FILENAME_CLOSED = "data/pretuning_closed_loop.xlsx"
+DEFAULT_TUNING_FILENAME_OPEN = "data/pretuning_open_loop.xlsx"
 DEFAULT_ACQUISITION_TIME_S = 5
 DEFAULT_WAIT_TIME_S = 1
 DEFAULT_POLARIMETERS = [polarimeter for _, _, polarimeter in polarimeter_iterator()]
@@ -211,9 +212,10 @@ Usage examples:
         metavar="FILENAME",
         type=str,
         dest="tuning_filename",
-        default=DEFAULT_TUNING_FILENAME,
+        default=None,
         help="Run the test using the scanners contained in an Excel file. "
-            f'The default is "{DEFAULT_TUNING_FILENAME}".'
+            f'The default is "{DEFAULT_TUNING_FILENAME_CLOSED}" if --open-loop is not used, '
+            f'"{DEFAULT_TUNING_FILENAME_OPEN}" otherwise.'
     )
     parser.add_argument("--bias-from-dummy-polarimeter",
         action="store_true",
@@ -250,7 +252,14 @@ Usage examples:
 
     assert(args.phsw_status == "77" or args.phsw_status == "56" or args.phsw_status == "65")
 
-    test_scanners = read_excel(args.tuning_filename, args.dummy_polarimeter, args.open_loop)
+    if args.tuning_filename == None:
+        if args.open_loop:
+            args.tuning_filename = DEFAULT_TUNING_FILENAME_OPEN
+        else:
+            args.tuning_filename = DEFAULT_TUNING_FILENAME_CLOSED
+ 
+    tests = ["HA1", "HA2", "HA3", "HB1", "HB2", "HB3", "Offset"]
+    test_scanners = read_excel(args.tuning_filename, tests, args.dummy_polarimeter)
 
     args.test_polarimeters = parse_polarimeters(args.test_polarimeters)
     args.turnon_polarimeters = parse_polarimeters(args.turnon_polarimeters)
@@ -265,7 +274,6 @@ Usage examples:
     elif args.hk_scan_boards[0] == "turnon":
         args.hk_scan_boards = list(set(map(get_polarimeter_board, args.turnon_polarimeters)))
 
- 
     commit = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.rstrip("\n")
     status = subprocess.run(["git", "status", "--untracked-files=no", "--porcelain"], capture_output=True, text=True).stdout
     if status == "":

@@ -11,7 +11,7 @@ from tuning import scanners
 # One dimensional scanners
 
 class Scanner1D(ABC):
-    def __init__(self, label: str):
+    def __init__(self, label : str = "x"):
         self.label = label
 
     @abstractmethod
@@ -29,7 +29,8 @@ class Scanner1D(ABC):
 
 class LinearScanner(Scanner1D):
     def __init__(self, start: Union[float, np.ndarray], stop: Union[float, np.ndarray],
-                 nsteps: int, label: str):
+                 nsteps: int, label: str = "x"):
+        super().__init__(label)
         self.start = start
         self.stop = stop
         self.nsteps = nsteps
@@ -108,7 +109,7 @@ class GridScanner(Scanner2D):
     def __init__(self, x_start: Union[float, np.ndarray], x_stop: Union[float, np.ndarray], x_nsteps: int,
                  y_start: Union[float, np.ndarray], y_stop: Union[float, np.ndarray], y_nsteps: int,
                  x_label: str = "x", y_label: str = "y"):
-        super(GridScanner, self).__init__(x_label, y_label)
+        super().__init__(x_label, y_label)
         self.x_start = x_start
         self.x_stop = x_stop
         self.x_nsteps = x_nsteps
@@ -162,7 +163,7 @@ class RasterScanner(Scanner2D):
     def __init__(self, x_start: Union[float, np.ndarray], x_stop: Union[float, np.ndarray], x_nsteps: int,
                  y_start: Union[float, np.ndarray], y_stop: Union[float, np.ndarray], y_nsteps: int,
                  x_label: str = "x", y_label: str = "y"):
-        super(RasterScanner, self).__init__(x_label, y_label)
+        super().__init__(x_label, y_label)
         self.x_start = x_start
         self.x_stop = x_stop
         self.x_nsteps = x_nsteps
@@ -217,7 +218,7 @@ class SpiralScanner(Scanner2D):
     def __init__(self, x_start: Union[float, np.ndarray], x_step: Union[float, np.ndarray],
                  y_start: Union[float, np.ndarray], y_step: Union[float, np.ndarray], n_arms: int,
                  x_label: str = "x", y_label: str = "y"):
-        super(SpiralScanner, self).__init__(x_label, y_label)
+        super().__init__(x_label, y_label)
         self.x_start = x_start
         self.x_step = x_step
         self.y_start = y_start
@@ -265,37 +266,28 @@ class SpiralScanner(Scanner2D):
     @property
     def index(self) -> List[int]: self.index = [self.n_arm, self.step]
 
-def read_cell(excel_file, polarimeter: str, test: str, mode: str) -> Union[Scanner2D, Scanner1D]:
+def read_cell(excel_file, polarimeter: str, test: str) -> Union[Scanner2D, Scanner1D]:
     from ast import literal_eval
 
     row = excel_file[polarimeter]
-    if test != "Offset":
-        test += mode
     scanner_class = getattr(scanners, row[(test, "Scanner")])
     arguments_str = row[(test, "Arguments")]
     arguments = list(map(literal_eval, arguments_str.split(";")))
     for i in range(len(arguments)):
         if isinstance(arguments[i], list):
             arguments[i] = np.asarray(arguments[i], dtype=float)
-    if test == "Offset":
-        return scanner_class(*arguments, label="offset")
-    else:
-        return scanner_class(*arguments, x_label="idrain", y_label="offset")
+    return scanner_class(*arguments)
 
-def read_excel(filename: str, dummy_polarimeter: bool = False, open_loop: bool = False) -> Dict[str, Dict[str, Scanner2D]]:
+def read_excel(filename: str, tests: List[str], dummy_polarimeter: bool = False) -> Dict[str, Dict[str, Union[Scanner1D, Scanner2D]]]:
     import pandas as pd
 
     excel_file = pd.read_excel(filename, header=(0, 1), index_col=0).to_dict(orient="index")
     scanners = {}
-    if open_loop:
-        mode = " open loop"
-    else:
-        mode = " closed loop"
     for polarimeter in set(excel_file) - {"DUMMY"}: # Iterate over all polarimeters except the DUMMY one
         scanners[polarimeter] = {}
-        for test in "HA1", "HA2", "HA3", "HB1", "HB2", "HB3", "Offset":
+        for test in tests:
             if dummy_polarimeter:
-                scanners[polarimeter][test] = read_cell(excel_file, "DUMMY", test, mode)
+                scanners[polarimeter][test] = read_cell(excel_file, "DUMMY", test)
             else:
-                scanners[polarimeter][test] = read_cell(excel_file, polarimeter, test, mode)
+                scanners[polarimeter][test] = read_cell(excel_file, polarimeter, test)
     return scanners

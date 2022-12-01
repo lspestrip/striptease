@@ -8,7 +8,7 @@ from striptease.utilities import STRIP_BOARD_NAMES, get_polarimeter_board, \
 
 DEFAULT_TEST_NAME = "DET_OFFS_TUNE"
 DEFAULT_BIAS_FILENAME = "data/default_biases_warm.xlsx"
-DEFAULT_TUNING_FILENAME = "data/pretuning.xlsx"
+DEFAULT_TUNING_FILENAME = "data/tuning_detector_offsets.xlsx"
 DEFAULT_ACQUISITION_TIME_S = 5
 DEFAULT_WAIT_TIME_S = 1
 DEFAULT_POLARIMETERS = [polarimeter for _, _, polarimeter in polarimeter_iterator()]
@@ -207,7 +207,8 @@ Usage examples:
     args = parser.parse_args()
     log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
 
-    test_scanners = read_excel(args.tuning_filename, args.dummy_polarimeter, args.open_loop)
+    tests = ["Offset"]
+    test_scanners = read_excel(args.tuning_filename, tests, args.dummy_polarimeter)
 
     args.test_polarimeters = parse_polarimeters(args.test_polarimeters)
     args.turnon_polarimeters = parse_polarimeters(args.turnon_polarimeters)
