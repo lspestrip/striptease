@@ -11,15 +11,22 @@ from tuning import scanners
 # One dimensional scanners
 
 class Scanner1D(ABC):
+    """An abstract class representing a one dimensional scanner.
+    
+    Args:
+    - `label` (`str`): the label of the x variable."""
     def __init__(self, label : str = "x"):
         self.label = label
 
     @abstractmethod
     def next(self) -> bool:
+        """Advance the scanning to the next parameter: if the return value is True, the next parameter can be found in self.x,
+        otherwise the scan has ended."""
         ...
 
     @abstractmethod
     def reset(self) -> None:
+        """Reset the scanner to the initial state."""
         ...
 
     @property
@@ -28,6 +35,14 @@ class Scanner1D(ABC):
         ...
 
 class LinearScanner(Scanner1D):
+    """A 1D scanner that explore the parameters linearly.
+    
+    Args:
+    - `start` (`Union[float, np.ndarray]`): the starting value (or array).
+    - `stop` (`Union[float, np.ndarray]`): the last value (or array).
+    - `nsteps` (`int`): the number of steps.
+    - `label` (`str`): the label of the x variable."""
+
     def __init__(self, start: Union[float, np.ndarray], stop: Union[float, np.ndarray],
                  nsteps: int, label: str = "x"):
         super().__init__(label)
@@ -151,7 +166,7 @@ class GridScanner(Scanner2D):
     def index(self) -> List[int]: return [self.x_current_step, self.y_current_step]
 
 class RasterScanner(Scanner2D):
-    """A scanner that explores parameters on a grid \"boustrophedically\",
+    """A scanner that explores parameters on a grid "boustrophedically",
     from down to up and viceversa alternating at every column.
 
     Args:
@@ -266,19 +281,48 @@ class SpiralScanner(Scanner2D):
     @property
     def index(self) -> List[int]: self.index = [self.n_arm, self.step]
 
-def read_cell(excel_file, polarimeter: str, test: str) -> Union[Scanner2D, Scanner1D]:
+# Helper functions
+
+def read_test(excel_file, polarimeter: str, test: str) -> Union[Scanner2D, Scanner1D]:
+    """Read the cells regarding one test in the excel file and return the corresponding scanner.
+    
+    Args:
+    - `excel_file`: a dictionary representing the file as returned by pd.read_excel(...).to_dict(orient="index").
+    - `polarimeter` (`str`): the row to read the test in.
+    - `test` (`str`): the test to return.
+    """
     from ast import literal_eval
 
     row = excel_file[polarimeter]
-    scanner_class = getattr(scanners, row[(test, "Scanner")])
-    arguments_str = row[(test, "Arguments")]
-    arguments = list(map(literal_eval, arguments_str.split(";")))
+    scanner_class = getattr(scanners, row[(test, "Scanner")])   # The "Scanner" column contains the name of the scanner class: get the class itself with getattr.
+    arguments_str = row[(test, "Arguments")]    # The "Arguments" column contains the arguments to use to instantiate an object of the class.
+    arguments = list(map(literal_eval, arguments_str.split(";")))   # Evaluate the arguments and store them in a list.
     for i in range(len(arguments)):
-        if isinstance(arguments[i], list):
+        if isinstance(arguments[i], list):  # Convert lists to numpy arrays in arguments.
             arguments[i] = np.asarray(arguments[i], dtype=float)
-    return scanner_class(*arguments)
+    return scanner_class(*arguments)    # Return an instance of the scanner class with the specified parameters.
 
 def read_excel(filename: str, tests: List[str], dummy_polarimeter: bool = False) -> Dict[str, Dict[str, Union[Scanner1D, Scanner2D]]]:
+    """Read an Excel file describing a set of scanners. The rows represent the polarimeters, the columns the scanners. For example:
+    +------------+---------------+-----------------------------------------------+---------------+-----------------------------------------------+
+    |Polarimeter | HA1           |                                               | HA2           |                                               |
+    +------------+---------------+-----------------------------------------------+---------------+-----------------------------------------------+
+    |            | Scanner       | Arguments                                     | Scanner       | Arguments                                     |
+    +------------+---------------+-----------------------------------------------+---------------+-----------------------------------------------+
+    |O1          | GridScanner   | 2000;7000;5;[0,0,0,0];[4095,4095,4095,4095];5 | RasterScanner | 2000;7000;5;[0,0,0,0];[4095,4095,4095,4095];5 |
+    +------------+---------------+-----------------------------------------------+---------------+-----------------------------------------------+
+    |O2          | GridScanner   | 3000;6000;5;[0,0,0,0];[4095,4095,4095,4095];5 | RasterScanner | 3000;6000;5;[0,0,0,0];[4095,4095,4095,4095];5 |
+    +------------+---------------+-----------------------------------------------+---------------+-----------------------------------------------+
+    |DUMMY       | RasterScanner | 2000;7000;5;[0,0,0,0];[4095,4095,4095,4095];5 | GridScanner   | 2000;7000;5;[0,0,0,0];[4095,4095,4095,4095];5 |
+    +------------+---------------+-----------------------------------------------+---------------+-----------------------------------------------+
+    The DUMMY row is used to configure all the polarimeters with the same scanners without changing the file.
+    Return a dictionary of dictionaries of scanners (one for each polarimeters and for each test).
+
+    Args:
+    - `filename` (`str`): the name of the Excel file.
+    - `tests` (`List[`str`]`): the list of the names of the tests to look up in the file.
+    - `dummy_polarimeter` (`bool`): True if the DUMMY row is to be used for all plarimeters, False otherwise.
+    """
     import pandas as pd
 
     excel_file = pd.read_excel(filename, header=(0, 1), index_col=0).to_dict(orient="index")
@@ -287,7 +331,7 @@ def read_excel(filename: str, tests: List[str], dummy_polarimeter: bool = False)
         scanners[polarimeter] = {}
         for test in tests:
             if dummy_polarimeter:
-                scanners[polarimeter][test] = read_cell(excel_file, "DUMMY", test)
+                scanners[polarimeter][test] = read_test(excel_file, "DUMMY", test)
             else:
-                scanners[polarimeter][test] = read_cell(excel_file, polarimeter, test)
+                scanners[polarimeter][test] = read_test(excel_file, polarimeter, test)
     return scanners

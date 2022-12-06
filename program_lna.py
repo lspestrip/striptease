@@ -18,6 +18,10 @@ DEFAULT_WAIT_TIME_S = 1
 DEFAULT_POLARIMETERS = [polarimeter for _, _, polarimeter in polarimeter_iterator()]
 
 class LNAOffsetProcedure(StripProcedure):
+    """A procedure to test LNAs and offsets, running a LNAPretuningProcedure followed by a OffsetTuningProcedure.
+    
+    Args: see LNAPretuningProcedure."""
+
     def __init__(self, test_name: str, scanners: Dict[str, Union[Scanner1D, Scanner2D]],
                  test_polarimeters: List[str] = [polarimeter for _, _, polarimeter in polarimeter_iterator()],
                  turnon_polarimeters: Union[List[str], None] = None,
@@ -32,7 +36,7 @@ class LNAOffsetProcedure(StripProcedure):
                  start_state=StripState.OFF,
                  end_state=StripState.ZERO_BIAS):
         super().__init__()
-        self.lna_pretuning_procedure = LNAPretuningProcedure(
+        self.lna_pretuning_procedure = LNAPretuningProcedure(   # Set end_state as ZERO_BIAS, to match the start_state of the OffsetTuningProcedure.
             start_state=start_state, end_state=StripState.ZERO_BIAS,
             test_name=test_name, test_polarimeters=test_polarimeters, turnon_polarimeters=turnon_polarimeters, bias_file_name=bias_file_name,
             stable_acquisition_time=stable_acquisition_time, turnon_acqisition_time=turnon_acqisition_time, turnon_wait_time=turnon_wait_time,
