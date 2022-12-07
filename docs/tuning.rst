@@ -67,6 +67,7 @@ Now that we have a way to define our scanning strategy, we can write
 a procedure to run the tests. To make our life easier, the :class:`TuningProcedure`
 abstract class can be used. In addition to providing some useful methods
 to set and reset some biases, it does two things:
+
 1. It decorates the :func:`run` procedure of child classes adding a turnon
    and turnoff procedure if the start or end states are ``StripState.OFF``.
 2. It provides a :func:`_test` function that child classes can use to run
@@ -87,6 +88,7 @@ Existing tuning procedures
 The module defines two tuning procedures: :class:`LNAPretuningProcedure`
 and :class:`OffsetTuningProcedure`.
 :class:`LNAPretuningProcedure` operates as follows:
+
 1. Set leg HA biases to the default values;
 2. Set leg HB vdrain (and igate if running in closed loop) to zero, and
    phsw status to ``PhswPinMode.STILL_NO_SIGNAL``;
@@ -97,5 +99,6 @@ and :class:`OffsetTuningProcedure`.
 6. Repeat steps 1-5 for leg HB.
 
 :class:`OffsetTuningProcedure` operates as follows:
+
 1. Set all polarimeters to zero bias;
 2. Test offsets according to the scanning strategy specified by the scanner.
