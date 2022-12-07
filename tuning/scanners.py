@@ -281,9 +281,9 @@ class SpiralScanner(Scanner2D):
     @property
     def index(self) -> List[int]: self.index = [self.n_arm, self.step]
 
-# Helper functions
+# Excel-file functions
 
-def read_test(excel_file, polarimeter: str, test: str) -> Union[Scanner2D, Scanner1D]:
+def _read_test(excel_file, polarimeter: str, test: str) -> Union[Scanner2D, Scanner1D]:
     """Read the cells regarding one test in the excel file and return the corresponding scanner.
     
     Args:
@@ -331,7 +331,7 @@ def read_excel(filename: str, tests: List[str], dummy_polarimeter: bool = False)
         scanners[polarimeter] = {}
         for test in tests:
             if dummy_polarimeter:
-                scanners[polarimeter][test] = read_test(excel_file, "DUMMY", test)
+                scanners[polarimeter][test] = _read_test(excel_file, "DUMMY", test)
             else:
-                scanners[polarimeter][test] = read_test(excel_file, polarimeter, test)
+                scanners[polarimeter][test] = _read_test(excel_file, polarimeter, test)
     return scanners
