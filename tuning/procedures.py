@@ -512,6 +512,7 @@ class OffsetTuningProcedure(TuningProcedure):
                           comment="Set leg HB to zero bias."):
                 self._zero_bias(leg="HB")
 
+        wait_with_tag(conn=self.conn, name=f"{self.test_name}_PRE_ACQ", seconds=120)
         # Perform a detector offset test
         with StripTag(conn=self.conn, name=f"{self.test_name}_TEST_DET_OFFS",
                       comment="Perform a detector offset test."):
@@ -519,8 +520,10 @@ class OffsetTuningProcedure(TuningProcedure):
                        tag=f"{self.test_name}_TEST_DET_OFFS", comment="Test detector offset")
 
         if self.end_state == StripState.ZERO_BIAS:
-            for polarimeter in self.test_polarimeters:
-                self._set_offset(polarimeter, np.array([0, 0, 0, 0]))
+            with StripTag(conn=self.conn, name=f"{self.test_name}_ZERO_OFFS",
+                          comment="Set offsets to zero."):
+                for polarimeter in self.test_polarimeters:
+                    self._set_offset(polarimeter, np.array([0, 0, 0, 0]))
 
         if self.end_state == StripState.DEFAULT:
             # Set legs to default bias
@@ -530,6 +533,8 @@ class OffsetTuningProcedure(TuningProcedure):
             with StripTag(conn=self.conn, name=f"{self.test_name}_RESET_LEG_HB",
                           comment="Set leg HB to default bias."):
                 self._reset_leg(leg="HB")
+
+        wait_with_tag(conn=self.conn, name=f"{self.test_name}_POST_ACQ", seconds=120)
 
     def _test_offset(self, polarimeter, step) -> Scanner1D:
         """Test offsets on all polarimeters changing them according to a scanning strategy.
