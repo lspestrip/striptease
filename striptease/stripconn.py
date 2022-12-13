@@ -692,7 +692,9 @@ class StripConnection(Connection):
         """
         assert len(values) == 4
         for detector in range(4):
-            self.set_offset(polarimeter=polarimeter, detector=detector, value=values[detector])
+            self.set_offset(
+                polarimeter=polarimeter, detector=detector, value=values[detector]
+            )
 
     def __get_bias(self, polarimeter, component_index, param_name):
         real_polarimeter = normalize_polarimeter_name(polarimeter)
