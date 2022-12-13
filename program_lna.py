@@ -6,8 +6,8 @@ from typing import Dict, List, Union
 from striptease.procedures import StripProcedure
 from striptease.utilities import STRIP_BOARD_NAMES, get_polarimeter_board, \
                                  normalize_polarimeter_name, polarimeter_iterator
-from tuning.scanners import Scanner1D, Scanner2D
-from tuning.procedures import LNAPretuningProcedure, OffsetTuningProcedure, StripState
+from striptease.tuning.scanners import Scanner1D, Scanner2D
+from striptease.tuning.procedures import LNAPretuningProcedure, OffsetTuningProcedure, StripState
 
 DEFAULT_TEST_NAME = "PRETUNE"
 DEFAULT_BIAS_FILENAME = "data/default_biases_warm.xlsx"
@@ -93,8 +93,8 @@ if __name__ == "__main__":
     import subprocess
     import sys
 
-    from tuning.procedures import parse_state
-    from tuning.scanners import read_excel
+    from striptease.tuning.procedures import parse_state
+    from striptease.tuning.scanners import read_excel
 
     parser = ArgumentParser(
         description="Produce a command sequence to test the LNAs on one or more polarimeters",

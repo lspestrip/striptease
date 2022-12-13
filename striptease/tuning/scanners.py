@@ -6,7 +6,7 @@ from typing import Dict, List, Union
 
 import numpy as np
 
-from tuning import scanners
+from . import scanners
 
 # One dimensional scanners
 

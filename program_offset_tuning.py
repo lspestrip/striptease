@@ -53,8 +53,8 @@ if __name__ == "__main__":
     import subprocess
     import sys
 
-    from tuning.procedures import OffsetTuningProcedure, parse_state
-    from tuning.scanners import read_excel
+    from striptease.tuning.procedures import OffsetTuningProcedure, parse_state
+    from striptease.tuning.scanners import read_excel
 
     parser = ArgumentParser(
         description="Produce a command sequence to test the detector offsets on one or more polarimeters",

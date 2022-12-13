@@ -177,7 +177,7 @@ class TuningProcedure(StripProcedure, ABC):
         cmd["method"] = "SET"
         cmd["timeout"] = 500
         cmd["pol"] = polarimeter
-        cmd["type"] = "DAQ"
+        cmd["type"] = "DAQ" # BUG: which one?
         
         # Post a SET command for each detector (0, 1, 2, 3)
         for detector_idx in range(0, 4):
