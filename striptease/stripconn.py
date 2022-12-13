@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 
-from typing import Union
+from typing import List, Union
 from urllib.parse import urljoin
 from web.rest.base import Connection
 
@@ -652,6 +652,47 @@ class StripConnection(Connection):
         self.__set_lna_bias(
             polarimeter=polarimeter, lna=lna, param_name="ID", value_adu=value_adu
         )
+
+    def set_offset(self, polarimeter: str, detector: int, value: int):
+        """Send a command to change the offset of one detector of an amplifier.
+
+        Args
+        ----
+
+            polarimeter (str): name of the polarimeter, e.g., ``I0``
+
+            detector (int): index of the detector (0, 1, 2 or 3)
+
+            value (int): value to be used (between 0 and 4095)
+
+        """
+        assert 0 <= detector < 4
+        assert 0 <= value < 4096
+        real_polarimeter = normalize_polarimeter_name(polarimeter)
+        board = real_polarimeter[0]
+        self.slo_command(
+            method="SET",
+            board=board,
+            pol=int(real_polarimeter[1]),
+            kind="DAQ",
+            base_addr=f"DET{detector}_OFFS",
+            data=[int(value)],
+        )
+
+    def set_offsets(self, polarimeter: str, values: List[int]):
+        """Send a command to change the offsets of all detectors of an amplifier.
+
+        Args
+        ----
+
+            polarimeter (str): name of the polarimeter, e.g., ``I0``
+
+            values (List[int]): value to be used (between 0 and 4095)
+
+        """
+        assert len(values) == 4
+        for detector in range(4):
+            self.set_offset(polarimeter=polarimeter, detector=detector, value=values[detector])
 
     def __get_bias(self, polarimeter, component_index, param_name):
         real_polarimeter = normalize_polarimeter_name(polarimeter)
