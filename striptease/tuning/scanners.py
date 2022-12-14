@@ -247,6 +247,7 @@ class IrregularGridScanner(Scanner2D):
                 self._y_scanner.reset()
         self.x = self._x_scanner.x
         self.y = self._y_scanner.x
+        return True
 
     def reset(self) -> None:
         self._x_scanner.reset()
@@ -399,6 +400,20 @@ class SpiralScanner(Scanner2D):
 # Excel-file functions
 
 
+def _list_to_array(x):
+    new_list = []
+    for element in x:
+        if isinstance(element, list):
+            if any(
+                isinstance(subelement, list) for subelement in element
+            ):  # element contains a list
+                element = _list_to_array(element)
+            else:  # element is a list of atomics: we convert it to an array
+                element = np.asarray(element, dtype="float")
+        new_list.append(element)
+    return new_list
+
+
 def _read_test(excel_file, polarimeter: str, test: str) -> Union[Scanner2D, Scanner1D]:
     """Read the cells regarding one test in the excel file and return the corresponding scanner.
 
@@ -416,14 +431,9 @@ def _read_test(excel_file, polarimeter: str, test: str) -> Union[Scanner2D, Scan
     arguments_str = row[
         (test, "Arguments")
     ]  # The "Arguments" column contains the arguments to use to instantiate an object of the class.
-    arguments = list(
-        map(literal_eval, arguments_str.split(";"))
-    )  # Evaluate the arguments and store them in a list.
-    for i in range(len(arguments)):
-        if isinstance(
-            arguments[i], list
-        ):  # Convert lists to numpy arrays in arguments.
-            arguments[i] = np.asarray(arguments[i], dtype=float)
+    arguments = _list_to_array(
+        list(map(literal_eval, arguments_str.split(";")))
+    )  # Evaluate the arguments and store them in a list, converting lists of atomics to arrays
     return scanner_class(
         *arguments
     )  # Return an instance of the scanner class with the specified parameters.
@@ -432,6 +442,7 @@ def _read_test(excel_file, polarimeter: str, test: str) -> Union[Scanner2D, Scan
 def read_excel(
     filename: str, tests: List[str], dummy_polarimeter: bool = False
 ) -> Dict[str, Dict[str, Union[Scanner1D, Scanner2D]]]:
+
     """Read an Excel file describing a set of scanners. The rows represent the polarimeters, the columns the scanners. For example:
     +------------+---------------+-----------------------------------------------+---------------+-----------------------------------------------+
     |Polarimeter | HA1           |                                               | HA2           |                                               |
