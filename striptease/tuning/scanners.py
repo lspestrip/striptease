@@ -205,10 +205,10 @@ class GridScanner(Scanner2D):
         self.y_current_step = 0
 
     def next(self) -> bool:
-        if self.y_current_step >= self.y_nsteps:  # Last row in the column
-            if self.x_current_step >= self.x_nsteps:  # Last column in the grid
+        if self.y_current_step >= self.y_nsteps:  # Last column in the row
+            if self.x_current_step >= self.x_nsteps:  # Last row in the grid
                 return False
-            else:  # Not last column in the grid
+            else:  # Not last row in the grid
                 self.x += self.delta_x
                 self.x_current_step += 1
                 self.y = copy(self.y_start)
@@ -229,6 +229,35 @@ class GridScanner(Scanner2D):
     @property
     def index(self) -> List[int]:
         return [self.x_current_step, self.y_current_step]
+
+
+class IrregularGridScanner(Scanner2D):
+    def __init__(self, x: List, y: List):
+        super().__init__()
+        self._x_scanner = IrregularScanner(*x)
+        self._y_scanner = IrregularScanner(*y)
+        self.x = self._x_scanner.x
+        self.y = self._y_scanner.x
+
+    def next(self) -> bool:
+        if self._y_scanner.next() is False:  # Last column in the row
+            if self._x_scanner.next() is False:  # Last row in the grid
+                return False
+            else:  # Not last column in the grid
+                self._y_scanner.reset()
+        self.x = self._x_scanner.x
+        self.y = self._y_scanner.x
+
+    def reset(self) -> None:
+        self._x_scanner.reset()
+        self._y_scanner.reset()
+
+        self.x = self._x_scanner.x
+        self.y = self._y_scanner.x
+
+    @property
+    def index(self) -> List[int]:
+        return [self._x_scanner.index, self._y_scanner.index]
 
 
 class RasterScanner(Scanner2D):
