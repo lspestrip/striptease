@@ -147,29 +147,16 @@ class SetupBoard(object):
     def enable_electronics(self, polarimeter, delay_sec=0.5, mode=5):
         url = self.conf.get_rest_base() + "/slo"
 
-        {
-            "board": "R",
-            "type": "DAQ",
-            "pol": "BOARD",
-            "base_addr": "CLK_REF",
-            "method": "GET",
-            "size": 1,
-            "timeout": 500,
-        }
+        cmd = {"board": self.board, "method": "SET", "timeout": 500}
 
-        cmd = {}
-        cmd["board"] = self.board
-        cmd["method"] = "SET"
-        cmd["timeout"] = 500
-
-        for c in [
+        for (base_addr, data, typeof, pol) in [
             ("POL_PWR", 1, "BIAS", polarimeter),
             ("DAC_REF", 1, "BIAS", polarimeter),
             ("POL_MODE", mode, "BIAS", polarimeter),
+            ("GAIN_EN", 1, "DAQ", polarimeter),
             ("CLK_REF", 0, "DAQ", "BOARD"),
             ("PHASE_SRC", 0, "BIAS", "BOARD"),
         ]:
-            base_addr, data, typeof, pol = c
             cmd["base_addr"] = base_addr
             cmd["data"] = [data]
             cmd["type"] = typeof
@@ -177,7 +164,7 @@ class SetupBoard(object):
 
             if not self.post_command(url, cmd):
                 print(
-                    f"WARNING: command {c[0]}={c[1]} gave an error",
+                    f"WARNING: command {base_addr}={data} gave an error",
                     file=sys.stderr,
                     flush=True,
                 )
