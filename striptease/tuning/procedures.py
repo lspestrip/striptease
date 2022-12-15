@@ -748,7 +748,12 @@ class OffsetTuningProcedure(TuningProcedure):
                 comment="Set offsets to zero.",
             ):
                 for polarimeter in self.test_polarimeters:
-                    self._set_offset(polarimeter, np.array([0, 0, 0, 0]))
+                    with StripTag(
+                        conn=self.conn,
+                        name=f"{self.test_name}_ZERO_OFFS_{polarimeter}",
+                        comment=f"Set offsets to zero. Polarimeter {polarimeter}.",
+                    ):
+                        self._set_offset(polarimeter, np.array([0, 0, 0, 0]))
 
         if self.end_state == StripState.DEFAULT:
             # Set legs to default bias
