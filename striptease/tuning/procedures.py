@@ -228,34 +228,6 @@ class TuningProcedure(StripProcedure, ABC):
         for lna in map(lambda x: leg + x, ("1", "2", "3")):
             self._reset_lna(lna)
 
-    def _set_offset(self, polarimeter: str, offset: np.ndarray):
-        """Set the offset for all detectors on the specified polarimeter.
-
-        Args:
-
-        - `polarimeter` (`str`): the polarimeter to set the offset on.
-
-        - `offset` (`np.ndarray`): an array containing the four values for the offsets (one for each detector).
-            Must be between 0 and 4095."""
-
-        # Get the REST API URL
-        url = self.conf.get_rest_base() + "/slo"
-
-        # Prepare the REST API command
-        cmd = {}
-        cmd["board"] = get_polarimeter_board(polarimeter)
-        cmd["type"] = "BIAS"
-        cmd["method"] = "SET"
-        cmd["timeout"] = 500
-        cmd["pol"] = polarimeter
-        cmd["type"] = "DAQ"  # BUG: which one?
-
-        # Post a SET command for each detector (0, 1, 2, 3)
-        for detector_idx in range(0, 4):
-            cmd["base_addr"] = f"DET{detector_idx}_OFFS"
-            cmd["data"] = [int(offset[detector_idx])]
-            self.conn.post_command(url, cmd)
-
     def _reset_offset(self, polarimeter: str):
         """Reset offsets of the polarimeter to default values.
 
@@ -263,15 +235,13 @@ class TuningProcedure(StripProcedure, ABC):
 
         - `polarimeter` (`str`): the polarimeter to reset."""
         setup_board = self._setup_boards[get_polarimeter_board(polarimeter)]
-        default_offsets = np.array(
-            [
-                setup_board.ib.get_biases(
-                    module_name=polarimeter, param_hk=f"DET{detector_idx}_OFFSET"
-                )
-                for detector_idx in range(0, 4)
-            ]
-        )
-        self._set_offset(polarimeter, default_offsets)
+        default_offsets = [
+            setup_board.ib.get_biases(
+                module_name=polarimeter, param_hk=f"DET{detector_idx}_OFFSET"
+            )
+            for detector_idx in range(0, 4)
+        ]
+        self.conn.set_offsets(polarimeter, default_offsets)
 
     def _test(
         self,
@@ -624,7 +594,7 @@ class LNAPretuningProcedure(TuningProcedure):
                 polarimeter=polarimeter, hk="idrain", component=lna, value=idrain
             )
             self.conn.set_id(polarimeter, lna, idrain_adu)
-            self._set_offset(polarimeter, offset)
+            self.conn.set_offsets(polarimeter, offset)
         return scanner
 
     def _test_open_loop(self, polarimeter, step, lna: str) -> Scanner2D:
@@ -654,7 +624,7 @@ class LNAPretuningProcedure(TuningProcedure):
                 polarimeter=polarimeter, hk="vgate", component=lna, value=vgate
             )
             self.conn.set_vg(polarimeter, lna, vgate_adu)
-            self._set_offset(polarimeter, offset)
+            self.conn.set_offsets(polarimeter, offset)
         return scanner
 
     def _get_phsw_from_leg(self, leg: str) -> Tuple[str]:
@@ -819,7 +789,7 @@ class OffsetTuningProcedure(TuningProcedure):
                         name=f"{self.test_name}_ZERO_OFFS_{polarimeter}",
                         comment=f"Set offsets to zero. Polarimeter {polarimeter}.",
                     ):
-                        self._set_offset(polarimeter, np.array([0, 0, 0, 0]))
+                        self.conn.set_offsets(polarimeter, np.array([0, 0, 0, 0]))
 
         if self.end_state == StripState.DEFAULT:
             # Set legs to default bias
@@ -855,5 +825,5 @@ class OffsetTuningProcedure(TuningProcedure):
             comment=f"Test detector offset: step {step}, polarimeter {polarimeter}, "
             f"offset={offset}",
         ):
-            self._set_offset(polarimeter, offset)
+            self.conn.set_offsets(polarimeter, offset)
         return scanner
