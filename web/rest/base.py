@@ -125,7 +125,7 @@ class Connection(object):
             try:
                 socket_msg["opcode"] = _KIND_TO_OPCODE[socket_msg["kind"]]
                 self.socket.sendall(json.dumps(socket_msg).encode("utf-8"))
-                return
+                return {}
             except KeyError:
                 print(
                     bcolors.WARNING
