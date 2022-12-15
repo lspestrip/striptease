@@ -88,6 +88,9 @@ class Connection(object):
 
         if self.use_fast_socket:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # TODO: we should probably use a dedicated server and port for
+            #       the socket, but I prefer to leave things as they are until
+            #       we can do some lab tests
             server, port = self.conf.get_server().split(":")
             if port == "":
                 self.socket.connect(server)
