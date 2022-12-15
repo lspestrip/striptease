@@ -15,6 +15,7 @@ class Scanner1D(ABC):
     """An abstract class representing a one dimensional scanner.
 
     Args:
+
     - `label` (`str`): the label of the x variable."""
 
     def __init__(self, label: str = "x"):
@@ -41,9 +42,13 @@ class LinearScanner(Scanner1D):
     """A 1D scanner that explore the parameters linearly.
 
     Args:
+
     - `start` (`Union[float, np.ndarray]`): the starting value (or array).
+
     - `stop` (`Union[float, np.ndarray]`): the last value (or array).
+
     - `nsteps` (`int`): the number of steps.
+
     - `label` (`str`): the label of the x variable."""
 
     def __init__(
@@ -129,6 +134,7 @@ class Scanner2D(ABC):
     """Abstract base class representing a scanning strategy to explore a 2D plane.
 
     Args:
+
     -`x_label`/`y_label` (`str`): the names of the x, y variables, to be used in the plot."""
 
     def __init__(self, x_label: str = "x", y_label: str = "y"):
@@ -172,9 +178,13 @@ class GridScanner(Scanner2D):
     """A scanner that explores parameters on a grid from down to up and from left to right
 
     Args:
+
     - `x_start`/`y_start` (`float | np.ndarray`): the starting parameters
+
     - `x_stop`/`y_stop` (`float | np.ndarray`): the parameters at which the grid ends
+
     - `x_nsteps`/`y_nsteps` (`int`): the number of steps
+
     - `x_label`/`y_label` (`str`): the names of the x, y variables, to be used in the plot."""
 
     def __init__(
@@ -266,8 +276,11 @@ class RasterScanner(Scanner2D):
     from down to up and viceversa alternating at every column.
 
     Args:
+
     - `x_start`/`y_start` (`float | np.ndarray`): the starting parameters
+
     - `x_stop`/`y_stop` (`float | np.ndarray`): the parameters at which the grid ends
+
     - `x_nsteps`/`y_nsteps` (`int`): the number of steps
     """
 
@@ -332,8 +345,11 @@ class SpiralScanner(Scanner2D):
     starting from a center and expanding step by step.
 
     Args:
+
     - `x_start`/`y_start` (`float | np.ndarray`): the starting parameters
+
     - `x_step`/`y_step` (`float | np.ndarray`): the distance between two steps
+
     - `n_arms` (`int`): the number of spiral arms to explore
     """
 
@@ -418,8 +434,11 @@ def _read_test(excel_file, polarimeter: str, test: str) -> Union[Scanner2D, Scan
     """Read the cells regarding one test in the excel file and return the corresponding scanner.
 
     Args:
+
     - `excel_file`: a dictionary representing the file as returned by pd.read_excel(...).to_dict(orient="index").
+
     - `polarimeter` (`str`): the row to read the test in.
+
     - `test` (`str`): the test to return.
     """
     from ast import literal_eval
@@ -444,6 +463,7 @@ def read_excel(
 ) -> Dict[str, Dict[str, Union[Scanner1D, Scanner2D]]]:
 
     """Read an Excel file describing a set of scanners. The rows represent the polarimeters, the columns the scanners. For example:
+
     +------------+---------------+-----------------------------------------------+---------------+-----------------------------------------------+
     |Polarimeter | HA1           |                                               | HA2           |                                               |
     +------------+---------------+-----------------------------------------------+---------------+-----------------------------------------------+
@@ -455,12 +475,16 @@ def read_excel(
     +------------+---------------+-----------------------------------------------+---------------+-----------------------------------------------+
     |DUMMY       | RasterScanner | 2000;7000;5;[0,0,0,0];[4095,4095,4095,4095];5 | GridScanner   | 2000;7000;5;[0,0,0,0];[4095,4095,4095,4095];5 |
     +------------+---------------+-----------------------------------------------+---------------+-----------------------------------------------+
+
     The DUMMY row is used to configure all the polarimeters with the same scanners without changing the file.
     Return a dictionary of dictionaries of scanners (one for each polarimeters and for each test).
 
     Args:
+
     - `filename` (`str`): the name of the Excel file.
+
     - `tests` (`List[`str`]`): the list of the names of the tests to look up in the file.
+
     - `dummy_polarimeter` (`bool`): True if the DUMMY row is to be used for all plarimeters, False otherwise.
     """
     import pandas as pd

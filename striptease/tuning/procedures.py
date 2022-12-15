@@ -39,6 +39,7 @@ def parse_state(state: str) -> StripState:
     """Return a StripState corresponding to the input string.
 
     Args:
+
     - `state` (`str`): one of "on", "off", "zero-bias", "default."."""
     assert ["on", "off", "zero-bias", "default"].count(state) > 0
     if state == "on":
@@ -56,19 +57,33 @@ class TuningProcedure(StripProcedure, ABC):
     if required by the start and end states.
 
     Args:
+
     - `start_state`(`StripState`): the state before the procedure is run.
+
     - `end_state` (`StripState`): the state to leave Strip after the procedure.
+
     - `turnon_zero_bias` (`bool`): True if the turnon procedure is to be run with zero bias flag.
+
     - `tag_comment` (`str`): the comment of the tag surrounding the procedure
+
     - `test_name`: `str`: the name of the test.
+
     - `test_polarimeters` (`List[str]`): the polarimeters to test.
+
     - `turnon_polarimeters` (`Union[List[str], None]`): the polarimeters to turnon.
+
     - `bias_file_name` (`str`): the file containing the default biases.
+
     - `stable_acquisition_time` (`int`): the time in seconds to do stable acquisition.
+
     - `turnon_acqisition_time` (`int`): the time in seconds to do acquisition during turnon.
+
     - `turnon_wait_time` (`int`): the time in seconds to wait during turnon.
+
     - `message` (`str`): the log message for the procedure (if empty, no log command is added to the json).
+
     - `hk_scan_boards` (`List[str]`): the boards to scan housekeeping on.
+
     - `open_loop` (`bool`): True if the procedure is run in open loop mode.
     """
 
@@ -148,8 +163,11 @@ class TuningProcedure(StripProcedure, ABC):
         """Decorate run methods adding a turnon and turnoff procedure if self.start_state and self.end_state are off.
 
         Args:
+
         - `run` (`Callable`): the procedure method to decorate (the run method of child classes).
+
         - `turnon_zero_bias` (`bool`): `True` if the turnon procedure needs to set polarimeters to zero bias, `False` otherwise.
+
         - `tag_comment` (`str`): the comment for the tag surrounding the whole procedure."""
 
         @functools.wraps(run)
@@ -185,6 +203,7 @@ class TuningProcedure(StripProcedure, ABC):
         """Reset the vdrain and idrain or vgate of the required LNA and the offsets to the default value for each polarimeter.
 
         Args:
+
         - `lna` (`str`): the LNA to reset."""
         for polarimeter in self.test_polarimeters:
             with StripTag(
@@ -204,6 +223,7 @@ class TuningProcedure(StripProcedure, ABC):
         """Reset all the LNAs in a leg, and the offsets, for each polarimeter.
 
         Args:
+
         - `leg` (`str`): the leg to reset. Can be "HA" or "HB"."""
         for lna in map(lambda x: leg + x, ("1", "2", "3")):
             self._reset_lna(lna)
@@ -212,7 +232,9 @@ class TuningProcedure(StripProcedure, ABC):
         """Set the offset for all detectors on the specified polarimeter.
 
         Args:
+
         - `polarimeter` (`str`): the polarimeter to set the offset on.
+
         - `offset` (`np.ndarray`): an array containing the four values for the offsets (one for each detector).
             Must be between 0 and 4095."""
 
@@ -238,6 +260,7 @@ class TuningProcedure(StripProcedure, ABC):
         """Reset offsets of the polarimeter to default values.
 
         Args:
+
         - `polarimeter` (`str`): the polarimeter to reset."""
         setup_board = self._setup_boards[get_polarimeter_board(polarimeter)]
         default_offsets = np.array(
@@ -259,8 +282,11 @@ class TuningProcedure(StripProcedure, ABC):
         """Run the test described by the func argument on each of the polarimeters to test.
 
         Args:
+
         - `func` (`Callable`): the test to run. Args: self, polarimeter (to run the test on), step. Returns a scanner with the state of the test.
+
         - `tag` (`str`): the tag to surround the test steps with.
+
         - `comment` (`str`): the comment for the tag."""
         step = 0
         test_polarimeters = copy(self.test_polarimeters)
@@ -293,6 +319,7 @@ class TuningProcedure(StripProcedure, ABC):
         """Set vgate (and idrain if in closed loop) for all LNAs and phase switch biases to zero on all polarimeters on the specified leg.
 
         Args:
+
         - `leg` (`str`): the leg to set to zero bias. Can be "HA" or "HB"."""
         for polarimeter in self.test_polarimeters:
             with StripTag(
@@ -313,6 +340,7 @@ class TuningProcedure(StripProcedure, ABC):
         """Turn on all the polarimeters specified in self.polarimeters.
 
         Args:
+
         - `zero_bias` (`bool`): True if the turnon is to be done with zero bias, False if with default values."""
         self._turnonoff(turnon=True, zero_bias=zero_bias)
 
@@ -324,7 +352,9 @@ class TuningProcedure(StripProcedure, ABC):
         """Turn on or off all polarimeters.
 
         Args:
+
         - `turnon` (`bool`): True if turnon, False if turnoff.
+
         - `zero_bias` (`bool`): True if the turnon is to be done with zero bias, False if with default values. Not used in turnoff."""
 
         turnonoff_proc = TurnOnOffProcedure(
@@ -362,19 +392,33 @@ class LNAPretuningProcedure(TuningProcedure):
     """A procedure that sets idrain and offset for polarimeters one LNA at a time, with only one leg active.
 
     Args:
+
     - `test_name` (`str`): the name of the test, used in tags
+
     - `scanners` (`Dict[str, ScannerOneLNA]`): a dictionary that associates to each LNA the scanner to use
+
     - `test_polarimeters` (`List[str]`): the polarimeters to test.
+
     - `turnon_polarimeters` (`Union[List[str], None]`): the polarimeters to turnon.
+
     - `bias_file_name` (`str`): the file containing the default biases.
+
     - `stable_acquisition_time` (`int`): the time in seconds to do stable acquisition.
+
     - `turnon_acqisition_time` (`int`): the time in seconds to do acquisition during turnon.
+
     - `turnon_wait_time` (`int`): the time in seconds to wait during turnon.
+
     - `message` (`str`): the log message for the procedure (if empty, no log command is added to the json).
+
     - `hk_scan_boards` (`List[str]`): the boards to scan housekeeping on.
+
     - `phsw_status` (`str`): the status of the phase switches (can be "77", "56" or "65").
+
     - `open_loop` (`bool`): True if the procedure is run in open loop mode.
+
     - `start_state`(`StripState`): the state before the procedure is run.
+
     - `end_state` (`StripState`): the state to leave Strip after the procedure.
     """
 
@@ -519,6 +563,7 @@ class LNAPretuningProcedure(TuningProcedure):
         """Run the test on the specified leg on all polarimeters, from LNA 1 to 3.
 
         Args:
+
         - `leg` (`str`): the leg to run the test on. Can be "HA" or "HB"."""
         for lna in (f"{leg}{i}" for i in range(1, 4)):
             # Test LNA
@@ -556,8 +601,11 @@ class LNAPretuningProcedure(TuningProcedure):
         """Test one LNA on all polarimeters changing idrain and offset according to a scanning strategy.
 
         Args:
+
         - `polarimeter` (`str`): the polarimeter to test.
+
         - `step` (`int`): the current step of the test.
+
         - `lna` (`str`): the LNA to test.
         """
 
@@ -583,8 +631,11 @@ class LNAPretuningProcedure(TuningProcedure):
         """Test one LNA on all polarimeters changing vgate and offset according to a scanning strategy.
 
         Args:
+
         - `polarimeter` (`str`): the polarimeter to test.
+
         - `step` (`int`): the current step of the test.
+
         - `lna` (`str`): the LNA to test.
         """
 
@@ -610,6 +661,7 @@ class LNAPretuningProcedure(TuningProcedure):
         """Return a tuple with the phsw indexes on the leg.
 
         Args:
+
         - `leg` (`str`): the leg of the phase switches (can be "HA" or "HB")."""
         if leg == "HA":
             return (0, 1)
@@ -620,6 +672,7 @@ class LNAPretuningProcedure(TuningProcedure):
         """Reset phase switches of all tested polarimeters on the requested leg according to self.phsw_status.
 
         Args:
+
         - `leg` (`str`): the leg of the phase switches to reset (can be "HA" or "HB")."""
         for polarimeter in self.test_polarimeters:
             with StripTag(
@@ -653,18 +706,31 @@ class OffsetTuningProcedure(TuningProcedure):
     """A procedure that sets offsets for polarimeters with everything at zero bias.
 
     Args:
+
     - `test_name` (`str`): the name of the test, used in tags
+
     - `scanners` (`Dict[str, ScannerOneLNA]`): a dictionary that associates to each LNA the scanner to use
+
     - `test_polarimeters` (`List[str]`): the polarimeters to test.
+
     - `turnon_polarimeters` (`Union[List[str], None]`): the polarimeters to turnon.
+
     - `bias_file_name` (`str`): the file containing the default biases.
+
     - `stable_acquisition_time` (`int`): the time in seconds to do stable acquisition.
+
     - `turnon_acqisition_time` (`int`): the time in seconds to do acquisition during turnon.
+
     - `turnon_wait_time` (`int`): the time in seconds to wait during turnon.
+
     - `message` (`str`): the log message for the procedure (if empty, no log command is added to the json).
+
     - `hk_scan_boards` (`List[str]`): the boards to scan housekeeping on.
+
     - `open_loop` (`bool`): True if the procedure is run in open loop mode.
+
     - `start_state`(`StripState`): the state before the procedure is run.
+
     - `end_state` (`StripState`): the state to leave Strip after the procedure.
     """
 
@@ -776,7 +842,9 @@ class OffsetTuningProcedure(TuningProcedure):
         """Test offsets on all polarimeters changing them according to a scanning strategy.
 
         Args:
+
         - `polarimeter` (`str`): the polarimeter to test.
+
         - `step` (`int`): the current step of the test.
         """
         scanner = self.scanners[polarimeter]["Offset"]
