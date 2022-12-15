@@ -120,25 +120,6 @@ class WsWarning(object):
                 )
         self.__current = {}
 
-    def save_config(self, name=None, force_new=False):
-        if force_new and self.__current.get("id") is not None:
-            del self.__current["id"]
-
-        if name is not None:
-            self.__current["name"] = name
-        pkt = {
-            "save": self.__current.get("name", "unnamed_config"),
-            "config": self.__current.get("config", []),
-        }
-        res = {"status": "ERROR"}
-        if self.__current.get("id") is None:  # save new config
-            res = self.conn.post(self.url, pkt)
-        else:  # update existing conf
-            url = self.url + "/" + str(self.__current["id"])
-            res = self.conn.put(url, pkt)
-        if res["status"] == "OK":
-            self.__current["id"] = res["id"]
-
     async def recv(self):
         """waits for warning packet and decodes it from json string
         :return: dictionary of the decoded json.

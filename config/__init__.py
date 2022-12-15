@@ -67,6 +67,10 @@ class Config(object):
 
         return res["status"]
 
+    def get_server(self) -> str:
+        """Return the name of the server (including the port, if present)"""
+        return self.conf["urls"]["base"]
+
     def get_rest_base(self):
         """returns the base url for REST requests"""
         return self.conf["urls"]["schema"] + "://" + self.conf["urls"]["base"] + "/rest"
