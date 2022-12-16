@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 import curses
 import json
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import socket
 
@@ -350,12 +350,12 @@ next command. Default is {DEFAULT_WAIT_TIME_S}
         with cur_file.open("rt") as fp:
             cur_json_procedure = json.load(fp)
 
-        start_time = datetime.now()
+        start_time = datetime.now(timezone.utc)
         send_message_to_telegram(
             args,
             (
                 "Starting a new acquisition on `{host}`, commands are read from `{cur_file}` "
-                "({num_of_commands} commands). The system date is {datetime} (MJD: {mjd})"
+                "({num_of_commands} commands). The system date is {datetime} UTC (MJD: {mjd})"
             ).format(
                 host=socket.gethostname(),
                 cur_file=cur_file.absolute(),
@@ -366,25 +366,26 @@ next command. Default is {DEFAULT_WAIT_TIME_S}
         )
 
         curses.wrapper(main)
-        end_time = datetime.now()
+        end_time = datetime.now(timezone.utc)
 
         if premature_quit:
             end_message = (
                 "The acquisition for `{name}` on `{hostname}` was "
-                "*interrupted by the user* after {time}. The MJD range "
+                "*interrupted by the user* at {datetime} UTC after {time}. The MJD range "
                 "is {mjd_start}–{mjd_end}."
             )
 
         else:
             end_message = (
                 "The acquisition for `{name}` on `{hostname}` was *completed*, "
-                "and it took {time} to complete. The MJD range "
+                "at {datetime} UTC and it took {time} to complete. The MJD range "
                 "is {mjd_start}–{mjd_end}."
             )
 
         end_message = end_message.format(
             name=cur_file.name,
             hostname=socket.gethostname(),
+            datetime=end_time,
             time=end_time - start_time,
             mjd_start=astropy.time.Time(start_time).mjd,
             mjd_end=astropy.time.Time(end_time).mjd,
