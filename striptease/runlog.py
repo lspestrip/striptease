@@ -11,7 +11,7 @@ containing a log of all the procedures that have been ran.
 """
 RUN_LOG_FILE_PATH = Path.home() / ".strip" / "run_log.db"
 
-RUN_LOG_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
+RUN_LOG_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f%Z"
 
 RunLogEntry = namedtuple(
     "RunLogEntry",
