@@ -348,14 +348,6 @@ class TuningProcedure(StripProcedure, ABC):
                     self.conn.set_pol_mode(polarimeter, OPEN_LOOP_MODE)
                 else:
                     self.conn.set_pol_mode(polarimeter, CLOSED_LOOP_MODE)
-            self.conn.slo_command(
-                method="SET",
-                board=get_polarimeter_board(polarimeter),
-                pol=polarimeter,
-                kind="DAQ",
-                base_addr="GAIN_EN",
-                data=1,
-            )
 
 
 class LNAPretuningProcedure(TuningProcedure):
