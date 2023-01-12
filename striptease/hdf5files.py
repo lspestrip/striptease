@@ -538,7 +538,7 @@ class DataFile:
         hk_data = datahk["value"]
         return hk_time, hk_data
 
-    def load_sci(self, polarimeter, data_type, detector=[], check_overflow=True):
+    def load_sci(self, polarimeter, data_type, detector=[]):
         """Loads scientific data from one detector of a given polarimeter
 
         Args:
@@ -555,10 +555,6 @@ class DataFile:
                 You can also pass a list, e.g., ``["Q1", "Q2"]``. If
                 no value is provided for this parameter, all the four
                 detectors will be returned.
-
-            check_overflow (bool): If ``True``, the sign of ``PWR`` data
-                will be checked that they do not overflow the
-                ``numpy.int32`` type.
 
         Returns:
 
@@ -619,14 +615,6 @@ class DataFile:
             column_selector = tuple([f"{data_type}{x}" for x in detector])
 
         converted_data = _unsigned_to_signed(scidata[column_selector])
-        if data_type == "PWR" and check_overflow:
-            if converted_data.dtype.names:
-                for cur_field in converted_data.dtype.names:
-                    assert np.all(
-                        converted_data[cur_field] >= 0
-                    ), f"Field {cur_field} has out-of-bounds values"
-            else:
-                assert np.all(converted_data >= 0), "Data have out-of-bounds values"
 
         return scitime, converted_data
 
