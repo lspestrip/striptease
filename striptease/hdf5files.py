@@ -46,9 +46,13 @@ HDF5_FILE_SUFFIXES = (
 
 def _unsigned_to_signed(arr):
     # Convert every "unsigned" integer into a "signed" integer
-    new_dtype = [
-        (name, str(arr.dtype[name]).replace("uint", "int")) for name in arr.dtype.names
-    ]
+    if arr.dtype.names:  # Structured array with compound dtype
+        new_dtype = [
+            (name, str(arr.dtype[name]).replace("uint", "int"))
+            for name in arr.dtype.names
+        ]
+    else:
+        new_dtype = str(arr.dtype).replace("uint", "int")
     return arr.astype(new_dtype)
 
 
@@ -598,7 +602,7 @@ class DataFile:
 
         data_type = data_type.upper()
 
-        scidata = _unsigned_to_signed(self.hdf5_file[polarimeter]["pol_data"])
+        scidata = self.hdf5_file[polarimeter]["pol_data"]
 
         scitime = Time(scidata["m_jd"], format="mjd")
 
@@ -614,7 +618,7 @@ class DataFile:
 
             column_selector = tuple([f"{data_type}{x}" for x in detector])
 
-        converted_data = scidata[column_selector]
+        converted_data = _unsigned_to_signed(scidata[column_selector])
         if data_type == "PWR" and check_overflow:
             if converted_data.dtype.names:
                 for cur_field in converted_data.dtype.names:
