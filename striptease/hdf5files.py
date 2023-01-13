@@ -497,7 +497,7 @@ class DataFile:
         del self.hdf5_file
 
     def load_hk(self, group, subgroup, par, verbose=False):
-        """Loads scientific data from one detector of a given polarimeter
+        """Loads housekeeping data from one detector of a given polarimeter
 
         Args:
 
