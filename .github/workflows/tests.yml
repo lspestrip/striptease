@@ -21,8 +21,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y libhdf5-dev
+          sudo apt-get -o Acquire::Retries=3 update -y
+          sudo apt-get -o Acquire::Retries=3 install -y libhdf5-dev
           pip install -r requirements.txt
 
       - name: Tests
