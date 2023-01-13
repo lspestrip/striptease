@@ -538,7 +538,7 @@ class DataFile:
         hk_data = datahk["value"]
         return hk_time, hk_data
 
-    def load_sci(self, polarimeter, data_type, detector=[]):
+    def load_sci(self, polarimeter, data_type, detector=["Q1", "Q2", "U1", "U2"]):
         """Loads scientific data from one detector of a given polarimeter
 
         Args:
@@ -609,9 +609,6 @@ class DataFile:
 
             column_selector = f"{data_type}{detector}"
         else:
-            if not detector:
-                detector = ["Q1", "Q2", "U1", "U2"]
-
             column_selector = tuple([f"{data_type}{x}" for x in detector])
 
         converted_data = _unsigned_to_signed(scidata[column_selector])
