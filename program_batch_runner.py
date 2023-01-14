@@ -17,7 +17,7 @@ from striptease import StripConnection, append_to_run_log
 args = None
 cur_json_procedure = []
 DEFAULT_WAIT_TIME_S = 0.5
-
+MAX_TAG_NAME_LENGTH = 32
 
 premature_quit = False
 warnings = []
@@ -152,6 +152,12 @@ def main(stdscr):
         indent_level_incr = 0
         curpath = cur_command["path"]
         if cur_command["kind"] == "tag":
+            if len(cmddict["tag"]) > MAX_TAG_NAME_LENGTH:
+                warning(
+                    stdscr,
+                    f'Tag "{cmddict["tag"]}" is too long ({len(cmddict["tag"])} > {MAX_TAG_NAME_LENGTH})',
+                )
+
             print_fn = tagmsg
             if cmddict["type"] == "START":
                 command_descr = f"start of tag {cmddict['tag']}"

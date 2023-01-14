@@ -21,3 +21,5 @@ pyzstd~=0.15.0
 mako~=1.2.2
 sphinxcontrib.asciinema~=0.3.3
 telegram-send~=0.34
+Jinja2~=3.1.2
+python-telegram-bot~=13.5
