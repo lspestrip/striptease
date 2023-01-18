@@ -690,10 +690,7 @@ class StripConnection(Connection):
             values (List[int]): value to be used (between 0 and 4095)
 
         """
-        import numpy as np
-
-        if isinstance(values, np.ndarray):
-            values = values.tolist()
+        values = [int(value) for value in values]
 
         assert len(values) == 4
         for value in values:

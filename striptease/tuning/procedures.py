@@ -6,8 +6,6 @@ from enum import IntEnum
 import functools
 from typing import Callable, Dict, List, Tuple, Union
 
-import numpy as np
-
 from calibration import CalibrationTables
 from striptease.procedures import StripProcedure
 from striptease.stripconn import StripTag, wait_with_tag
@@ -459,7 +457,6 @@ class LNAPretuningProcedure(TuningProcedure):
             )
 
         # Scan the leg A
-        # breakpoint()
         with StripTag(
             conn=self.conn,
             name=f"{self.test_name}_TEST_LEG_HA",
@@ -529,23 +526,17 @@ class LNAPretuningProcedure(TuningProcedure):
         - `leg` (`str`): the leg to run the test on. Can be "HA" or "HB"."""
         for lna in (f"{leg}{i}" for i in range(1, 4)):
             # Test LNA
-            with StripTag(conn=self.conn, name=f"{self.test_name}_TEST_LNA_{lna}"):
+            with StripTag(conn=self.conn, name=f"{self.test_name}_TEST_{lna}"):
                 if self.open_loop:
 
                     def func(self, polarimeter, step):
                         return self._test_open_loop(polarimeter, step, lna)
 
-                    # func = lambda self, polarimeter, step: self._test_open_loop(
-                    #    polarimeter, step, lna
-                    # )
                 else:
 
                     def func(self, polarimeter, step):
                         return self._test_closed_loop(polarimeter, step, lna)
 
-                    # func = lambda self, polarimeter, step: self._test_closed_loop(
-                    # polarimeter, step, lna
-                    # )
                 self._test(
                     func=func,
                     tag=f"{self.test_name}_TEST_LNA_{lna}",
@@ -578,7 +569,7 @@ class LNAPretuningProcedure(TuningProcedure):
         offset_step = scanner.index[1]
         with StripTag(
             conn=self.command_emitter,
-            name=f"{self.test_name}_TEST_LNA_{lna}_{step}_{polarimeter}_{idrain_step}_{offset_step}",
+            name=f"{self.test_name}_TEST_{lna}_{step}_{polarimeter}_{idrain_step}_{offset_step}",
             comment=f"Test LNA {lna}: step {step}, polarimeter {polarimeter}:"
             f"idrain={idrain}, offset={offset}.",
         ):
@@ -608,7 +599,7 @@ class LNAPretuningProcedure(TuningProcedure):
         offset_step = scanner.index[1]
         with StripTag(
             conn=self.command_emitter,
-            name=f"{self.test_name}_TEST_LNA_{lna}_{step}_{polarimeter}_{vgate_step}_{offset_step}",
+            name=f"{self.test_name}_TEST_{lna}_{step}_{polarimeter}_{vgate_step}_{offset_step}",
             comment=f"Test LNA {lna}: step {step}, polarimeter {polarimeter}:"
             f"vgate={vgate}, offset={offset}.",
         ):
@@ -781,7 +772,7 @@ class OffsetTuningProcedure(TuningProcedure):
                         name=f"{self.test_name}_ZERO_OFFS_{polarimeter}",
                         comment=f"Set offsets to zero. Polarimeter {polarimeter}.",
                     ):
-                        self.conn.set_offsets(polarimeter, np.array([0, 0, 0, 0]))
+                        self.conn.set_offsets(polarimeter, [0, 0, 0, 0])
 
         if self.end_state == StripState.DEFAULT:
             # Set legs to default bias
