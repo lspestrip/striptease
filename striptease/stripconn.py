@@ -690,11 +690,24 @@ class StripConnection(Connection):
             values (List[int]): value to be used (between 0 and 4095)
 
         """
+        import numpy as np
+
+        if isinstance(values, np.ndarray):
+            values = values.tolist()
+
         assert len(values) == 4
-        for detector in range(4):
-            self.set_offset(
-                polarimeter=polarimeter, detector=detector, value=values[detector]
-            )
+        for value in values:
+            assert 0 <= value < 4096
+        real_polarimeter = normalize_polarimeter_name(polarimeter)
+        board = real_polarimeter[0]
+        self.slo_command(
+            method="SET",
+            board=board,
+            pol=int(real_polarimeter[1]),
+            kind="DAQ",
+            base_addr="DET0_OFFS",
+            data=values,
+        )
 
     def __get_bias(self, polarimeter, component_index, param_name):
         real_polarimeter = normalize_polarimeter_name(polarimeter)
