@@ -69,11 +69,12 @@ Tenerife. Be sure not to mess with HDF5 file names!
 
 Since the kind of HDF5 file used in Strip has a complex structure,
 Striptease provides a few facilities to handle them. To load timelines
-of housekeeping parameter and detector outputs, the :class:`.DataFile`
-class provides two methods:
+of housekeeping parameter, temperature sensors, and detector outputs,
+the :class:`.DataFile` class provides two methods:
 
 - :meth:`.DataFile.load_hk`
 - :meth:`.DataFile.load_sci`
+- :meth:`.DataFile.load_cryo`
 
 Moreover, a method :meth:`.DataFile.get_average_biases` can be used
 to retrieve the average level of biases within some time frame.
@@ -180,7 +181,9 @@ tags, scientific data and housekeeping parameters:
 
 - :meth:`.DataStorage.get_tags` retrieves a list of tags;
 - :meth:`.DataStorage.load_sci` retrieves scientific timelines;
-- :meth:`.DataStorage.load_hk` retrieves housekeeping timelines.
+- :meth:`.DataStorage.load_hk` retrieves housekeeping timelines;
+- :meth:`.DataStorage.load_cryo` retrieves the timelines measured
+  by temperature sensors.
 
 All these functions accept either a 2-tuple containing the start and
 end MJD or a :class:`.Tag` object that specifies the time range.
