@@ -492,6 +492,8 @@ class DataStorage:
         3. A pair of instances of ``astropy.time.Time``;
         4. A single instance of the :class:`.Tag` class.
 
+        *Warning*: If you are interested in temperatures, use :meth:`.DataStorage.load_cryo`.
+
         Example::
 
             from striptease import DataStorage
@@ -507,3 +509,29 @@ class DataStorage:
 
         """
         return self._load(mjd_range, load_fn=lambda f: f.load_hk(*args, **kwargs))
+
+    def load_cryo(self, mjd_range: Union[Tuple[float, float], Tag], *args, **kwargs):
+        """Load the measurement of a cryogenic temperature within a specified MJD time range
+
+        This function operates in the same way as :meth:`.DataFile.load_cryo`, but it
+        takes as input a time range that can cross the HDF5 file boundaries. The
+        parameter `mjd_time` range can be one of the following:
+
+        1. A pair of floating-point values, each representing a MJD date;
+        2. A pair of strings, each representing a date (e.g., ``2021-12-10 10:39:45``);
+        3. A pair of instances of ``astropy.time.Time``;
+        4. A single instance of the :class:`.Tag` class.
+
+        Example::
+
+            from striptease import DataStorage
+
+            ds = DataStorage("/database/STRIP/HDF5/")
+            # Caution! One whole day of scientific data!
+            times, data = ds.load_cryo(
+                mjd_range=(59530.0, 59531.0),
+                sensor_name="TS-CX7-Module-I",
+                get_raw=False,
+            )
+        """
+        return self._load(mjd_range, load_fn=lambda f: f.load_cryo(*args, **kwargs))

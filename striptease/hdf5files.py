@@ -46,9 +46,13 @@ HDF5_FILE_SUFFIXES = (
 
 def _unsigned_to_signed(arr):
     # Convert every "unsigned" integer into a "signed" integer
-    new_dtype = [
-        (name, str(arr.dtype[name]).replace("uint", "int")) for name in arr.dtype.names
-    ]
+    if arr.dtype.names:  # Structured array with compound dtype
+        new_dtype = [
+            (name, str(arr.dtype[name]).replace("uint", "int"))
+            for name in arr.dtype.names
+        ]
+    else:
+        new_dtype = str(arr.dtype).replace("uint", "int")
     return arr.astype(new_dtype)
 
 
@@ -493,7 +497,7 @@ class DataFile:
         del self.hdf5_file
 
     def load_hk(self, group, subgroup, par, verbose=False):
-        """Loads scientific data from one detector of a given polarimeter
+        """Loads housekeeping data from one detector of a given polarimeter
 
         Args:
 
@@ -534,7 +538,33 @@ class DataFile:
         hk_data = datahk["value"]
         return hk_time, hk_data
 
-    def load_sci(self, polarimeter, data_type, detector=[], check_overflow=True):
+    def load_cryo(self, sensor_name: str, get_raw: bool = False):
+        """Load the temperatures measured by a sensor
+
+        Args:
+            sensor_name (str): The name of the sensor
+
+            get_raw (bool): If ``False`` (the default), return the calibrated temperature,
+                otherwise the raw measurement
+
+        Returns:
+            A couple containing the time (an AstroPy array) and the value of the sensor.
+        """
+
+        if not self.hdf5_groups:
+            self.read_file_metadata()
+
+        matrix = self.hdf5_file["CRYO"][sensor_name]["cryo_data"]
+        hk_time = Time(matrix["m_jd"], format="mjd")
+
+        if get_raw:
+            values = matrix["raw"]
+        else:
+            values = matrix["calibrated"]
+
+        return hk_time, values
+
+    def load_sci(self, polarimeter, data_type, detector=["Q1", "Q2", "U1", "U2"]):
         """Loads scientific data from one detector of a given polarimeter
 
         Args:
@@ -551,10 +581,6 @@ class DataFile:
                 You can also pass a list, e.g., ``["Q1", "Q2"]``. If
                 no value is provided for this parameter, all the four
                 detectors will be returned.
-
-            check_overflow (bool): If ``True``, the sign of ``PWR`` data
-                will be checked that they do not overflow the
-                ``numpy.int32`` type.
 
         Returns:
 
@@ -598,7 +624,7 @@ class DataFile:
 
         data_type = data_type.upper()
 
-        scidata = _unsigned_to_signed(self.hdf5_file[polarimeter]["pol_data"])
+        scidata = self.hdf5_file[polarimeter]["pol_data"]
 
         scitime = Time(scidata["m_jd"], format="mjd")
 
@@ -609,20 +635,9 @@ class DataFile:
 
             column_selector = f"{data_type}{detector}"
         else:
-            if not detector:
-                detector = ["Q1", "Q2", "U1", "U2"]
-
             column_selector = tuple([f"{data_type}{x}" for x in detector])
 
-        converted_data = scidata[column_selector]
-        if data_type == "PWR" and check_overflow:
-            if converted_data.dtype.names:
-                for cur_field in converted_data.dtype.names:
-                    assert np.all(
-                        converted_data[cur_field] >= 0
-                    ), f"Field {cur_field} has out-of-bounds values"
-            else:
-                assert np.all(converted_data >= 0), "Data have out-of-bounds values"
+        converted_data = _unsigned_to_signed(scidata[column_selector])
 
         return scitime, converted_data
 
