@@ -1,0 +1,16 @@
+# Detector offsets analysis
+
+Time range: {{ mjd_range }}
+
+Argv: `{{ argv }}`
+
+## Timelines:
+
+{% for polarimeter in analyzed_data %}
+![](timeline_{{ polarimeter }}.png)
+{% endfor %}
+
+## Analyzed data
+{% for polarimeter in analyzed_data %}
+![](analysis_{{ polarimeter }}.pdf)
+{% endfor %}
