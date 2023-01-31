@@ -539,6 +539,32 @@ class DataFile:
         hk_data = datahk["value"]
         return hk_time, hk_data
 
+    def load_cryo(self, sensor_name: str, get_raw: bool = False):
+        """Load the temperatures measured by a sensor
+
+        Args:
+            sensor_name (str): The name of the sensor
+
+            get_raw (bool): If ``False`` (the default), return the calibrated temperature,
+                otherwise the raw measurement
+
+        Returns:
+            A couple containing the time (an AstroPy array) and the value of the sensor.
+        """
+
+        if not self.hdf5_groups:
+            self.read_file_metadata()
+
+        matrix = self.hdf5_file["CRYO"][sensor_name]["cryo_data"]
+        hk_time = Time(matrix["m_jd"], format="mjd")
+
+        if get_raw:
+            values = matrix["raw"]
+        else:
+            values = matrix["calibrated"]
+
+        return hk_time, values
+
     def load_sci(self, polarimeter, data_type, detector=["Q1", "Q2", "U1", "U2"]):
         """Loads scientific data from one detector of a given polarimeter
 
