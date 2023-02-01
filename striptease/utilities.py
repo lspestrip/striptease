@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 from enum import IntEnum, IntFlag
+from typing import List
 
 #: List of all the board names: handy if you need to iterate over them,
 #: or if you need to validate user input
@@ -275,3 +276,83 @@ def polarimeter_iterator(
                 pol_name = BOARD_TO_W_BAND_POL[cur_board]
 
             yield cur_board, pol_idx, pol_name
+
+
+def parse_polarimeters(polarimeters: List[str]) -> List[str]:
+    """Parse a list of polarimeters or boards, and return a list of all polarimeters corresponding
+    to the input, without duplicates.
+    These shorthand values are also accepted: "Q" (all Q polarimeters), "W" (all W polarimeters),
+    "all" (all polarimeters) and (e.g.) "OQ", "OW" (all Q or W polarimeters in board O).
+    Raises a KeyError on unrecognized input.
+
+        >>> parse_polarimeters(["O1", "GW", "YQ", "R"])
+        ['O1', 'W6', 'Y0', 'Y1', 'Y2', 'Y3', 'Y4', 'Y5', 'Y6', 'R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'W3']
+        >>> parse_polarimeters(["W", "R1", "Y2"])
+        ['W3', 'W4', 'W6', 'W5', 'W1', 'W2', 'R1', 'Y2']
+    """
+
+    all_polarimeters = [polarimeter for _, _, polarimeter in polarimeter_iterator()]
+    if polarimeters == []:
+        return []
+    if polarimeters[0] == "all":
+        return all_polarimeters
+
+    parsed_polarimeters = []
+    for item in polarimeters:
+        if not isinstance(item, str):
+            raise KeyError(f"polarimeter or board name {item} must be of str type")
+
+        # Check if item is a polarimeter name
+        try:
+            if normalize_polarimeter_name(item) in map(
+                normalize_polarimeter_name, all_polarimeters
+            ):
+                parsed_polarimeters.append(item)
+                continue
+        except KeyError:  # Continue if it is not
+            pass
+
+        # Check if item is a board name
+        if item in STRIP_BOARD_NAMES:
+            parsed_polarimeters += [
+                polarimeter for _, _, polarimeter in polarimeter_iterator(boards=[item])
+            ]
+
+        # Check if item is "Q", meaning all Q polarimeters
+        elif item == "Q":
+            parsed_polarimeters += [
+                polarimeter
+                for _, _, polarimeter in polarimeter_iterator(include_w_band=False)
+            ]
+
+        # Check if item is "W", meaning all W polarimeters
+        elif item == "W":
+            parsed_polarimeters += [
+                polarimeter
+                for _, _, polarimeter in polarimeter_iterator(include_q_band=False)
+            ]
+
+        # Check if item is of the form f"{board}Q", meaning all Q polarimeters on the board
+        elif len(item) == 2 and item[1] == "Q":
+            parsed_polarimeters += [
+                polarimeter
+                for _, _, polarimeter in polarimeter_iterator(
+                    boards=[item[0]], include_w_band=False
+                )
+            ]
+
+        # Check if item is of the form f"{board}W", meaning all W polarimeters on the board
+        elif len(item) == 2 and item[1] == "W":
+            parsed_polarimeters += [
+                polarimeter
+                for _, _, polarimeter in polarimeter_iterator(
+                    boards=[item[0]], include_q_band=False
+                )
+            ]
+
+        else:
+            raise KeyError(f"unknown polarimeter or board {item}")
+
+    return list(
+        dict.fromkeys(parsed_polarimeters)
+    )  # Return list removing duplicate polarimeters
