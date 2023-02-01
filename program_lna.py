@@ -7,7 +7,7 @@ from striptease.procedures import StripProcedure
 from striptease.utilities import (
     STRIP_BOARD_NAMES,
     get_polarimeter_board,
-    normalize_polarimeter_name,
+    parse_polarimeters,
     polarimeter_iterator,
 )
 from striptease.tuning.scanners import Scanner1D, Scanner2D
@@ -92,55 +92,6 @@ class LNAOffsetProcedure(StripProcedure):
     def run(self):
         self.lna_pretuning_procedure.run()
         self.offset_tuning_procedure.run()
-
-
-def parse_polarimeters(polarimeters: List[str]) -> List[str]:
-    """Parse a list of polarimeters, boards, "Q" (all Q polarimeters), "W" (all W polarimeters)
-    and (e.g.) "OQ", "OW" (all Q or W polarimeters in board O), and return a list of polarimeter names."""
-    if polarimeters == []:
-        return []
-    if polarimeters[0] == "all":
-        return DEFAULT_POLARIMETERS
-
-    parsed_polarimeters = []
-    for item in polarimeters:
-        try:
-            if normalize_polarimeter_name(item) in map(
-                normalize_polarimeter_name, DEFAULT_POLARIMETERS
-            ):
-                parsed_polarimeters.append(item)
-                continue
-        except KeyError:
-            pass
-        if item in STRIP_BOARD_NAMES:
-            parsed_polarimeters += [
-                polarimeter for _, _, polarimeter in polarimeter_iterator(boards=[item])
-            ]
-        elif item == "Q":
-            parsed_polarimeters += [
-                polarimeter
-                for _, _, polarimeter in polarimeter_iterator(include_w_band=False)
-            ]
-        elif item == "W":
-            parsed_polarimeters += [
-                polarimeter
-                for _, _, polarimeter in polarimeter_iterator(include_q_band=False)
-            ]
-        elif item[1] == "Q":
-            parsed_polarimeters += [
-                polarimeter
-                for _, _, polarimeter in polarimeter_iterator(
-                    boards=[item[0]], include_w_band=False
-                )
-            ]
-        elif item[1] == "W":
-            parsed_polarimeters += [
-                polarimeter
-                for _, _, polarimeter in polarimeter_iterator(
-                    boards=[item[0]], include_q_band=False
-                )
-            ]
-    return list(dict.fromkeys(parsed_polarimeters))  # Remove duplicate polarimeters
 
 
 if __name__ == "__main__":
