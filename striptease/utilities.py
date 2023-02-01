@@ -279,8 +279,17 @@ def polarimeter_iterator(
 
 
 def parse_polarimeters(polarimeters: List[str]) -> List[str]:
-    """Parse a list of polarimeters, boards, "Q" (all Q polarimeters), "W" (all W polarimeters)
-    and (e.g.) "OQ", "OW" (all Q or W polarimeters in board O), and return a list of polarimeter names."""
+    """Parse a list of polarimeters or boards, and return a list of all polarimeters corresponding
+    to the input, without duplicates.
+    These shorthand values are also accepted: "Q" (all Q polarimeters), "W" (all W polarimeters),
+    "all" (all polarimeters) and (e.g.) "OQ", "OW" (all Q or W polarimeters in board O).
+    Raises a KeyError on unrecognized input.
+
+        >>> parse_polarimeters(["O1", "GW", "YQ", "R"])
+        ['O1', 'W6', 'Y0', 'Y1', 'Y2', 'Y3', 'Y4', 'Y5', 'Y6', 'R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'W3']
+        >>> parse_polarimeters(["W", "R1", "Y2"])
+        ['W3', 'W4', 'W6', 'W5', 'W1', 'W2', 'R1', 'Y2']
+    """
 
     all_polarimeters = [polarimeter for _, _, polarimeter in polarimeter_iterator()]
     if polarimeters == []:
