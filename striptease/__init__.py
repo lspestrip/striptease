@@ -75,6 +75,7 @@ from .utilities import (
     get_polarimeter_index,
     get_lna_num,
     get_lna_list,
+    parse_polarimeters,
     polarimeter_iterator,
 )
 
@@ -146,5 +147,6 @@ __all__ = [
     "get_polarimeter_index",
     "get_lna_num",
     "get_lna_list",
+    "parse_polarimeters",
     "polarimeter_iterator",
 ]
