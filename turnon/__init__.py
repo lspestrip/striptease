@@ -11,7 +11,12 @@ import sys
 import pandas as pd
 import numpy as np
 from calibration import physical_units_to_adu
-from striptease import get_lna_num, get_polarimeter_index, StripProcedure
+from striptease import (
+    get_lna_num,
+    get_polarimeter_index,
+    StripProcedure,
+    CLOSED_LOOP_MODE,
+)
 from striptease.biases import InstrumentBiases, BoardCalibration
 
 CalibrationCurve = namedtuple(
@@ -501,6 +506,7 @@ class TurnOnOffProcedure(StripProcedure):
         det_offset: Optional[int] = None,
         zero_bias: bool = False,
         bias_file_name: Optional[str] = None,
+        closed_loop: bool = False,
     ):
         super(TurnOnOffProcedure, self).__init__()
         self.board = None
@@ -514,6 +520,7 @@ class TurnOnOffProcedure(StripProcedure):
         self.on_boards = set()
         self.off_boards = set()
         self.bias_file_name = bias_file_name
+        self.closed_loop = closed_loop
 
     def set_board_horn_polarimeter(self, new_board, new_horn, new_pol=None):
         self.board = new_board
@@ -679,6 +686,9 @@ class TurnOnOffProcedure(StripProcedure):
 
         board_setup.setup_VG(self.horn, "4A", step=1.0)
         board_setup.setup_VG(self.horn, "5A", step=1.0)
+
+        if self.closed_loop:
+            self.conn.set_pol_mode(self.horn, CLOSED_LOOP_MODE)
 
         if stable_acquisition_time_s > 0:
             board_setup.log(
