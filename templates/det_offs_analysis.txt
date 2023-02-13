@@ -1,16 +1,56 @@
 # Detector offsets analysis
 
+This is a report for the pretuning-1 procedure.
+
 Time range: {{ mjd_range }}
 
 Argv: `{{ argv }}`
 
-## Timelines:
+Data saved on file {{ data_file }}
 
-{% for polarimeter in analyzed_data %}
-![](timeline_{{ polarimeter }}.png)
-{% endfor %}
+{% for polarimeter, pol_data in polarimeters.items() %}
+## Polarimeter {{ polarimeter }}
+### Timelines:
+#### PWR data
+![]({{ pol_data.timeline.PWR }})
 
-## Analyzed data
-{% for polarimeter in analyzed_data %}
-![](analysis_{{ polarimeter }}.pdf)
+#### DEM data
+![]({{ pol_data.timeline.DEM }})
+
+### Fit
+#### PWR data
+![]({{ pol_data.fit.PWR.mean_plot }})
+![]({{ pol_data.fit.PWR.std_plot }})
+
+|    | Q1 | Q2 | U1 | U2 |
+|----|----|----|----|----|
+| angular_coefficient | {% for detector in "Q1", "Q2", "U1", "U2" %} {{pol_data.fit.PWR.fit[detector].parameters[0]|round(3)}} | {% endfor %}
+| sigma               | {% for detector in "Q1", "Q2", "U1", "U2" %} {{pol_data.fit.PWR.fit[detector].covariance[0, 0]|round(3)}} | {% endfor %}
+| saturation_offset   | {% for detector in "Q1", "Q2", "U1", "U2" %} {{pol_data.fit.PWR.fit[detector].parameters[1]|round(4)}} | {% endfor %}
+| sigma               | {% for detector in "Q1", "Q2", "U1", "U2" %} {{pol_data.fit.PWR.fit[detector].covariance[1, 1]|round(4)}} | {% endfor %}
+| covariance          | {% for detector in "Q1", "Q2", "U1", "U2" %} {{pol_data.fit.PWR.fit[detector].covariance[0, 1]|round(3)}} | {% endfor %}
+| reduced chi square  | {% for detector in "Q1", "Q2", "U1", "U2" %} {{pol_data.fit.PWR.fit[detector].chi|round(1)}} | {% endfor %}
+| sigma               | {% for detector in "Q1", "Q2", "U1", "U2" %} {{pol_data.fit.PWR.fit[detector].chi_sigma|round(1)}} | {% endfor %}
+
+#### PWR_SUM data
+![]({{ pol_data.fit.PWR_SUM.mean_plot }})
+![]({{ pol_data.fit.PWR_SUM.std_plot }})
+
+|    | Q1 | Q2 | U1 | U2 |
+|----|----|----|----|----|
+| angular_coefficient | {% for detector in "Q1", "Q2", "U1", "U2" %} {{pol_data.fit.PWR_SUM.fit[detector].parameters[0]|round(3)}} | {% endfor %}
+| sigma               | {% for detector in "Q1", "Q2", "U1", "U2" %} {{pol_data.fit.PWR_SUM.fit[detector].covariance[0, 0]|round(3)}} | {% endfor %}
+| saturation_offset   | {% for detector in "Q1", "Q2", "U1", "U2" %} {{pol_data.fit.PWR_SUM.fit[detector].parameters[1]|round(4)}} | {% endfor %}
+| sigma               | {% for detector in "Q1", "Q2", "U1", "U2" %} {{pol_data.fit.PWR_SUM.fit[detector].covariance[1, 1]|round(4)}} | {% endfor %}
+| covariance          | {% for detector in "Q1", "Q2", "U1", "U2" %} {{pol_data.fit.PWR_SUM.fit[detector].covariance[0, 1]|round(3)}} | {% endfor %}
+| reduced chi square  | {% for detector in "Q1", "Q2", "U1", "U2" %} {{pol_data.fit.PWR_SUM.fit[detector].chi|round(1)}} | {% endfor %}
+| sigma               | {% for detector in "Q1", "Q2", "U1", "U2" %} {{pol_data.fit.PWR_SUM.fit[detector].chi_sigma|round(1)}} | {% endfor %}
+
+#### DEM data
+![]({{ pol_data.fit.DEM.mean_plot }})
+![]({{ pol_data.fit.DEM.std_plot }})
+
+#### DEM_DIFF data
+![]({{ pol_data.fit.DEM_DIFF.mean_plot }})
+![]({{ pol_data.fit.DEM_DIFF.std_plot }})
 {% endfor %}

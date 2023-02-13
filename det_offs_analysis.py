@@ -1,6 +1,10 @@
 # -*- encoding: utf-8 -*-
 
 from copy import copy
+import logging as log
+
+log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
+from pathlib import Path
 import sys
 from typing import Dict, List, Tuple, Union
 
@@ -8,6 +12,7 @@ from astropy.time import Time
 import json
 from matplotlib import pyplot as plt
 import numpy as np
+import xarray as xr
 
 from striptease import (
     DataStorage,
@@ -18,6 +23,7 @@ from striptease import (
 from striptease.tuning import read_excel
 
 DEFAULT_POLARIMETERS = [polarimeter for _, _, polarimeter in polarimeter_iterator()]
+SATURATION_VALUE = 524287.0
 
 
 def load_offsets(polarimeters, excel_file):
@@ -28,7 +34,7 @@ def load_offsets(polarimeters, excel_file):
         offsets[polarimeter] = [copy(scanner.x)]
         while scanner.next() is True:
             offsets[polarimeter].append(copy(scanner.x))
-        offsets[polarimeter] = np.array(offsets[polarimeter])
+        offsets[polarimeter] = np.array(offsets[polarimeter], dtype="int")
     return offsets
 
 
@@ -116,22 +122,21 @@ def plot_timeline(
     tags_global: List[Tag],
     polarimeter: str,
     detectors: Union[List[str], Tuple[str]],
+    data_type: str,
 ):
-    fig, ax = plt.subplots(1, 2, figsize=(15, 8))
-    # fig, ax = plt.subplots(1, 2)
+    fig, ax = plt.subplots()
     fig.suptitle(f"{polarimeter}")
 
-    for data_type, subplot in ("PWR", 0), ("DEM", 1):
-        plot_data = data_in_range(data[polarimeter][data_type], mjd_range)
-        for detector in detectors:
-            channel = f"{data_type}{detector}"
-            ax[subplot].plot(
-                plot_data[0].value, plot_data[1][channel], ",", label=channel
-            )
-        for tag in tags_global:
-            ax[subplot].axvline(tag.mjd_end, linewidth=0.1, color="k")
-        ax[subplot].legend(loc="upper right")
-        ax[subplot].set_title(data_type)
+    plot_data = data_in_range(data[polarimeter][data_type], mjd_range)
+    for detector in detectors:
+        channel = f"{data_type}{detector}"
+        ax.plot(plot_data[0].value, plot_data[1][channel], ",", label=channel)
+    for tag in tags_global:
+        ax.axvline(tag.mjd_end, linewidth=0.1, color="k")
+    ax.legend(loc="upper right")
+    # ax.set_title(data_type)
+    ax.set_xlabel("$t$ [mjd]")
+    ax.set_ylabel(f"{data_type} [adu]")
 
     fig.tight_layout()
     return fig, ax
@@ -152,59 +157,64 @@ def analyze_test(data, polarimeter, tag_acq, detectors):
         analysis["PWR"][detector] = analyze_type(pwr[f"PWR{detector}"])
 
         dem_det = dem[f"DEM{detector}"]
-        analysis["DEM"][detector] = analyze_type(dem[f"DEM{detector}"])
+        analysis["DEM"][detector] = analyze_type(np.abs(dem[f"DEM{detector}"]))
 
         pwr_even = pwr_det[::2]
         pwr_odd = pwr_det[1::2]
         if len(pwr_even) != len(pwr_odd):
             pwr_even = pwr_even[:-1]
-        analysis["PWR_SUM"][detector] = analyze_type(pwr_even + pwr_odd)
+        analysis["PWR_SUM"][detector] = analyze_type((pwr_even + pwr_odd) / 2)
 
         dem_even = dem_det[::2]
         dem_odd = dem_det[1::2]
         if len(dem_even) != len(dem_odd):
             dem_even = dem_even[:-1]
-        analysis["DEM_DIFF"][detector] = analyze_type(np.abs(dem_even - dem_odd))
+        analysis["DEM_DIFF"][detector] = analyze_type(np.abs(dem_even - dem_odd) / 2)
 
     return analysis
 
 
-def plot_analysed_data(det_offs_analysis, polarimeter: str, offsets, detectors):
-    fig, ax = plt.subplots(4, 2, figsize=(15, 30))
-    # fig, ax = plt.subplots(4, 2)
-    fig.suptitle(f"{polarimeter}")
+def plot_analysed_data(det_offs_analysis, polarimeter: str, data_type: str, fit=None):
+    fig_mean, ax_mean = plt.subplots()
+    fig_std, ax_std = plt.subplots()
 
-    offsets = offsets[polarimeter][:, 0]
+    offsets = det_offs_analysis.coords["offset"]
+    detectors = det_offs_analysis.coords["detector"]
 
-    for (i, j, value) in (
-        (0, 0, "PWR"),
-        (0, 1, "DEM"),
-        (1, 0, "PWR_SUM"),
-        (1, 1, "DEM_DIFF"),
-    ):
-        for detector in detectors:
-            mean = np.array(
-                [
-                    det_offs_analysis[polarimeter][offset][value][detector]["mean"]
-                    for offset in offsets
-                ]
-            )
-            std = np.array(
-                [
-                    det_offs_analysis[polarimeter][offset][value][detector]["std"]
-                    for offset in offsets
-                ]
-            )
-            ax[i, j].errorbar(
-                offsets, mean, yerr=std, marker=".", ls="none", label=detector
-            )
-            ax[i + 2, j].plot(offsets, std, marker=".", ls="none")
-        ax[i, j].set_title(f"{value} mean")
-        ax[i + 2, j].set_title(f"{value} std")
+    for detector in detectors:
+        mean = det_offs_analysis.sel(
+            polarimeter=polarimeter,
+            data_type=data_type,
+            value="mean",
+            detector=detector,
+        )
+        std = det_offs_analysis.sel(
+            polarimeter=polarimeter, data_type=data_type, value="std", detector=detector
+        )
+        ax_mean.errorbar(offsets, mean, yerr=std, marker=".", ls="none", label=detector)
+        ax_std.plot(offsets, std, marker=".", ls="none")
+    ax_mean.set_title(f"{data_type} mean")
+    ax_mean.set_xlabel("offset")
+    ax_mean.set_ylabel(f"{data_type} [adu]")
+    ax_std.set_title(f"{data_type} std")
+    ax_std.set_xlabel("offset")
+    ax_std.set_ylabel(f"{data_type} [adu]")
 
-    fig.tight_layout()
+    fig_mean.tight_layout()
+    fig_std.tight_layout()
     plt.tight_layout()
-    return ax, fig
+    return fig_mean, ax_mean, fig_std, ax_std
+
+
+def fit_function(offset, angular_coefficient, saturation_offset):
+    #          { max                                                          for offset <= saturation_offset
+    # idrain = {
+    #          { max - angular_coefficient * (offset - saturation_offset)     for offset > saturation_offset
+    return np.where(
+        offset <= saturation_offset,
+        SATURATION_VALUE,
+        SATURATION_VALUE - angular_coefficient * (offset - saturation_offset),
+    )
 
 
 def main():
@@ -220,8 +230,8 @@ def main():
         "-o",
         metavar="FILENAME",
         type=str,
-        dest="json_output",
-        default="",
+        dest="output_file",
+        default=None,
         help="Name of the file where to write the analyzed data output (in JSON format). "
         "If not provided, the output will be sent to stdout.",
     )
@@ -235,7 +245,7 @@ def main():
         "--report-output",
         metavar="FILENAME",
         type=str,
-        dest="report_output",
+        dest="report_file",
         default="report.md",
         help="The file to write the report to (default: report.md).",
     )
@@ -315,10 +325,16 @@ def main():
 
     args = parser.parse_args()
 
-    ds = DataStorage(args.ds_path)
-    polarimeters = parse_polarimeters(args.polarimeters)
-    detectors = ("Q1", "Q2", "U1", "U2")
+    output_dir = Path(args.output_dir)
+    output_file = output_dir / args.output_file if args.output_file else None
+    report_file = output_dir / args.report_file
+    template_file = args.template
+    ds_path = Path(args.ds_path)
+    ds = DataStorage(ds_path)
+    tuning_file = Path(args.tuning_file)
     mjd_range = (args.mjd_start, args.mjd_end)
+    polarimeters = parse_polarimeters(args.polarimeters)
+    detectors = ["Q1", "Q2", "U1", "U2"]
 
     data = {
         polarimeter: load_data(ds, mjd_range, polarimeter, detectors, args.delta)
@@ -329,38 +345,213 @@ def main():
         ds, mjd_range, test_name=args.test_name, polarimeters=polarimeters
     )
 
-    offsets = load_offsets(polarimeters, excel_file=args.tuning_file)
+    offsets = load_offsets(polarimeters, excel_file=tuning_file)
 
-    det_offs_analysis = {
-        "mjd_range": mjd_range,
-        "argv": sys.argv,
-        "analyzed_data": {
-            polarimeter: {
-                int(offsets[polarimeter][i, 0]): analyze_test(
-                    data, polarimeter, tags_acq[i], detectors
-                )
-                for i in range(len(tags_acq))
-            }
-            for polarimeter in polarimeters
-        },
+    det_offs_analysis_json = {
+        polarimeter: {
+            int(offsets[polarimeter][i, 0]): analyze_test(
+                data, polarimeter, tags_acq[i], detectors
+            )
+            for i in range(len(tags_acq))
+        }
+        for polarimeter in polarimeters
     }
 
-    with open(f"{args.output_dir}/{args.json_output}", "w") as f:
-        json.dump(det_offs_analysis, f, indent=0)
+    with open(output_file, "w") as f:
+        json.dump(det_offs_analysis_json, f, indent=0)
+
+    data_types = ["PWR", "DEM", "PWR_SUM", "DEM_DIFF"]
+    values = ["mean", "std", "nsamples"]
+
+    store_to_netcdf = True
+    if store_to_netcdf:
+        all_offsets = np.sort(
+            np.unique(
+                np.concatenate(
+                    [
+                        offsets[polarimeter][:, detector]
+                        for polarimeter in polarimeters
+                        for detector in range(len(detectors))
+                    ]
+                )
+            )
+        )
+        det_offs_analysis = xr.DataArray(
+            data=np.nan,
+            coords=[
+                ("polarimeter", polarimeters),
+                ("data_type", data_types),
+                ("detector", detectors),
+                ("value", values),
+                ("offset", all_offsets),
+            ],
+        )
+
+        for polarimeter in polarimeters:
+            log.log(log.INFO, f"Converting {polarimeter} to xarray.")
+            for data_type in data_types:
+                log.log(log.INFO, f"Converting {polarimeter} {data_type} to xarray.")
+                for detector_idx in range(len(detectors)):
+                    detector = detectors[detector_idx]
+                    for value in values:
+                        for offset in offsets[polarimeter][:, detector_idx]:
+                            det_offs_analysis.loc[
+                                dict(
+                                    polarimeter=polarimeter,
+                                    data_type=data_type,
+                                    detector=detector,
+                                    value=value,
+                                    offset=int(offset),
+                                )
+                            ] = det_offs_analysis_json[polarimeter][offset][data_type][
+                                detector
+                            ][
+                                value
+                            ]
+        det_offs_analysis.to_netcdf(f"{output_dir}/det_offs_analysis.nc")
+    else:
+        log.log(log.INFO, "Loading xarray.")
+        det_offs_analysis = xr.open_dataarray(f"{output_dir}/det_offs_analysis.nc")
+
+    log.log(log.INFO, "Fitting PWR and PWR_SUM data.")
+    pwr_fit = det_offs_analysis.sel(
+        data_type=["PWR", "PWR_SUM"], value="mean"
+    ).curvefit("offset", fit_function)
+
+    pwr_chi = (
+        (
+            (
+                det_offs_analysis.sel(data_type=["PWR", "PWR_SUM"], value="mean")
+                - xr.apply_ufunc(
+                    fit_function,
+                    det_offs_analysis.coords["offset"],
+                    pwr_fit["curvefit_coefficients"].sel(
+                        param="angular_coefficient", data_type=["PWR", "PWR_SUM"]
+                    ),
+                    pwr_fit["curvefit_coefficients"].sel(
+                        param="saturation_offset", data_type=["PWR", "PWR_SUM"]
+                    ),
+                )
+            )
+            / det_offs_analysis.sel(data_type=["PWR", "PWR_SUM"], value="std")
+        )
+        ** 2
+    ).sum(dim="offset")
+    pwr_chi_reduced = pwr_chi / (len(det_offs_analysis.coords["offset"]) - 2)
+    pwr_chi_sigma = np.sqrt(2 * pwr_chi) / (len(det_offs_analysis.coords["offset"]) - 2)
+
+    # det_offs_analysis.sel(polarimeter="R0", data_type="PWR", value="mean").plot(x="offset", hue="detector", ls="", marker=".")
+    # plt.show()
+
+    (
+        det_offs_analysis.sel(data_type=["PWR", "PWR_SUM"], value="mean")
+        - xr.apply_ufunc(
+            fit_function,
+            det_offs_analysis.coords["offset"],
+            pwr_fit["curvefit_coefficients"].sel(
+                param="angular_coefficient", data_type=["PWR", "PWR_SUM"]
+            ),
+            pwr_fit["curvefit_coefficients"].sel(
+                param="saturation_offset", data_type=["PWR", "PWR_SUM"]
+            ),
+        )
+    ).sel(data_type="PWR_SUM", detector="U1").plot(
+        x="offset", hue="polarimeter", marker="."
+    )
+    plt.show()
+    (
+        det_offs_analysis.sel(data_type=["PWR", "PWR_SUM"], value="mean")
+        - xr.apply_ufunc(
+            fit_function,
+            det_offs_analysis.coords["offset"],
+            pwr_fit["curvefit_coefficients"].sel(
+                param="angular_coefficient", data_type=["PWR", "PWR_SUM"]
+            ),
+            pwr_fit["curvefit_coefficients"].sel(
+                param="saturation_offset", data_type=["PWR", "PWR_SUM"]
+            ),
+        )
+    ).sel(data_type="PWR_SUM", detector="U2").plot(
+        x="offset", hue="polarimeter", marker="."
+    )
+    plt.show()
 
     if args.report:
-        for polarimeter in polarimeters:
-            fig, ax = plot_timeline(
-                data, tag_whole_test, tags_global, polarimeter, detectors
-            )
-            fig.savefig(f"{args.output_dir}/timeline_{polarimeter}.png")
+        report_data = {
+            "mjd_range": mjd_range,
+            "argv": sys.argv,
+            "data_file": output_file,
+            "polarimeters": {
+                polarimeter: {
+                    "timeline": {},
+                    "fit": {},
+                }
+                for polarimeter in polarimeters
+            },
+        }
 
         for polarimeter in polarimeters:
-            ax, fig = plot_analysed_data(
-                det_offs_analysis["analyzed_data"], polarimeter, offsets, detectors
-            )
-            fig.savefig(f"{args.output_dir}/analysis_{polarimeter}.pdf")
+            for data_type in "PWR", "DEM":
+                timeline_plot = output_dir / f"timeline_{polarimeter}_{data_type}.png"
 
+                report_data["polarimeters"][polarimeter]["timeline"][
+                    data_type
+                ] = timeline_plot
+
+                fig, ax = plot_timeline(
+                    data, tag_whole_test, tags_global, polarimeter, detectors, data_type
+                )
+                fig.savefig(timeline_plot)
+                plt.close()
+
+            for data_type in "PWR", "DEM", "PWR_SUM", "DEM_DIFF":
+                fit_mean_plot = output_dir / f"fit_{polarimeter}_{data_type}_mean.svg"
+                fit_std_plot = output_dir / f"fit_{polarimeter}_{data_type}_std.svg"
+
+                report_data["polarimeters"][polarimeter]["fit"][data_type] = {
+                    "mean_plot": fit_mean_plot,
+                    "std_plot": fit_std_plot,
+                }
+
+                fig_mean, ax_mean, fig_std, ax_std = plot_analysed_data(
+                    det_offs_analysis, polarimeter, data_type
+                )
+                fig_mean.savefig(fit_mean_plot)
+                fig_std.savefig(fit_std_plot)
+                plt.close()
+
+            for data_type in "PWR", "PWR_SUM":
+                report_data["polarimeters"][polarimeter]["fit"][data_type]["fit"] = {
+                    detector: {
+                        "parameters": pwr_fit["curvefit_coefficients"]
+                        .sel(
+                            polarimeter=polarimeter,
+                            data_type=data_type,
+                            detector=detector,
+                        )
+                        .values,
+                        "covariance": pwr_fit["curvefit_covariance"]
+                        .sel(
+                            polarimeter=polarimeter,
+                            data_type=data_type,
+                            detector=detector,
+                        )
+                        .values,
+                        "chi": pwr_chi_reduced.sel(
+                            polarimeter=polarimeter,
+                            data_type=data_type,
+                            detector=detector,
+                        ).values.item(),
+                        "chi_sigma": pwr_chi_sigma.sel(
+                            polarimeter=polarimeter,
+                            data_type=data_type,
+                            detector=detector,
+                        ).values.item(),
+                    }
+                    for detector in detectors
+                }
+
+        log.log(log.INFO, "Generating report.")
         from jinja2 import Environment, FileSystemLoader, select_autoescape
 
         env = Environment(
@@ -368,9 +559,9 @@ def main():
             autoescape=select_autoescape(["html", "xml"]),
         )
 
-        template = env.get_template(args.template)
-        with open(f"{args.output_dir}/{args.report_output}", "w") as f:
-            print(template.render(det_offs_analysis), file=f)
+        template = env.get_template(template_file)
+        with open(report_file, "w") as f:
+            print(template.render(report_data), file=f)
 
 
 if __name__ == "__main__":
