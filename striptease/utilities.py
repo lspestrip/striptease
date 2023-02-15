@@ -37,7 +37,7 @@ class PolMode(IntFlag):
 
     # If this is not set, the electronics will ignore drain settings
     ENABLE_VDRAIN = 1
-    # If this is set, the LNA works in open-loop mode
+    # If this is set, the LNA works in closed-loop mode
     ENABLE_IDRAIN_LOOP = 2
     # If enable, gate voltage is set to a constant value
     MANUAL_MODE = 4
