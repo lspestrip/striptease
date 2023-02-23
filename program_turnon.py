@@ -109,6 +109,12 @@ Usage example:
         help="Time to wait after having altered the bias level for each amplifier "
         f"(default: {DEFAULT_WAITTIME_S}, set to 0 to disable)",
     )
+    parser.add_argument(
+        "--closed-loop",
+        action="store_true",
+        help="Set the polarimeter to closed loop mode after turnon, instead of "
+        "leaving it in open loop.",
+    )
 
     args = parser.parse_args()
 
@@ -122,6 +128,7 @@ Usage example:
         zero_bias=args.zero_bias,
         det_offset=args.det_offset,
         bias_file_name=args.bias_table_file,
+        closed_loop=args.closed_loop,
     )
     for cur_horn, cur_polarimeter in unroll_polarimeters(args.polarimeters):
         log.info("Processing horn %s, polarimeter %s", cur_horn, cur_polarimeter)
