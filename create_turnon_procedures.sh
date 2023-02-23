@@ -17,6 +17,12 @@ function create_board_script {
                 $pol
             python3 program_turnon.py \
                 --bias-table-file "$biases" \
+                --output "${basename}_turnon_${condition}_closed_loop.json" \
+                --board $board \
+                --closed-loop \
+                $pol
+            python3 program_turnon.py \
+                --bias-table-file "$biases" \
                 --output "${basename}_turnoff_${condition}.json" \
                 --board $board \
                 --turnoff \
@@ -50,6 +56,8 @@ done
 for condition in cryo warm; do
     ./join_scripts.py $(ls "$output_dir"/*_all_turnon_${condition}.json | sort) \
                       > "$output_dir"/all_turnon_${condition}.json
+    ./join_scripts.py $(ls "$output_dir"/*_all_turnon_${condition}_closed_loop.json | sort) \
+                      > "$output_dir"/all_turnon_${condition}_closed_loop.json
     ./join_scripts.py $(ls "$output_dir"/*_all_turnoff_${condition}.json | sort) \
                       > "$output_dir"/all_turnoff_${condition}.json
 done
