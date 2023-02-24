@@ -37,9 +37,14 @@ class Config(object):
                 js = json.loads(jss)
                 self.user = js["user"]
                 self.password = js["password"]
+                self.socket_server = js.get("direct_server", None)
+                self.socket_port = js.get("direct_port", None)
+                self.socket_username = js.get("direct_user", None)
         else:
             self.user = None
             self.password = None
+            self.socket_server = None
+            self.socket_port = None
 
     def load(self, con):
         """requests the instrument configuration from the server and populates the attributes boards, board_addr, addr_str, addr_int
@@ -70,6 +75,15 @@ class Config(object):
     def get_server(self) -> str:
         """Return the name of the server (including the port, if present)"""
         return self.conf["urls"]["base"]
+
+    def get_direct_server(self) -> str:
+        return self.socket_server
+
+    def get_direct_port(self) -> int:
+        return self.socket_port
+
+    def get_direct_username(self) -> str:
+        return self.socket_username
 
     def get_rest_base(self):
         """returns the base url for REST requests"""
