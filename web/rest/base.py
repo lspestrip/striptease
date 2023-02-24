@@ -1,7 +1,7 @@
 # web/rest/base.py --- Base REST wraping classes
 #
 # Copyright (C) 2018 Stefano Sartor - stefano.sartor@inaf.it
-
+import logging
 from copy import copy
 from config import Config
 import json
@@ -88,14 +88,17 @@ class Connection(object):
 
         if self.use_fast_socket:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            # TODO: we should probably use a dedicated server and port for
-            #       the socket, but I prefer to leave things as they are until
-            #       we can do some lab tests
-            server, port = self.conf.get_server().split(":")
-            if port == "":
-                self.socket.connect(server)
+            server, port = self.conf.get_direct_server(), self.conf.get_direct_port()
+            if server:
+                if not port:
+                    self.socket.connect(server)
+                else:
+                    self.socket.connect((server, port))
             else:
-                self.socket.connect((server, int(port)))
+                logging.warning(
+                    "No 'direct_server' entry in the configuration file, "
+                    "falling back to HTTP"
+                )
 
     def logout(self):
         """logout the user and delete the sessionid.
@@ -124,16 +127,15 @@ class Connection(object):
         """
         if self.socket:
             socket_msg = copy(message)
-            socket_msg["user"] = self.user
+            socket_msg["user"] = self.conf.get_direct_username()
             try:
                 socket_msg["opcode"] = _KIND_TO_OPCODE[socket_msg["kind"]]
                 self.socket.sendall(json.dumps(socket_msg).encode("utf-8"))
-                return {}
+                return json.loads(self.socket.recv(2048).decode("utf-8"))
             except KeyError:
-                print(
-                    bcolors.WARNING
-                    + bcolors.BOLD
-                    + f"Unable to send command {socket_msg['kind']} to socket, falling back to HTTP"
+                logging.warning(
+                    f"Unable to translate {message=} into command {socket_msg=} and send it "
+                    + f"to socket through {url=}, falling back to HTTP"
                 )
                 # Fall back to the HTTP code
 
