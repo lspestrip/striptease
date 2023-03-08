@@ -85,7 +85,7 @@ def load_tags(
     ds: DataStorage,
     mjd_range: Tuple[str],
     test_name: str,
-    polarimeters: Union[List[str], Tuple[str]] = ["Q1", "Q2", "U1", "U2"],
+    polarimeters: Union[List[str], Tuple[str]],
 ):
     # All tags in the time range
     tags_all = [x for x in ds.get_tags(mjd_range)]
@@ -142,9 +142,22 @@ def plot_timeline(
     return fig, ax
 
 
+def sigma_method(data):
+    even = data[::2]
+    odd = data[1::2]
+    if len(even) != len(odd):
+        even = even[:-1]
+    return np.std(odd - even) / np.sqrt(2)
+
+
 def analyze_test(data, polarimeter, tag_acq, detectors):
     def analyze_type(data):
-        return {"mean": np.mean(data), "std": np.std(data), "nsamples": len(data)}
+        return {
+            "mean": np.mean(data),
+            "std": np.std(data),
+            "sigma": sigma_method(data),
+            "nsamples": len(data),
+        }
 
     analysis = {"PWR": {}, "DEM": {}, "PWR_SUM": {}, "DEM_DIFF": {}}
 
@@ -182,6 +195,7 @@ def plot_analysed_data(det_offs_analysis, polarimeter: str, data_type: str, fit=
     detectors = det_offs_analysis.coords["detector"]
 
     for detector in detectors:
+        color = next(ax_mean._get_lines.prop_cycler)["color"]
         mean = det_offs_analysis.sel(
             polarimeter=polarimeter,
             data_type=data_type,
@@ -191,8 +205,36 @@ def plot_analysed_data(det_offs_analysis, polarimeter: str, data_type: str, fit=
         std = det_offs_analysis.sel(
             polarimeter=polarimeter, data_type=data_type, value="std", detector=detector
         )
-        ax_mean.errorbar(offsets, mean, yerr=std, marker=".", ls="none", label=detector)
-        ax_std.plot(offsets, std, marker=".", ls="none")
+        ax_mean.errorbar(
+            offsets, mean, yerr=std, marker=".", ls="none", color=color, label=None
+        )
+        ax_std.plot(
+            offsets, std, marker=".", ls="none", color=color, label=detector.values
+        )
+
+        if fit:
+            ax_mean.plot(
+                offsets,
+                xr.apply_ufunc(
+                    fit_function,
+                    det_offs_analysis.coords["offset"],
+                    fit["curvefit_coefficients"].sel(
+                        param="angular_coefficient",
+                        data_type=data_type,
+                        detector=detector,
+                        polarimeter=polarimeter,
+                    ),
+                    fit["curvefit_coefficients"].sel(
+                        param="saturation_offset",
+                        data_type=data_type,
+                        detector=detector,
+                        polarimeter=polarimeter,
+                    ),
+                ),
+                color=color,
+                label=detector.values,
+            )
+    ax_mean.legend()
     ax_mean.set_title(f"{data_type} mean")
     ax_mean.set_xlabel("offset")
     ax_mean.set_ylabel(f"{data_type} [adu]")
@@ -325,9 +367,12 @@ def main():
 
     args = parser.parse_args()
 
+    img_type = "svg"
     output_dir = Path(args.output_dir)
-    output_file = output_dir / args.output_file if args.output_file else None
-    report_file = output_dir / args.report_file
+    output_file = (
+        (output_dir / args.output_file).resolve() if args.output_file else None
+    )
+    report_file = (output_dir / args.report_file).resolve()
     template_file = args.template
     ds_path = Path(args.ds_path)
     ds = DataStorage(ds_path)
@@ -356,6 +401,36 @@ def main():
         }
         for polarimeter in polarimeters
     }
+
+    import scipy as sp
+
+    x = data_in_range(data["R0"]["PWR"], tags_acq[21])[1]
+    plt.plot(x["PWRQ1"], marker=".")
+    plt.show()
+    plt.hist(x["PWRQ1"], bins=30)
+    plt.show()
+    print(sp.stats.shapiro(x["PWRQ1"]))
+    print(sp.stats.normaltest(x["PWRQ1"]))
+    print(sp.stats.anderson(x["PWRQ1"]))
+
+    y = []
+    for i in range(21, 21 + len(tags_acq[21:])):
+        y.append(
+            data_in_range(data["R0"]["PWR"], tags_acq[i])[1]["PWRQ1"]
+            - det_offs_analysis_json["R0"][offsets["R0"][i, 0]]["PWR"]["Q1"]["mean"]
+        )
+    y = np.concatenate(y)
+
+    # plt.plot(x["PWRQ1"] - det_offs_analysis_json["R0"][offsets["R0"][21, 0]]["PWR"]["Q1"]["mean"], marker=".")
+    # plt.show()
+    # plt.plot(y, marker=".")
+    # plt.show()
+    # plt.hist(y, bins=30)
+    # plt.show()
+    # print(sp.stats.shapiro(y))
+    # print(sp.stats.normaltest(y))
+    # print(sp.stats.anderson(y))
+    # return
 
     with open(output_file, "w") as f:
         json.dump(det_offs_analysis_json, f, indent=0)
@@ -413,10 +488,23 @@ def main():
         log.log(log.INFO, "Loading xarray.")
         det_offs_analysis = xr.open_dataarray(f"{output_dir}/det_offs_analysis.nc")
 
+    # import scipy as sp
+    # test = det_offs_analysis.sel(data_type="PWR_SUM", polarimeter="R0", detector="Q1")
+    # test_mean = test.sel(value="mean")
+    # test_sigma = test.sel(value="std").where(test.sel(value="std") != 0, other=1.)
+    # print(test_sigma)
+    # popt, pcov = sp.optimize.curve_fit(fit_function, test.coords["offset"], test_mean, sigma=test_sigma, absolute_sigma=True)
+    # print(popt, pcov)
+
+    # return
+
     log.log(log.INFO, "Fitting PWR and PWR_SUM data.")
     pwr_fit = det_offs_analysis.sel(
         data_type=["PWR", "PWR_SUM"], value="mean"
     ).curvefit("offset", fit_function)
+
+    print(pwr_fit.sel(data_type="PWR_SUM", polarimeter="R0", detector="Q1"))
+    print(pwr_fit.sel(data_type="PWR_SUM", polarimeter="R0", detector="Q1"))
 
     pwr_chi = (
         (
@@ -458,6 +546,10 @@ def main():
     ).sel(data_type="PWR_SUM", detector="U1").plot(
         x="offset", hue="polarimeter", marker="."
     )
+    plt.xlabel("Offset")
+    plt.ylabel("$I$ (measured - fit)")
+    plt.title("")
+    plt.savefig(f"residuals_U1.{img_type}")
     plt.show()
     (
         det_offs_analysis.sel(data_type=["PWR", "PWR_SUM"], value="mean")
@@ -492,7 +584,8 @@ def main():
 
         for polarimeter in polarimeters:
             for data_type in "PWR", "DEM":
-                timeline_plot = output_dir / f"timeline_{polarimeter}_{data_type}.png"
+                # timeline_plot = (output_dir / f"timeline_{polarimeter}_{data_type}.{img_type}").resolve()
+                timeline_plot = f"timeline_{polarimeter}_{data_type}.{img_type}"
 
                 report_data["polarimeters"][polarimeter]["timeline"][
                     data_type
@@ -505,17 +598,22 @@ def main():
                 plt.close()
 
             for data_type in "PWR", "DEM", "PWR_SUM", "DEM_DIFF":
-                fit_mean_plot = output_dir / f"fit_{polarimeter}_{data_type}_mean.svg"
-                fit_std_plot = output_dir / f"fit_{polarimeter}_{data_type}_std.svg"
+                fit_mean_plot = f"fit_{polarimeter}_{data_type}_mean.{img_type}"
+                fit_std_plot = f"fit_{polarimeter}_{data_type}_std.{img_type}"
 
                 report_data["polarimeters"][polarimeter]["fit"][data_type] = {
                     "mean_plot": fit_mean_plot,
                     "std_plot": fit_std_plot,
                 }
 
-                fig_mean, ax_mean, fig_std, ax_std = plot_analysed_data(
-                    det_offs_analysis, polarimeter, data_type
-                )
+                if data_type == "PWR" or data_type == "PWR_SUM":
+                    fig_mean, ax_mean, fig_std, ax_std = plot_analysed_data(
+                        det_offs_analysis, polarimeter, data_type, pwr_fit
+                    )
+                else:
+                    fig_mean, ax_mean, fig_std, ax_std = plot_analysed_data(
+                        det_offs_analysis, polarimeter, data_type
+                    )
                 fig_mean.savefig(fit_mean_plot)
                 fig_std.savefig(fit_std_plot)
                 plt.close()
