@@ -5,7 +5,9 @@ import logging as log
 
 log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
 from typing import Dict, List, Tuple, Union
+from pathlib import Path
 import pickle
+
 
 from astropy.time import Time
 from matplotlib import pyplot as plt
@@ -267,14 +269,15 @@ def main():
     lnas = ["HA1", "HA2", "HA3", "HB1", "HB2", "HB3"]
     detectors = ["Q1", "Q2", "U1", "U2"]
     mjd_range = (args.mjd_start, args.mjd_end)
-    output_dir = args.output_dir
-    pickle_filename = f"{output_dir}/transconductance_data"
+    output_dir = Path(args.output_dir)
+    pickle_filename = output_dir / "transconductance_data"
+    img_types = ["pdf", "svg", "png"]
 
     tags_all, tags_test, tags_test_lna, tags_pol, tags_acq, tags_global = load_tags(
         ds, mjd_range, test_name=args.test_name, polarimeters=polarimeters
     )
 
-    store_to_pickle = True
+    store_to_pickle = False
     if store_to_pickle:
         log.log(log.INFO, "Storing in pickle")
         for polarimeter in polarimeters:
@@ -290,7 +293,6 @@ def main():
     idrains, offsets = load_idrains_and_offsets(
         polarimeters, lnas, excel_file=args.tuning_file
     )
-    print(idrains, offsets)
 
     analyze = True
     if analyze:
@@ -350,19 +352,46 @@ def main():
                     value: np.array(
                         transconductance_json[polarimeter][lna]["analyzed"][hk][value]
                     )
-                    for value in ("mean", "std", "nsamples")
+                    for value in ("mean", "median", "std", "nsamples")
                 }
                 for hk in ("idrain", "vgate", "vdrain")
             }
 
-    plt.plot(data["R0"]["HA1"]["raw"]["vgate"], data["R0"]["HA1"]["raw"]["idrain"], ".")
-    plt.show()
-    plt.plot(
-        data["R0"]["HA1"]["analyzed"]["vgate"]["mean"],
-        data["R0"]["HA1"]["analyzed"]["idrain"]["mean"],
-        ".",
-    )
-    plt.show()
+    for polarimeter in polarimeters:
+        for lna in lnas:
+            current_data = data[polarimeter][lna]
+            log.info(f"Generating plot: raw {polarimeter} {lna}")
+            plt.plot(current_data["raw"]["vgate"], current_data["raw"]["idrain"], ".")
+            plt.xlabel("vgate")
+            plt.ylabel("idrain")
+            plt.title(f"Raw {polarimeter} {lna}")
+            for img_type in img_types:
+                plt.savefig(output_dir / f"{polarimeter}_{lna}_raw.{img_type}")
+            plt.close()
+            log.info(f"Generating plot: mean {polarimeter} {lna}")
+            plt.plot(
+                current_data["analyzed"]["vgate"]["mean"],
+                current_data["analyzed"]["idrain"]["mean"],
+                ".",
+            )
+            plt.xlabel("vgate")
+            plt.ylabel("idrain")
+            plt.title(f"Mean {polarimeter} {lna}")
+            for img_type in img_types:
+                plt.savefig(output_dir / f"{polarimeter}_{lna}_mean.{img_type}")
+            plt.close()
+            log.info(f"Generating plot: median {polarimeter} {lna}")
+            plt.plot(
+                current_data["analyzed"]["vgate"]["median"],
+                current_data["analyzed"]["idrain"]["median"],
+                ".",
+            )
+            plt.xlabel("vgate")
+            plt.ylabel("idrain")
+            plt.title(f"Median {polarimeter} {lna}")
+            for img_type in img_types:
+                plt.savefig(output_dir / f"{polarimeter}_{lna}_median.{img_type}")
+            plt.close()
 
 
 if __name__ == "__main__":
