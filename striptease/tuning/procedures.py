@@ -10,8 +10,6 @@ from calibration import CalibrationTables
 from striptease.procedures import StripProcedure
 from striptease.stripconn import StripTag, wait_with_tag
 from striptease.utilities import (
-    CLOSED_LOOP_MODE,
-    OPEN_LOOP_MODE,
     STRIP_BOARD_NAMES,
     PhswPinMode,
     get_polarimeter_board,
@@ -331,6 +329,7 @@ class TuningProcedure(StripProcedure, ABC):
             turnon=turnon,
             bias_file_name=self.bias_file_name,
             zero_bias=zero_bias,
+            closed_loop=not self.open_loop,
         )
         for polarimeter in self.turnon_polarimeters:
             turnonoff_proc.set_board_horn_polarimeter(
@@ -341,11 +340,6 @@ class TuningProcedure(StripProcedure, ABC):
             turnonoff_proc.run()
             self.command_emitter.command_list += turnonoff_proc.get_command_list()
             turnonoff_proc.clear_command_list()
-            if turnon:  # BUG: this is not run if state is not off
-                if self.open_loop:
-                    self.conn.set_pol_mode(polarimeter, OPEN_LOOP_MODE)
-                else:
-                    self.conn.set_pol_mode(polarimeter, CLOSED_LOOP_MODE)
 
 
 class LNAPretuningProcedure(TuningProcedure):
