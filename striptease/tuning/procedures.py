@@ -417,6 +417,16 @@ class LNAPretuningProcedure(TuningProcedure):
         self.scanners = scanners
         self.phsw_status = phsw_status
 
+        if open_loop:
+            self._previous_vgate = {
+                polarimeter: None for polarimeter in test_polarimeters
+            }
+        else:
+            self._previous_idrain = {
+                polarimeter: None for polarimeter in test_polarimeters
+            }
+        self._previous_offset = {polarimeter: None for polarimeter in test_polarimeters}
+
     def run(self):
         with StripTag(
             conn=self.conn,
@@ -567,11 +577,15 @@ class LNAPretuningProcedure(TuningProcedure):
             comment=f"Test LNA {lna}: step {step}, polarimeter {polarimeter}:"
             f"idrain={idrain}, offset={offset}.",
         ):
-            idrain_adu = self._calibr.physical_units_to_adu(
-                polarimeter=polarimeter, hk="idrain", component=lna, value=idrain
-            )
-            self.conn.set_id(polarimeter, lna, idrain_adu)
-            self.conn.set_offsets(polarimeter, offset)
+            if idrain != self._previous_idrain[polarimeter]:
+                idrain_adu = self._calibr.physical_units_to_adu(
+                    polarimeter=polarimeter, hk="idrain", component=lna, value=idrain
+                )
+                self.conn.set_id(polarimeter, lna, idrain_adu)
+                self._previous_idrain[polarimeter] = idrain
+            if any(offset != self._previous_offset[polarimeter]):
+                self.conn.set_offsets(polarimeter, offset)
+                self._previous_offset[polarimeter] = offset
         return scanner
 
     def _test_open_loop(self, polarimeter, step, lna: str) -> Scanner2D:
@@ -597,11 +611,15 @@ class LNAPretuningProcedure(TuningProcedure):
             comment=f"Test LNA {lna}: step {step}, polarimeter {polarimeter}:"
             f"vgate={vgate}, offset={offset}.",
         ):
-            vgate_adu = self._calibr.physical_units_to_adu(
-                polarimeter=polarimeter, hk="vgate", component=lna, value=vgate
-            )
-            self.conn.set_vg(polarimeter, lna, vgate_adu)
-            self.conn.set_offsets(polarimeter, offset)
+            if vgate != self._previous_vgate[polarimeter]:
+                vgate_adu = self._calibr.physical_units_to_adu(
+                    polarimeter=polarimeter, hk="vgate", component=lna, value=vgate
+                )
+                self.conn.set_vg(polarimeter, lna, vgate_adu)
+                self._previous_vgate[polarimeter] = vgate
+            if any(offset != self._previous_offset[polarimeter]):
+                self.conn.set_offsets(polarimeter, offset)
+                self._previous_offset[polarimeter] = offset
         return scanner
 
     def _get_phsw_from_leg(self, leg: str) -> Tuple[str]:
