@@ -306,7 +306,7 @@ def main():
                     log.info(f"Loading data: {polarimeter} {lna}")
                     data = pickle.load(f)
                 transconductance_json[polarimeter][lna] = {
-                    "raw": {hk: data[hk][1] for hk in ("idrain", "vgate", "vdrain")},
+                    "raw": {hk: [] for hk in ("idrain", "vgate", "vdrain")},
                     "analyzed": {
                         hk: {"mean": [], "median": [], "std": [], "nsamples": []}
                         for hk in ("idrain", "vgate", "vdrain")
@@ -318,6 +318,8 @@ def main():
                         for offset_idx in range(len(offsets[polarimeter][lna])):
                             tag = tags_acq[lna][idrain_idx * len(offsets) + offset_idx]
                             hk_data += data_in_range(data[hk], tag)[1].tolist()
+                        transconductance_json[polarimeter][lna]["raw"][hk] += hk_data
+
                         transconductance_json[polarimeter][lna]["analyzed"][hk][
                             "mean"
                         ].append(np.mean(hk_data))
@@ -331,8 +333,10 @@ def main():
                             "nsamples"
                         ].append(len(hk_data))
 
-        # with open(f"{args.output_dir}/{args.json_output}", "w") as f:
-        # json.dump(transconductance_json, f, indent=5)
+        import json
+
+        with open(f"{args.output_dir}/{args.json_output}", "w") as f:
+            json.dump(transconductance_json, f, indent=2)
 
     # else:
     # transconductance_json = json.load(f"{args.output_dir}/{args.json_output}")
@@ -361,7 +365,7 @@ def main():
         for lna in lnas:
             current_data = data[polarimeter][lna]
             log.info(f"Generating plot: raw {polarimeter} {lna}")
-            plt.plot(current_data["raw"]["vgate"], current_data["raw"]["idrain"], ".")
+            plt.plot(current_data["raw"]["vgate"], current_data["raw"]["idrain"], ".-")
             plt.xlabel("vgate")
             plt.ylabel("idrain")
             plt.title(f"Raw {polarimeter} {lna}")
@@ -372,7 +376,7 @@ def main():
             plt.plot(
                 current_data["analyzed"]["vgate"]["mean"],
                 current_data["analyzed"]["idrain"]["mean"],
-                ".",
+                ".-",
             )
             plt.xlabel("vgate")
             plt.ylabel("idrain")
@@ -384,7 +388,7 @@ def main():
             plt.plot(
                 current_data["analyzed"]["vgate"]["median"],
                 current_data["analyzed"]["idrain"]["median"],
-                ".",
+                ".-",
             )
             plt.xlabel("vgate")
             plt.ylabel("idrain")
