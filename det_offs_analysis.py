@@ -235,12 +235,15 @@ def plot_analysed_data(det_offs_analysis, polarimeter: str, data_type: str, fit=
                 label=detector.values,
             )
     ax_mean.legend()
+    if data_type == "PWR_SUM":
+        data_type = "$I$"
     ax_mean.set_title(f"{data_type} mean")
     ax_mean.set_xlabel("offset")
     ax_mean.set_ylabel(f"{data_type} [adu]")
+    ax_std.legend()
     ax_std.set_title(f"{data_type} std")
     ax_std.set_xlabel("offset")
-    ax_std.set_ylabel(f"{data_type} [adu]")
+    ax_std.set_ylabel(f"{data_type} std [adu]")
 
     fig_mean.tight_layout()
     fig_std.tight_layout()
@@ -367,7 +370,7 @@ def main():
 
     args = parser.parse_args()
 
-    img_type = "svg"
+    img_type = "pdf"
     output_dir = Path(args.output_dir)
     output_file = (
         (output_dir / args.output_file).resolve() if args.output_file else None

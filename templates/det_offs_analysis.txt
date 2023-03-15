@@ -10,12 +10,6 @@ Data saved on file {{ data_file }}
 
 {% for polarimeter, pol_data in polarimeters.items() %}
 ## Polarimeter {{ polarimeter }}
-### Timelines:
-#### PWR data
-![]({{ pol_data.timeline.PWR }})
-
-#### DEM data
-![]({{ pol_data.timeline.DEM }})
 
 ### Fit
 #### PWR data
