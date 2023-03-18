@@ -1015,8 +1015,8 @@ def main():
         with open(f"{output_dir}/{args.json_output}", "r") as f:
             lna_analysis_json = json.load(f)
 
-    with open(f"{output_dir}/det_offs_analysis.json", "r") as f:
-        det_offs_analysis = json.load(f)
+    # with open(f"{output_dir}/det_offs_analysis.json", "r") as f:
+    # det_offs_analysis = json.load(f)
 
     data_types = ["PWR", "DEM", "PWR_SUM", "DEM_DIFF"]
     values = ["mean", "std", "sigma", "nsamples"]
@@ -1119,19 +1119,7 @@ def main():
                                             offset_idx, detector_idx
                                         ],
                                     )
-                                ] = det_offs_analysis[polarimeter][
-                                    str(
-                                        offsets[polarimeter][lna][
-                                            offset_idx, detector_idx
-                                        ]
-                                    )
-                                ][
-                                    data_type
-                                ][
-                                    detectors[detector_idx]
-                                ][
-                                    value
-                                ]
+                                ] = 0
 
         lna_analysis.reset_index("lna_idrain").to_netcdf(
             f"{output_dir}/lna_analysis_xarray_multiindex.nc"
