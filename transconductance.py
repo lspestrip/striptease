@@ -58,6 +58,88 @@ def data_in_range(data: Tuple[Time, np.ndarray], tag: Tag) -> Tuple[Time, np.nda
     return (times[index_start:index_end], values[index_start:index_end])
 
 
+def sigma_method(data):
+    even = data[::2]
+    odd = data[1::2]
+    if len(even) != len(odd):
+        even = even[:-1]
+    return np.std(odd - even) / np.sqrt(2)
+
+
+def analyze_data(data, polarimeter, tags_acq, detectors, idrains, offsets):
+    def analyze_type(data):
+        return np.mean(data), np.std(data), sigma_method(data), len(data)
+
+    analysis = {
+        data_type: {
+            detector: {
+                value: [None] * len(idrains)
+                for value in ("mean", "std", "sigma", "nsamples")
+            }
+            for detector in detectors
+        }
+        for data_type in ("PWR", "DEM", "PWR_SUM", "DEM_DIFF")
+    }
+
+    i = 0
+    for idrain in range(len(idrains)):
+        # tag_acq = tags_acq[i]
+        pwr = np.concatenate(
+            [
+                data_in_range(data[polarimeter]["PWR"], tags_acq[j])[1]
+                for j in range(i, i + len(offsets))
+            ]
+        )
+        dem = np.concatenate(
+            [
+                data_in_range(data[polarimeter]["DEM"], tags_acq[j])[1]
+                for j in range(i, i + len(offsets))
+            ]
+        )
+        i = i + len(offsets)
+
+        for detector in detectors:
+            pwr_det = pwr[f"PWR{detector}"]
+            (
+                analysis["PWR"][detector]["mean"][idrain],
+                analysis["PWR"][detector]["std"][idrain],
+                analysis["PWR"][detector]["sigma"][idrain],
+                analysis["PWR"][detector]["nsamples"][idrain],
+            ) = analyze_type(pwr_det)
+
+            dem_det = dem[f"DEM{detector}"]
+            (
+                analysis["DEM"][detector]["mean"][idrain],
+                analysis["DEM"][detector]["std"][idrain],
+                analysis["DEM"][detector]["sigma"][idrain],
+                analysis["DEM"][detector]["nsamples"][idrain],
+            ) = analyze_type(dem_det)
+
+            pwr_even = pwr_det[::2]
+            pwr_odd = pwr_det[1::2]
+            if len(pwr_even) != len(pwr_odd):
+                pwr_even = pwr_even[:-1]
+            (
+                analysis["PWR_SUM"][detector]["mean"][idrain],
+                analysis["PWR_SUM"][detector]["std"][idrain],
+                analysis["PWR_SUM"][detector]["sigma"][idrain],
+                analysis["PWR_SUM"][detector]["nsamples"][idrain],
+            ) = analyze_type((pwr_even + pwr_odd) / 2)
+
+            dem_even = dem_det[::2]
+            dem_odd = dem_det[1::2]
+            if len(dem_even) != len(dem_odd):
+                dem_even = dem_even[:-1]
+            (
+                analysis["DEM_DIFF"][detector]["mean"][idrain],
+                analysis["DEM_DIFF"][detector]["std"][idrain],
+                analysis["DEM_DIFF"][detector]["sigma"][idrain],
+                analysis["DEM_DIFF"][detector]["nsamples"][idrain],
+            ) = analyze_type(np.abs(dem_even - dem_odd) / 2)
+
+    return analysis
+
+
 def load_hk(
     ds: DataStorage,
     mjd_range: Tuple[str],
@@ -95,6 +177,43 @@ def load_hk(
     vdrain = (Time(vdrain[0].value + delta, format="mjd"), vdrain[1])
 
     return {"idrain": idrain, "vgate": vgate, "vdrain": vdrain}
+
+
+def load_data(
+    ds: DataStorage,
+    mjd_range: Tuple[str],
+    polarimeter: str,
+    detectors: Union[str, List[str], Tuple[str]] = ["Q1", "Q2", "U1", "U2"],
+    delta=0.0,
+) -> Dict[str, Dict[str, Tuple[Time, np.ndarray]]]:
+    if len(detectors) == 1:
+        detectors = detectors[0]
+    pwr = ds.load_sci(
+        mjd_range=(mjd_range.mjd_start - delta, mjd_range.mjd_end - delta),
+        polarimeter=polarimeter,
+        data_type="PWR",
+        detector=detectors,
+    )
+    dem = ds.load_sci(
+        mjd_range=(mjd_range.mjd_start - delta, mjd_range.mjd_end - delta),
+        polarimeter=polarimeter,
+        data_type="DEM",
+        detector=detectors,
+    )
+    if isinstance(detectors, str):
+        pwr = (
+            Time(pwr[0].value + delta, format="mjd"),
+            pwr[1].astype([(f"PWR{detectors}", pwr[1].dtype)]),
+        )
+        dem = (
+            Time(dem[0].value + delta, format="mjd"),
+            dem[1].astype([(f"DEM{detectors}", dem[1].dtype)]),
+        )
+    else:
+        pwr = (Time(pwr[0].value + delta, format="mjd"), pwr[1])
+        dem = (Time(dem[0].value + delta, format="mjd"), dem[1])
+
+    return {"PWR": pwr, "DEM": dem}
 
 
 def load_tags(
@@ -279,8 +398,8 @@ def main():
         ds, mjd_range, test_name=args.test_name, polarimeters=polarimeters
     )
 
-    #import pdb; pdb.set_trace()
-    store_to_pickle = True
+    # import pdb; pdb.set_trace()
+    store_to_pickle = False
     if store_to_pickle:
         log.log(log.INFO, "Storing in pickle")
         for polarimeter in polarimeters:
@@ -289,83 +408,184 @@ def main():
                     log.log(log.INFO, f"Storing in pickle: {polarimeter} {lna}")
                     tag = tags_test_lna[lna][0]
                     pickle.dump(
-                        load_hk(ds, tag, polarimeter, lna, detectors, args.delta), f
+                        {
+                            "hk": load_hk(
+                                ds, tag, polarimeter, lna, detectors, args.delta
+                            ),
+                            "sci": load_data(
+                                ds, tag, polarimeter, detectors, args.delta
+                            ),
+                        },
+                        f,
                     )
 
     idrains, offsets = load_idrains_and_offsets(
         polarimeters, lnas, excel_file=args.tuning_file
     )
 
-    analyze = True
+    analyze = False
+    hks = ("idrain", "vgate", "vdrain")
     if analyze:
         transconductance_json = {}
         for polarimeter in polarimeters:
             log.info(f"Analyzing polarimeter {polarimeter}")
-            transconductance_json[polarimeter] = {}
+            transconductance_json[polarimeter] = {"hk": {}, "sci": {}}
             for lna in lnas:
                 log.info(f"Analyzing polarimeter {polarimeter}: LNA {lna}")
                 with open(f"{pickle_filename}_{polarimeter}_{lna}.pkl", "rb") as f:
                     log.info(f"Loading data: {polarimeter} {lna}")
-                    data = pickle.load(f)
-                transconductance_json[polarimeter][lna] = {
-                    "raw": {hk: [] for hk in ("idrain", "vgate", "vdrain")},
+                    pickle_data = pickle.load(f)
+                    hk_data_pickle = pickle_data["hk"]
+                    sci_data_pickle = {polarimeter: pickle_data["sci"]}
+                transconductance_json[polarimeter]["hk"][lna] = {
+                    "raw": {hk: [] for hk in hks},
                     "analyzed": {
                         hk: {"mean": [], "median": [], "std": [], "nsamples": []}
-                        for hk in ("idrain", "vgate", "vdrain")
+                        for hk in hks
                     },
                 }
-                for idrain_idx in range(len(idrains[polarimeter][lna])):
-                    for hk in "idrain", "vgate", "vdrain":
-                        hk_data = []
-                        for offset_idx in range(len(offsets[polarimeter][lna])):
-                            tag = tags_acq[lna][idrain_idx * len(offsets) + offset_idx]
-                            hk_data += data_in_range(data[hk], tag)[1].tolist()
-                        transconductance_json[polarimeter][lna]["raw"][hk] += hk_data
+                transconductance_json[polarimeter]["sci"][lna] = analyze_data(
+                    sci_data_pickle,
+                    polarimeter,
+                    tags_acq[lna],
+                    detectors,
+                    idrains[polarimeter][lna],
+                    offsets[polarimeter][lna],
+                )
 
-                        transconductance_json[polarimeter][lna]["analyzed"][hk][
+                for idrain_idx in range(len(idrains[polarimeter][lna])):
+                    hk_data = {hk: [] for hk in hks}
+                    for offset_idx in range(len(offsets[polarimeter][lna])):
+                        tag = tags_acq[lna][idrain_idx * len(offsets) + offset_idx]
+                        for hk in hks:
+                            hk_data[hk] += data_in_range(hk_data_pickle[hk], tag)[
+                                1
+                            ].tolist()
+                    for hk in hks:
+                        transconductance_json[polarimeter]["hk"][lna]["raw"][
+                            hk
+                        ] += hk_data[hk]
+
+                        transconductance_json[polarimeter]["hk"][lna]["analyzed"][hk][
                             "mean"
-                        ].append(np.mean(hk_data))
-                        transconductance_json[polarimeter][lna]["analyzed"][hk][
+                        ].append(np.mean(hk_data[hk]))
+                        transconductance_json[polarimeter]["hk"][lna]["analyzed"][hk][
                             "median"
-                        ].append(np.median(hk_data))
-                        transconductance_json[polarimeter][lna]["analyzed"][hk][
+                        ].append(np.median(hk_data[hk]))
+                        transconductance_json[polarimeter]["hk"][lna]["analyzed"][hk][
                             "std"
-                        ].append(np.std(hk_data))
-                        transconductance_json[polarimeter][lna]["analyzed"][hk][
+                        ].append(np.std(hk_data[hk]))
+                        transconductance_json[polarimeter]["hk"][lna]["analyzed"][hk][
                             "nsamples"
-                        ].append(len(hk_data))
+                        ].append(len(hk_data[hk]))
 
         import json
 
         with open(f"{args.output_dir}/{args.json_output}", "w") as f:
             json.dump(transconductance_json, f, indent=2)
 
-    # else:
-    # transconductance_json = json.load(f"{args.output_dir}/{args.json_output}")
+    else:
+        import json
+
+        with open(f"{args.output_dir}/{args.json_output}", "r") as f:
+            transconductance_json = json.load(f)
 
     # Convert to np array
-    data = {}
+    hk_data = {}
+    sci_data = {}
     for polarimeter in polarimeters:
-        data[polarimeter] = {}
+        hk_data[polarimeter] = {}
+        sci_data[polarimeter] = {}
         for lna in lnas:
-            data[polarimeter][lna] = {}
-            data[polarimeter][lna]["raw"] = {
-                hk: np.array(transconductance_json[polarimeter][lna]["raw"][hk])
-                for hk in ("idrain", "vgate", "vdrain")
-            }
-            data[polarimeter][lna]["analyzed"] = {
-                hk: {
-                    value: np.array(
-                        transconductance_json[polarimeter][lna]["analyzed"][hk][value]
+            hk_data[polarimeter][lna] = {
+                "raw": {
+                    hk: np.array(
+                        transconductance_json[polarimeter]["hk"][lna]["raw"][hk]
                     )
-                    for value in ("mean", "median", "std", "nsamples")
-                }
-                for hk in ("idrain", "vgate", "vdrain")
+                    for hk in ("idrain", "vgate", "vdrain")
+                },
+                "analyzed": {
+                    hk: {
+                        value: np.array(
+                            transconductance_json[polarimeter]["hk"][lna]["analyzed"][
+                                hk
+                            ][value]
+                        )
+                        for value in ("mean", "median", "std", "nsamples")
+                    }
+                    for hk in ("idrain", "vgate", "vdrain")
+                },
             }
 
+            sci_data[polarimeter][lna] = {
+                data_type: {
+                    detector: {
+                        value: np.array(
+                            transconductance_json[polarimeter]["sci"][lna][data_type][
+                                detector
+                            ][value]
+                        )
+                        for value in ("mean", "std", "sigma", "nsamples")
+                    }
+                    for detector in detectors
+                }
+                for data_type in ("PWR", "DEM", "PWR_SUM", "DEM_DIFF")
+            }
+
+    # coords = [(lna, idrain) for lna in lnas for idrain in np.concatenate((np.array([0]), np.array(idrains["R0"][lna])))]
+    # idx = pd.MultiIndex.from_tuples(coords, names=("lna", "idrain"))
+
+    # hk_data = xr.DataArray(
+    # data=np.nan,
+    # coords=[
+    # ("polarimeter", polarimeters),
+    # ("lna", lnas),
+    # ("lna_idrain", idx),
+    # ("data_type", data_types),
+    # ("detector", detectors),
+    # ("value", values),
+    # ("idrain", all_idrains),
+    # ("offset", all_offsets)
+    # ]
+    # )
+
+    # print(hk_data["R0"]["HA1"]["analyzed"]["idrain"]["median"])
+    # print()
+    # print(sci_data["R0"]["HA1"]["PWR_SUM"]["Q1"]["mean"])
+    # print()
+    # print(hk_data["R0"]["HA1"]["analyzed"]["vgate"]["median"])
     for polarimeter in polarimeters:
         for lna in lnas:
-            current_data = data[polarimeter][lna]
+            plt.errorbar(
+                hk_data[polarimeter][lna]["analyzed"]["idrain"]["median"],
+                hk_data[polarimeter][lna]["analyzed"]["vgate"]["mean"],
+                hk_data[polarimeter][lna]["analyzed"]["vgate"]["std"],
+            )
+            plt.title(f"{polarimeter} {lna}")
+            plt.xlabel("idrain [$\\mu$A]")
+            plt.ylabel("vgate [V]")
+            plt.tight_layout()
+            plt.show()
+        # plt.scatter(hk_data[polarimeter]["HB2"]["analyzed"]["idrain"]["median"], hk_data[polarimeter]["HB2"]["analyzed"]["vgate"]["mean"], c=sci_data[polarimeter]["HB2"]["PWR_SUM"]["Q2"]["mean"])
+        # plt.show()
+        for lna in lnas:
+            plt.plot(
+                hk_data[polarimeter][lna]["analyzed"]["vgate"]["mean"],
+                hk_data[polarimeter][lna]["analyzed"]["vgate"]["std"],
+                ".-",
+                label=lna,
+            )
+        plt.title(f"{polarimeter}")
+        plt.xlabel("idrain [$\\mu$A]")
+        plt.ylabel("$\\sigma$ vgate [V]")
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+
+    return
+    for polarimeter in polarimeters:
+        for lna in lnas:
+            current_data = hk_data[polarimeter][lna]
             log.info(f"Generating plot: raw {polarimeter} {lna}")
             plt.plot(current_data["raw"]["vgate"], current_data["raw"]["idrain"], ".-")
             plt.xlabel("vgate")
