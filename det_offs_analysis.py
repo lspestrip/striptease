@@ -12,6 +12,7 @@ from astropy.time import Time
 import json
 from matplotlib import pyplot as plt
 import numpy as np
+from sigfig import round as sigfig_round
 import xarray as xr
 
 from striptease import (
@@ -24,6 +25,12 @@ from striptease.tuning import read_excel
 
 DEFAULT_POLARIMETERS = [polarimeter for _, _, polarimeter in polarimeter_iterator()]
 SATURATION_VALUE = 524287.0
+
+
+def round(*args):
+    print(args)
+    print(*args)
+    return sigfig_round(*args, cutoff=29, separation="brackets", output_type=str)
 
 
 def load_offsets(polarimeters, excel_file):
@@ -237,11 +244,12 @@ def plot_analysed_data(det_offs_analysis, polarimeter: str, data_type: str, fit=
     ax_mean.legend()
     if data_type == "PWR_SUM":
         data_type = "$I$"
-    ax_mean.set_title(f"{data_type} mean")
+    # ax_mean.set_title(f"{data_type} mean")
+    ax_mean.set_title(f"{polarimeter}")
     ax_mean.set_xlabel("offset")
     ax_mean.set_ylabel(f"{data_type} [adu]")
     ax_std.legend()
-    ax_std.set_title(f"{data_type} std")
+    ax_std.set_title(f"{polarimeter}")
     ax_std.set_xlabel("offset")
     ax_std.set_ylabel(f"{data_type} std [adu]")
 
@@ -409,9 +417,12 @@ def main():
 
     x = data_in_range(data["R0"]["PWR"], tags_acq[21])[1]
     plt.plot(x["PWRQ1"], marker=".")
-    plt.show()
+    # plt.show()
+    plt.close()
+
     plt.hist(x["PWRQ1"], bins=30)
-    plt.show()
+    # plt.show()
+    plt.close()
     print(sp.stats.shapiro(x["PWRQ1"]))
     print(sp.stats.normaltest(x["PWRQ1"]))
     print(sp.stats.anderson(x["PWRQ1"]))
@@ -506,8 +517,8 @@ def main():
         data_type=["PWR", "PWR_SUM"], value="mean"
     ).curvefit("offset", fit_function)
 
-    print(pwr_fit.sel(data_type="PWR_SUM", polarimeter="R0", detector="Q1"))
-    print(pwr_fit.sel(data_type="PWR_SUM", polarimeter="R0", detector="Q1"))
+    # print(pwr_fit.sel(data_type="PWR_SUM", polarimeter="R0", detector="Q1"))
+    # print(pwr_fit.sel(data_type="PWR_SUM", polarimeter="R0", detector="Q1"))
 
     pwr_chi = (
         (
@@ -534,42 +545,44 @@ def main():
     # det_offs_analysis.sel(polarimeter="R0", data_type="PWR", value="mean").plot(x="offset", hue="detector", ls="", marker=".")
     # plt.show()
 
-    (
-        det_offs_analysis.sel(data_type=["PWR", "PWR_SUM"], value="mean")
-        - xr.apply_ufunc(
-            fit_function,
-            det_offs_analysis.coords["offset"],
-            pwr_fit["curvefit_coefficients"].sel(
-                param="angular_coefficient", data_type=["PWR", "PWR_SUM"]
-            ),
-            pwr_fit["curvefit_coefficients"].sel(
-                param="saturation_offset", data_type=["PWR", "PWR_SUM"]
-            ),
-        )
-    ).sel(data_type="PWR_SUM", detector="U1").plot(
-        x="offset", hue="polarimeter", marker="."
-    )
-    plt.xlabel("Offset")
-    plt.ylabel("$I$ (measured - fit)")
-    plt.title("")
-    plt.savefig(f"residuals_U1.{img_type}")
-    plt.show()
-    (
-        det_offs_analysis.sel(data_type=["PWR", "PWR_SUM"], value="mean")
-        - xr.apply_ufunc(
-            fit_function,
-            det_offs_analysis.coords["offset"],
-            pwr_fit["curvefit_coefficients"].sel(
-                param="angular_coefficient", data_type=["PWR", "PWR_SUM"]
-            ),
-            pwr_fit["curvefit_coefficients"].sel(
-                param="saturation_offset", data_type=["PWR", "PWR_SUM"]
-            ),
-        )
-    ).sel(data_type="PWR_SUM", detector="U2").plot(
-        x="offset", hue="polarimeter", marker="."
-    )
-    plt.show()
+    # (
+    # det_offs_analysis.sel(data_type=["PWR", "PWR_SUM"], value="mean")
+    # - xr.apply_ufunc(
+    # fit_function,
+    # det_offs_analysis.coords["offset"],
+    # pwr_fit["curvefit_coefficients"].sel(
+    # param="angular_coefficient", data_type=["PWR", "PWR_SUM"]
+    # ),
+    # pwr_fit["curvefit_coefficients"].sel(
+    # param="saturation_offset", data_type=["PWR", "PWR_SUM"]
+    # ),
+    # )
+    # ).sel(data_type="PWR_SUM", detector="U1").plot(
+    # x="offset", hue="polarimeter", marker="."
+    # )
+    # plt.xlabel("Offset")
+    # plt.ylabel("$I$ (measured - fit)")
+    # plt.title("")
+    # plt.savefig(f"residuals_U1.{img_type}")
+    # plt.show()
+    # plt.close()
+    # (
+    # det_offs_analysis.sel(data_type=["PWR", "PWR_SUM"], value="mean")
+    # - xr.apply_ufunc(
+    # fit_function,
+    # det_offs_analysis.coords["offset"],
+    # pwr_fit["curvefit_coefficients"].sel(
+    # param="angular_coefficient", data_type=["PWR", "PWR_SUM"]
+    # ),
+    # pwr_fit["curvefit_coefficients"].sel(
+    # param="saturation_offset", data_type=["PWR", "PWR_SUM"]
+    # ),
+    # )
+    # ).sel(data_type="PWR_SUM", detector="U2").plot(
+    # x="offset", hue="polarimeter", marker="."
+    # )
+    # plt.show()
+    # plt.close()
 
     if args.report:
         report_data = {
@@ -588,7 +601,9 @@ def main():
         for polarimeter in polarimeters:
             for data_type in "PWR", "DEM":
                 # timeline_plot = (output_dir / f"timeline_{polarimeter}_{data_type}.{img_type}").resolve()
-                timeline_plot = f"timeline_{polarimeter}_{data_type}.{img_type}"
+                timeline_plot = (
+                    output_dir / f"timeline_{polarimeter}_{data_type}.{img_type}"
+                )
 
                 report_data["polarimeters"][polarimeter]["timeline"][
                     data_type
@@ -601,8 +616,12 @@ def main():
                 plt.close()
 
             for data_type in "PWR", "DEM", "PWR_SUM", "DEM_DIFF":
-                fit_mean_plot = f"fit_{polarimeter}_{data_type}_mean.{img_type}"
-                fit_std_plot = f"fit_{polarimeter}_{data_type}_std.{img_type}"
+                fit_mean_plot = (
+                    output_dir / f"fit_{polarimeter}_{data_type}_mean.{img_type}"
+                )
+                fit_std_plot = (
+                    output_dir / f"fit_{polarimeter}_{data_type}_std.{img_type}"
+                )
 
                 report_data["polarimeters"][polarimeter]["fit"][data_type] = {
                     "mean_plot": fit_mean_plot,
@@ -652,6 +671,49 @@ def main():
                     for detector in detectors
                 }
 
+        for polarimeter in polarimeters:
+            with open(output_dir / f"table_{polarimeter}", "w") as f:
+                row = f"{polarimeter}"
+                for detector in detectors:
+                    fit = pwr_fit["curvefit_coefficients"].sel(
+                        polarimeter=polarimeter, data_type="PWR_SUM", detector=detector
+                    )
+                    angular_coefficient = fit.sel(
+                        param="angular_coefficient"
+                    ).values.item()
+                    saturation_offset = fit.sel(param="saturation_offset").values.item()
+                    cov_matrix = pwr_fit["curvefit_covariance"].sel(
+                        polarimeter=polarimeter, data_type="PWR_SUM", detector=detector
+                    )
+                    sigma_angular_coefficient = cov_matrix.isel(
+                        cov_i=0, cov_j=0
+                    ).values.item()
+                    sigma_saturation_offset = cov_matrix.isel(
+                        cov_i=1, cov_j=1
+                    ).values.item()
+                    covariance = cov_matrix.isel(cov_i=0, cov_j=1).values.item()
+                    print(pwr_chi_reduced)
+                    chi = (
+                        pwr_chi_reduced.sel(
+                            # polarimeter=polarimeter,
+                            data_type=data_type,
+                            detector=detector,
+                        ).values[0],
+                    )
+                    sigma_chi = (
+                        pwr_chi_sigma.sel(
+                            # polarimeter=polarimeter,
+                            data_type=data_type,
+                            detector=detector,
+                        ).values[0],
+                    )
+                    row += (
+                        f" & {detector} & {round(angular_coefficient, sigma_angular_coefficient)} & "
+                        f"{round(saturation_offset, sigma_saturation_offset)} & {sigfig_round(covariance, covariance, cutoff=29, sep=tuple)[0]} & "
+                        f"{round(chi[0], sigma_chi[0])} \\\\\n"
+                    )
+                row += "\\hline\n"
+                f.write(row)
         log.log(log.INFO, "Generating report.")
         from jinja2 import Environment, FileSystemLoader, select_autoescape
 
