@@ -4,6 +4,7 @@ from copy import copy
 import logging as log
 
 log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
+from pathlib import Path
 import pickle
 from typing import Dict, List, Tuple, Union
 
@@ -12,6 +13,7 @@ import json
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
+from sigfig import round as sigfig_round
 import xarray as xr
 
 from striptease import (
@@ -25,6 +27,10 @@ from striptease.tuning import read_excel
 DEFAULT_POLARIMETERS = [polarimeter for _, _, polarimeter in polarimeter_iterator()]
 
 THRESHOLD = 524287.0
+
+
+def round(*args):
+    return sigfig_round(*args, cutoff=29, separation="brackets", output_type=str)
 
 
 def load_idrains_and_offsets(polarimeters, lnas, excel_file):
@@ -417,7 +423,7 @@ def saturates(data, threshold=THRESHOLD):
     return data >= threshold
 
 
-def do_analysis(lna_analysis):
+def do_analysis(lna_analysis, polarimeters, output_dir):
     # lna_analysis.sel(
     # data_type="PWR_SUM", value="mean", polarimeter="R0", detector="Q1", lna="HA1"
     # ).isel(idrain=slice(1, None)).plot(x="offset", hue="idrain")
@@ -425,39 +431,130 @@ def do_analysis(lna_analysis):
     # lna_analysis.sel(
     # data_type="PWR_SUM", value="mean", polarimeter="R0", lna="HA1", detector="Q1"
     # ).isel(idrain=slice(1, None)).plot.pcolormesh(x="idrain", y="offset", cmap="Greys")#hue="detector", marker=".")
-    plt.show()
-    lna_analysis.sel(
-        data_type="PWR_SUM",
-        value="std",
-        polarimeter="R0",
-        lna="HA1",
-        detector="Q1",
-        offset=2500,
-    ).isel(idrain=slice(1, None)).plot()
-    plt.show()
-    print(
-        lna_analysis.sel(lna="HA1").isel(idrain=slice(1, None)).coords["idrain"].values
+    # plt.show()
+
+    img_types = ["png", "pdf", "svg"]
+    lnas = ["HA1", "HA2", "HA3", "HB1", "HB2", "HB3"]
+
+    # Fit I(offs)
+    pwr_fit_offset = lna_analysis.sel(data_type="PWR_SUM", value="mean").curvefit(
+        "offset", fit_function
     )
-    plt.errorbar(
-        lna_analysis.sel(lna="HA1").isel(idrain=slice(1, None)).coords["idrain"],
-        lna_analysis.sel(
-            data_type="PWR_SUM",
-            value="mean",
-            polarimeter="R0",
-            lna="HA1",
-            detector="Q1",
-            offset=2500,
-        ).isel(idrain=slice(1, None)),
-        lna_analysis.sel(
-            data_type="PWR_SUM",
-            value="std",
-            polarimeter="R0",
-            lna="HA1",
-            detector="Q1",
-            offset=2500,
-        ).isel(idrain=slice(1, None)),
-    )
-    plt.show()
+
+    detectors = lna_analysis.coords["detector"].values
+
+    for polarimeter in polarimeters:
+        mean = {}
+        std = {}
+        for lna in "HA1", "HA2", "HA3", "HB1", "HB2", "HB3":
+            mean[lna] = (
+                pwr_fit_offset["curvefit_coefficients"]
+                .sel(
+                    param="angular_coefficient",
+                    polarimeter=polarimeter,
+                    lna=lna,
+                )
+                .isel(idrain=slice(1, None))
+                .mean(dim="idrain")
+            )
+            std[lna] = (
+                pwr_fit_offset["curvefit_coefficients"]
+                .sel(
+                    param="angular_coefficient",
+                    polarimeter=polarimeter,
+                    lna=lna,
+                )
+                .isel(idrain=slice(1, None))
+                .std(dim="idrain")
+            )
+
+        x = np.argwhere(
+            np.array(
+                np.logical_not(
+                    saturates(
+                        lna_analysis.sel(
+                            polarimeter=polarimeter, value="mean", data_type="PWR_SUM"
+                        )
+                    ).any(dim=("lna_idrain"))
+                )
+            )
+        )
+        old_detector = None
+        min_non_sat_offs = {detector: "/" for detector in detectors}
+        for y in x:
+            detector = (lna_analysis.coords["detector"][y[0]].values.item(),)
+            if detector == old_detector:
+                continue
+            old_detector = detector
+            offset = (lna_analysis.coords["offset"][y[1]].values.item(),)
+            min_non_sat_offs[detector[0]] = offset[0]
+
+        for lna in lnas:
+            for detector in detectors:
+                plt.errorbar(
+                    lna_analysis.sel(lna=lna)
+                    .isel(idrain=slice(1, None))
+                    .coords["idrain"],
+                    lna_analysis.sel(
+                        data_type="PWR_SUM",
+                        value="mean",
+                        polarimeter=polarimeter,
+                        lna=lna,
+                        detector=detector,
+                        offset=2500,
+                    ).isel(idrain=slice(1, None)),
+                    lna_analysis.sel(
+                        data_type="PWR_SUM",
+                        value="std",
+                        polarimeter=polarimeter,
+                        lna=lna,
+                        detector="Q1",
+                        offset=2500,
+                    ).isel(idrain=slice(1, None)),
+                    fmt=".-",
+                    label=detector,
+                )
+                plt.title(f"{polarimeter} {lna}")
+                plt.xlabel("idrain [$\\mu$A]")
+                plt.ylabel("$I$ [adu]")
+                plt.legend()
+                plt.tight_layout()
+            for img_type in img_types:
+                plt.savefig(output_dir / f"id_s_{polarimeter}_{lna}.{img_type}")
+            plt.close()
+            pwr_fit_offset["curvefit_coefficients"].sel(
+                param="saturation_offset",
+                polarimeter=polarimeter,
+                lna=lna,
+            ).isel(idrain=slice(1, None)).plot(x="idrain", hue="detector", marker=".")
+            plt.title(f"{polarimeter} {lna}")
+            plt.xlabel("idrain [$\\mu$A]")
+            plt.ylabel("Saturation offset")
+            plt.legend(detectors)
+            plt.tight_layout()
+            for img_type in img_types:
+                plt.savefig(output_dir / f"sat_off_{polarimeter}_{lna}.{img_type}")
+            plt.close()
+
+        with open(output_dir / f"table_{polarimeter}", "w") as f:
+            row = f"{polarimeter}"
+            for lna in lnas:
+                row += f" & Ang. coeff. {lna}"
+                for detector in detectors:
+                    mean_angular_coefficient = (
+                        mean[lna].sel(detector=detector).values.item()
+                    )
+                    std_angular_coefficient = (
+                        std[lna].sel(detector=detector).values.item()
+                    )
+
+                    row += f" & {round(mean_angular_coefficient, std_angular_coefficient) if std_angular_coefficient!=np.inf else sigfig_round(mean_angular_coefficient, decimals=2)}"
+                row += " \\\\\n"
+            row += "& Non sat. off. "
+            for detector in detectors:
+                row += f" & {min_non_sat_offs[detector]}"
+            row += " \\\\\n\\hline\n"
+            f.write(row)
 
     return
     lna_analysis.sel(
@@ -829,7 +926,7 @@ def main():
     detectors = ["Q1", "Q2", "U1", "U2"]
     lnas = ["HA1", "HA2", "HA3", "HB1", "HB2", "HB3"]
     mjd_range = (args.mjd_start, args.mjd_end)
-    output_dir = args.output_dir
+    output_dir = Path(args.output_dir)
 
     store_to_pickle = False
     pickle_filename = f"{output_dir}/lna_analysis_data"
@@ -1045,7 +1142,7 @@ def main():
             f"{output_dir}/lna_analysis_xarray_multiindex.nc"
         ).set_index(lna_idrain=["lna", "idrain"])
 
-    do_analysis(lna_analysis)
+    do_analysis(lna_analysis, polarimeters, output_dir)
 
 
 if __name__ == "__main__":
