@@ -118,6 +118,8 @@ def load_tags(
             or tag.name.startswith(f"{test_name}_LNA_{lna}")
             or tag.name.startswith(f"{test_name}_TEST_{lna}")
             or tag.name.startswith(f"{test_name}_TEST_LNA_{lna}")
+            or tag.name.startswith(f"{test_name}_LNA_TEST_{lna}")
+            or tag.name.startswith(f"{test_name}_LNA_TEST_LNA_{lna}")
         ]
         for lna in ("HA1", "HA2", "HA3", "HB1", "HB2", "HB3")
     }
@@ -277,7 +279,8 @@ def main():
         ds, mjd_range, test_name=args.test_name, polarimeters=polarimeters
     )
 
-    store_to_pickle = False
+    #import pdb; pdb.set_trace()
+    store_to_pickle = True
     if store_to_pickle:
         log.log(log.INFO, "Storing in pickle")
         for polarimeter in polarimeters:
@@ -288,7 +291,6 @@ def main():
                     pickle.dump(
                         load_hk(ds, tag, polarimeter, lna, detectors, args.delta), f
                     )
-        return
 
     idrains, offsets = load_idrains_and_offsets(
         polarimeters, lnas, excel_file=args.tuning_file
