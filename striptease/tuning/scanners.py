@@ -163,6 +163,7 @@ class Scanner2D(ABC):
         import numpy as np
 
         res = []
+        res.append((self.x, self.y))
         while self.next() is True:
             res.append((self.x, self.y))
 
@@ -242,8 +243,8 @@ class GridScanner(Scanner2D):
 
 
 class IrregularGridScanner(Scanner2D):
-    def __init__(self, x: List, y: List):
-        super().__init__()
+    def __init__(self, x: List, y: List, x_label="x", y_label="y"):
+        super().__init__(x_label=x_label, y_label=y_label)
         self._x_scanner = IrregularScanner(*x)
         self._y_scanner = IrregularScanner(*y)
         self.x = self._x_scanner.x
