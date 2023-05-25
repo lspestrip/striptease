@@ -3,6 +3,8 @@
 # Copyright (C) 2018 Stefano Sartor - stefano.sartor@inaf.it
 import logging
 from copy import copy
+from typing import Optional
+
 from config import Config
 import json
 import random
@@ -12,9 +14,10 @@ import socket
 import web.rest.errors as err
 
 # This is used by the code that sends commands directly to the socket
-_KIND_TO_OPCODE = {
-    "tag": "TAG",
-    "command": "SLO",
+_URL_TO_OPCODE: dict[str, Optional[str]] = {
+    "/rest/tag": "TAG",
+    "/rest/slo": "SLO",
+    "/rest/log": None,  # This must not be sent to the socket
 }
 
 
@@ -132,15 +135,20 @@ class Connection(object):
             socket_msg = copy(message)
             socket_msg["user"] = self.conf.get_direct_username()
             try:
-                socket_msg["opcode"] = _KIND_TO_OPCODE[socket_msg["kind"]]
-                self.socket.sendall(json.dumps(socket_msg).encode("utf-8"))
-                return json.loads(self.socket.recv(2048).decode("utf-8"))
+                socket_msg["opcode"] = _URL_TO_OPCODE[url]
+
+                if socket_msg["opcode"]:
+                    self.socket.sendall(json.dumps(socket_msg).encode("utf-8"))
+                    return json.loads(self.socket.recv(2048).decode("utf-8"))
+                else:
+                    # Fall back to HTTPS
+                    pass
             except KeyError:
+                # Emit a warning and fall back to HTTPS
                 logging.warning(
                     f"Unable to translate {message=} into command {socket_msg=} and send it "
                     + f"to socket through {url=}, falling back to HTTP"
                 )
-                # Fall back to the HTTP code
 
         pkt = json.dumps(message)
 
