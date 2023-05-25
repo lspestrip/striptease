@@ -102,9 +102,15 @@ class StripConnection(Connection):
     """
 
     def __init__(
-        self, user=None, password=None, addr=None, schema=None, post_command=None
+        self,
+        user=None,
+        password=None,
+        addr=None,
+        schema=None,
+        post_command=None,
+        use_fast_socket=True,
     ):
-        super(StripConnection, self).__init__()
+        super(StripConnection, self).__init__(use_fast_socket=use_fast_socket)
 
         self.__user = user
         self.__password = password
@@ -154,7 +160,7 @@ class StripConnection(Connection):
 
         super(StripConnection, self).login(cur_user, cur_password)
 
-    def post(self, rel_url, message):
+    def post(self, url, message, retry_count=10, retry_delay_s=None, force_https=False):
         """Post a request to the Strip control software
 
         This command sends a request to the instrument. Requests can
@@ -166,7 +172,7 @@ class StripConnection(Connection):
 
         Args:
 
-            rel_url (str): Relative path to the URL to use, e.g.,
+            url (str): Relative path to the URL to use, e.g.,
                 ``rest/slo``. See the Wep API to know what are the
                 available URLs.
 
@@ -175,12 +181,18 @@ class StripConnection(Connection):
                 paste here the text displayed by the "Show JSON"
                 button in the STRIP Web portal.
 
+            force_https (bool): If ``True``, the command will be sent
+                through the web server, even if a direct socket connection
+                with the instrument is available. It should be used for
+                those commands that are handled by the webserver, like
+                ``tag_query``.
+
         Returns:
 
             A dictionary indicating the status of the operation.
 
         """
-        abs_url = self.__rel2abs_url(rel_url)
+        abs_url = self.__rel2abs_url(url)
         if self.post_command:
             result = self.post_command(abs_url, message)
         else:
@@ -188,7 +200,13 @@ class StripConnection(Connection):
             # JSON scripts: in those cases, self.post_command is always set,
             # and this "if" has no effect.
             if abs_url != "":
-                result = super(StripConnection, self).post(url=abs_url, message=message)
+                result = super(StripConnection, self).post(
+                    url=abs_url,
+                    message=message,
+                    retry_count=retry_count,
+                    retry_delay_s=retry_delay_s,
+                    force_https=force_https,
+                )
                 # TODO: once the firmware is updated, remove "ERROR_TIMEOUT_GET" from here!
                 if result["status"] not in ["OK", "ERROR_TIMEOUT_GET"]:
                     assert False, "Error in POST ({0})".format(result["status"])
@@ -451,7 +469,7 @@ class StripConnection(Connection):
         self.last_response = self.post("rest/data", dic)
         return self.last_response["data"]
 
-    def tag_query(self, tag=None, tag_id=None, start_mjd=None, end_mjd=None, id=None):
+    def tag_query(self, tag=None, tag_id=None, start_mjd=None, end_mjd=None):
         """Query a list of tags
 
         The function can filter the tags
@@ -461,12 +479,12 @@ class StripConnection(Connection):
             tag (str or None): the name of the tag to search, e.g.,
                 "linearity_test"
 
+            tag_id (integer or None): the ID of the tag
+
             start_mjd (float or None): if not None, the initial
                 Modified Julian Date (MJD).
 
             end_mjd (float or None): if not None, the final MJD.
-
-            id (integer or None): the ID of the tag
 
         Returns:
 
@@ -501,7 +519,9 @@ class StripConnection(Connection):
         if tag_id:
             dic["id"] = tag_id
 
-        self.last_response = self.post("rest/tag_query", dic)
+        # We force the HTTPS protocol even if a direct socket is available because this
+        # command must be handled by the webserver.
+        self.last_response = self.post("rest/tag_query", dic, force_https=True)
         return self.last_response["tags"]
 
     def tag_start(self, name, comment=""):
