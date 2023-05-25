@@ -469,7 +469,7 @@ class StripConnection(Connection):
         self.last_response = self.post("rest/data", dic)
         return self.last_response["data"]
 
-    def tag_query(self, tag=None, tag_id=None, start_mjd=None, end_mjd=None, id=None):
+    def tag_query(self, tag=None, tag_id=None, start_mjd=None, end_mjd=None):
         """Query a list of tags
 
         The function can filter the tags
@@ -479,12 +479,12 @@ class StripConnection(Connection):
             tag (str or None): the name of the tag to search, e.g.,
                 "linearity_test"
 
+            tag_id (integer or None): the ID of the tag
+
             start_mjd (float or None): if not None, the initial
                 Modified Julian Date (MJD).
 
             end_mjd (float or None): if not None, the final MJD.
-
-            id (integer or None): the ID of the tag
 
         Returns:
 
