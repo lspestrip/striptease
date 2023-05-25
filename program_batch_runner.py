@@ -141,7 +141,7 @@ def main(stdscr):
 
         logmsg(
             stdscr,
-            "…connection established, fast socket connection is {'enabled' if conn.use_fast_socket else 'disabled'}",
+            f"…connection established, fast socket connection is {'enabled' if conn.use_fast_socket else 'disabled'}",
         )
 
         if (not args.dry_run) and (not args.do_not_round):
