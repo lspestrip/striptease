@@ -18,6 +18,7 @@ _URL_TO_OPCODE: Dict[str, Optional[str]] = {
     "/rest/tag": "TAG",
     "/rest/slo": "SLO",
     "/rest/log": None,  # This must not be sent to the socket
+    "/rest/command": None,  # Example: round_all_files (handled by the webserver)
 }
 
 
