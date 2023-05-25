@@ -116,16 +116,19 @@ class Connection(object):
             self.socket.close()
             self.socket = None
 
-    def post(self, url, message, retry_count=10, retry_delay_s=None):
+    def post(self, url, message, retry_count=10, retry_delay_s=None, force_https=False):
         """encode the message in json format and send it using POST http method.
         :param str url: url to send the message.
         :param message: dictionary or list to send.
         :param retry_count: number of times to retry the command if error 503 happens
         :param retry_delay_s: time to wait before retrying to send the command
+        :param force_https: if set to ``True``, always use the slow HTTPS connection
+            even if a direct socket is available. This is required for some commands
+            (like tag_query), which must always be handled by the webserver.
         :return: dictionary of the decoded json response.
         :raises HTTPError: any error that occours while communicating with the server.
         """
-        if self.socket:
+        if self.socket and (not force_https):
             socket_msg = copy(message)
             socket_msg["user"] = self.conf.get_direct_username()
             try:

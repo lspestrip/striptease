@@ -154,7 +154,7 @@ class StripConnection(Connection):
 
         super(StripConnection, self).login(cur_user, cur_password)
 
-    def post(self, rel_url, message):
+    def post(self, rel_url, message, force_https=False):
         """Post a request to the Strip control software
 
         This command sends a request to the instrument. Requests can
@@ -174,6 +174,12 @@ class StripConnection(Connection):
                 dictionary, which will be encoded as JSON. You can
                 paste here the text displayed by the "Show JSON"
                 button in the STRIP Web portal.
+
+            force_https (bool): If ``True``, the command will be sent
+                through the web server, even if a direct socket connection
+                with the instrument is available. It should be used for
+                those commands that are handled by the webserver, like
+                ``tag_query``.
 
         Returns:
 
@@ -501,7 +507,9 @@ class StripConnection(Connection):
         if tag_id:
             dic["id"] = tag_id
 
-        self.last_response = self.post("rest/tag_query", dic)
+        # We force the HTTPS protocol even if a direct socket is available because this
+        # command must be handled by the webserver.
+        self.last_response = self.post("rest/tag_query", dic, force_https=True)
         return self.last_response["tags"]
 
     def tag_start(self, name, comment=""):
