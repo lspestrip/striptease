@@ -131,12 +131,14 @@ def main(stdscr):
     if not args.dry_run:
         print(f"{len(cur_json_procedure)} commands ready to be executed, let's go!")
         print("Going to establish a connection with the server…")
-        conn = StripConnection()
+        conn = StripConnection(use_fast_socket=not args.https_connection)
         conn.login()
         if close_tags(stdscr, conn):
             return
 
-        print("…connection established")
+        print(
+            "…connection established, fast socket connection is {'enabled' if conn.use_fast_socket else 'disabled'}"
+        )
 
         if (not args.dry_run) and (not args.do_not_round):
             conn.round_all_files()
@@ -278,6 +280,12 @@ Pressing "q" will halt the execution.
         default=False,
         action="store_true",
         help="Wait a key before ending the procedure",
+    )
+    parser.add_argument(
+        "--https-connection",
+        default=False,
+        action="store_true",
+        help="If set to True, avoid using direct socket communication even if available",
     )
     parser.add_argument(
         "--wait-time",

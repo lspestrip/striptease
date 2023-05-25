@@ -102,9 +102,15 @@ class StripConnection(Connection):
     """
 
     def __init__(
-        self, user=None, password=None, addr=None, schema=None, post_command=None
+        self,
+        user=None,
+        password=None,
+        addr=None,
+        schema=None,
+        post_command=None,
+        use_fast_socket=True,
     ):
-        super(StripConnection, self).__init__()
+        super(StripConnection, self).__init__(use_fast_socket=use_fast_socket)
 
         self.__user = user
         self.__password = password
