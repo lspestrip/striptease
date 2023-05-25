@@ -160,7 +160,7 @@ class StripConnection(Connection):
 
         super(StripConnection, self).login(cur_user, cur_password)
 
-    def post(self, rel_url, message, force_https=False):
+    def post(self, url, message, retry_count=10, retry_delay_s=None, force_https=False):
         """Post a request to the Strip control software
 
         This command sends a request to the instrument. Requests can
@@ -172,7 +172,7 @@ class StripConnection(Connection):
 
         Args:
 
-            rel_url (str): Relative path to the URL to use, e.g.,
+            url (str): Relative path to the URL to use, e.g.,
                 ``rest/slo``. See the Wep API to know what are the
                 available URLs.
 
@@ -192,7 +192,7 @@ class StripConnection(Connection):
             A dictionary indicating the status of the operation.
 
         """
-        abs_url = self.__rel2abs_url(rel_url)
+        abs_url = self.__rel2abs_url(url)
         if self.post_command:
             result = self.post_command(abs_url, message)
         else:
@@ -200,7 +200,13 @@ class StripConnection(Connection):
             # JSON scripts: in those cases, self.post_command is always set,
             # and this "if" has no effect.
             if abs_url != "":
-                result = super(StripConnection, self).post(url=abs_url, message=message)
+                result = super(StripConnection, self).post(
+                    url=abs_url,
+                    message=message,
+                    retry_count=retry_count,
+                    retry_delay_s=retry_delay_s,
+                    force_https=force_https,
+                )
                 # TODO: once the firmware is updated, remove "ERROR_TIMEOUT_GET" from here!
                 if result["status"] not in ["OK", "ERROR_TIMEOUT_GET"]:
                     assert False, "Error in POST ({0})".format(result["status"])
