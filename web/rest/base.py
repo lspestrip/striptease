@@ -134,21 +134,25 @@ class Connection(object):
         if self.socket and (not force_https):
             socket_msg = copy(message)
             socket_msg["user"] = self.conf.get_direct_username()
-            try:
-                socket_msg["opcode"] = _URL_TO_OPCODE[url]
+            socket_msg["opcode"] = None
+            found = False
+            for cur_url_part, cur_opcode in _URL_TO_OPCODE.items():
+                if cur_url_part in url:
+                    found = True
+                    socket_msg["opcode"] = cur_opcode
 
-                if socket_msg["opcode"]:
-                    self.socket.sendall(json.dumps(socket_msg).encode("utf-8"))
-                    return json.loads(self.socket.recv(2048).decode("utf-8"))
-                else:
-                    # Fall back to HTTPS
-                    pass
-            except KeyError:
+            if socket_msg["opcode"]:
+                self.socket.sendall(json.dumps(socket_msg).encode("utf-8"))
+                return json.loads(self.socket.recv(2048).decode("utf-8"))
+            elif not found:
                 # Emit a warning and fall back to HTTPS
                 logging.warning(
                     f"Unable to translate {message=} into command {socket_msg=} and send it "
                     + f"to socket through {url=}, falling back to HTTP"
                 )
+            else:
+                # Quietly fall back to HTTPS
+                pass
 
         pkt = json.dumps(message)
 
