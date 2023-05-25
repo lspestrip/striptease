@@ -129,15 +129,19 @@ def main(stdscr):
     stdscr.keypad(True)
 
     if not args.dry_run:
-        print(f"{len(cur_json_procedure)} commands ready to be executed, let's go!")
-        print("Going to establish a connection with the server…")
+        logmsg(
+            stdscr,
+            f"{len(cur_json_procedure)} commands ready to be executed, let's go!",
+        )
+        logmsg(stdscr, "Going to establish a connection with the server…")
         conn = StripConnection(use_fast_socket=not args.https_connection)
         conn.login()
         if close_tags(stdscr, conn):
             return
 
-        print(
-            "…connection established, fast socket connection is {'enabled' if conn.use_fast_socket else 'disabled'}"
+        logmsg(
+            stdscr,
+            "…connection established, fast socket connection is {'enabled' if conn.use_fast_socket else 'disabled'}",
         )
 
         if (not args.dry_run) and (not args.do_not_round):
