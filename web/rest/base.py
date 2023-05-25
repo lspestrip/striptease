@@ -3,7 +3,7 @@
 # Copyright (C) 2018 Stefano Sartor - stefano.sartor@inaf.it
 import logging
 from copy import copy
-from typing import Optional
+from typing import Dict, Optional
 
 from config import Config
 import json
@@ -14,7 +14,7 @@ import socket
 import web.rest.errors as err
 
 # This is used by the code that sends commands directly to the socket
-_URL_TO_OPCODE: dict[str, Optional[str]] = {
+_URL_TO_OPCODE: Dict[str, Optional[str]] = {
     "/rest/tag": "TAG",
     "/rest/slo": "SLO",
     "/rest/log": None,  # This must not be sent to the socket
