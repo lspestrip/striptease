@@ -18,6 +18,8 @@ from dataclasses import dataclass
 from scipy.interpolate import interp1d
 
 from .biases import BiasConfiguration
+from .rle import RunLengthTime, decompress_times_rle
+
 
 # Any MJD value smaller than this will be considered invalid. We must
 # perform this kind of checks because the electronics has the nasty
@@ -362,6 +364,22 @@ def _open_file(filepath, filemode):
     return h5py.File(stream, filemode)
 
 
+def _load_times(hdf5_pol_group) -> Time:
+    try:
+        time_interval = hdf5_pol_group["rle_time_interval"]
+        time_nsamples = hdf5_pol_group["rle_time_nsamples"]
+
+        rle = RunLengthTime(
+            start_times=Time(time_interval[:, 0], format="mjd"),
+            end_times=Time(time_interval[:, 1], format="mjd"),
+            run_lengths=time_nsamples,
+        )
+
+        return decompress_times_rle(rle)
+    except KeyError:
+        return Time(hdf5_pol_group["pol_data"]["m_jd"], format="mjd")
+
+
 class DataFile:
     """A HDF5 file containing timelines acquired by Strip
 
@@ -624,9 +642,10 @@ class DataFile:
 
         data_type = data_type.upper()
 
-        scidata = self.hdf5_file[polarimeter]["pol_data"]
+        pol_group = self.hdf5_file[polarimeter]
+        scidata = pol_group["pol_data"]
 
-        scitime = Time(scidata["m_jd"], format="mjd")
+        scitime = _load_times(pol_group)
 
         if isinstance(detector, str):
             if not detector.upper() in VALID_DETECTORS:
@@ -713,3 +732,51 @@ class DataFile:
                 result[x] = average
 
         return BiasConfiguration(**result)
+
+    def add_rle_times(self, force=False):
+        """Add a RLE-compressed copy of each time column for the scientific datasets
+
+        This function modifies the HDF5 file, so you must have opened it in ``r+`` mode. Once
+        the RLE-compressed datasets have been saved to disk, loading chunks of data from them
+        will be orders of magnitude faster.
+
+        If the `force` flag is ``True``, existing RLE compressed streams will be overwritten.
+        """
+
+        from striptease import polarimeter_iterator, compress_times_rle
+
+        if not self.hdf5_groups:
+            self.read_file_metadata()
+
+        for _, _, pol_name in polarimeter_iterator():
+            hdf5_pol_group = f"POL_{pol_name}"
+            if hdf5_pol_group not in self.hdf5_file:
+                continue
+
+            pol_group = self.hdf5_file[hdf5_pol_group]
+
+            if (not force) and ("rle_time_interval" in pol_group):
+                continue
+
+            time = Time(pol_group["pol_data"]["m_jd"], format="mjd")
+            if (not time) or (len(time) == 0):
+                continue
+
+            rle = compress_times_rle(time)
+
+            if force:
+                try:
+                    del pol_group["rle_time_interval"]
+                except KeyError:
+                    pass
+
+                try:
+                    del pol_group["rle_time_nsamples"]
+                except KeyError:
+                    pass
+
+            time_matrix = np.stack(
+                (rle.start_times.to_value("mjd"), rle.end_times.to_value("mjd"))
+            ).transpose()
+            pol_group.create_dataset("rle_time_interval", data=time_matrix)
+            pol_group.create_dataset("rle_time_nsamples", data=rle.run_lengths)
