@@ -161,13 +161,16 @@ def scan_data_path(
                 },
             )
 
-            if update_hdf5 and computed:
+            if computed:
                 log.info(
                     f'Writing MJD range ({first_sample}, {last_sample}) back in "{file_name}"'
                 )
                 with DataFile(file_name, "r+") as hdf5:
                     hdf5.hdf5_file.attrs["FIRST_SAMPLE"] = first_sample
                     hdf5.hdf5_file.attrs["LAST_SAMPLE"] = last_sample
+
+            with DataFile(file_name, "r+") as hdf5:
+                hdf5.add_rle_times(force=update_hdf5)
 
             # If a tag is not closed when a HDF5 file is being opened, the
             # tag is left open and it will be properly closed in the next file.

@@ -32,6 +32,7 @@ from .diagnostics import (
 from .hdf5db import (
     DataStorage,
     HDF5FileInfo,
+    scan_data_path,
 )
 from .hdf5files import (
     HDF5_GZIP_FILE_SUFFIXES,
@@ -46,6 +47,11 @@ from .hdf5files import (
     get_group_subgroup,
     get_hk_descriptions,
     DataFile,
+)
+from .rle import (
+    RunLengthTime,
+    compress_times_rle,
+    decompress_times_rle,
 )
 from .procedures import (
     dump_procedure_as_json,
@@ -125,6 +131,10 @@ __all__ = [
     # procedures.py
     "dump_procedure_as_json",
     "StripProcedure",
+    # rle.py
+    "RunLengthTime",
+    "compress_times_rle",
+    "decompress_times_rle",
     # runlog.py
     "RUN_LOG_FILE_PATH",
     "RUN_LOG_DATETIME_FORMAT",
