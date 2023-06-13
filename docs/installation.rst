@@ -138,7 +138,6 @@ of the directory ``.strip``::
 
   $ chmod -R go-rwx ~/.strip
 
-
 Using environment variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -155,3 +154,34 @@ can make them permanent by adding the two ``export`` commands to your
 ``~/.profile`` file, but you should instead prefer to save them in
 ``conf.json`` (see above), as environment variables can be easily
 tracked by other malicious users on your system.
+
+
+
+Fast connection to the server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you are working on the same computer where the data server is running,
+you can save precious time when sending commands to it by skipping the
+HTTP authentication stage. As this needs to be done for each command sent to
+the server, skipping this part can lead to a significant boost in speed.
+
+You must define the following new fields in the same file ``~/.strip/conf.json``
+that was mentioned above:
+
+- ``direct_server``: the name/IP of the machine running the data server
+- ``direct_port``: the port used by the data server
+- ``direct_user``: the username
+
+So, the ``conf.json`` configuration file that was shown above should become
+something like this::
+
+  {
+    "user": "foo",
+    "password": "bar",
+    "direct_server": "my_data_server",
+    "direct_port": 12345,
+    "direct_user": "john.smith"
+  }
+
+If there is any problem connecting to the data server with these credentials,
+Striptease will emit a warning and fall back to the slower HTTP connection.
