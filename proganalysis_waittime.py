@@ -169,7 +169,7 @@ def load_waittime_polan_analysis(
             log.info(
                 f"Configuration: set {sm} for waitTime {wt}sec ({ii+1}/{nwt}). Analyzing {ncase} cases of voltages:"
             )
-            for jj, vv in track(enumerate(arr_volt), description="Progress..."):
+            for jj, vv in track(list(enumerate(arr_volt)), description="Progress..."):
                 vrange = tuple(results[f"{sm}_date_range"][ii, jj])
 
                 deltat = TimeDelta(vrange[1] - vrange[0], scale="tai", format="jd").sec
@@ -237,9 +237,9 @@ def plotting_countmap(metaData, idout=None, path_dir: Path = Path("./")):
     vextent = [xmin - xdelta, xmax + xdelta, ymin - ydelta, ymax + ydelta]
 
     for jj, kk in enumerate(vsets[0:3]):
-        log.info(f"\tSubplot {jj} ({kk})")
+        print(f"\tSubplot {jj} ({kk})")
         curAll = md[kk]
-        print(curAll["count"],"\n") #log.info(curAll["count"],"\n")
+        print(curAll["count"], "\n")
 
         plt.subplot(1, 3, jj + 1)
         plt.title(f"{pp} {ll} (set {kk})", {"fontsize": 10})
