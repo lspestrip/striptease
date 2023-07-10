@@ -2,7 +2,7 @@
 # -*- encoding: utf-8 -*-
 
 # 2023-05-10 (based on version of 2021-12-03)
-# 2023-05-25 (last modification)
+# 2023-06-13 (last modification)
 
 import numpy as np
 from typing import List, Tuple, Dict, Union
@@ -169,7 +169,7 @@ def load_waittime_polan_analysis(
             log.info(
                 f"Configuration: set {sm} for waitTime {wt}sec ({ii+1}/{nwt}). Analyzing {ncase} cases of voltages:"
             )
-            for jj, vv in track(enumerate(arr_volt), description="Progress..."):
+            for jj, vv in track(list(enumerate(arr_volt)), description="Progress..."):
                 vrange = tuple(results[f"{sm}_date_range"][ii, jj])
 
                 deltat = TimeDelta(vrange[1] - vrange[0], scale="tai", format="jd").sec
@@ -222,8 +222,6 @@ def plotting_countmap(metaData, idout=None, path_dir: Path = Path("./")):
     idcase = md.get("idcase", "")
     pp, ll = md["pol_name"], md["lna_name"]
     vsets = md["sets"]
-    #
-    # log.info(f"\n## Plotting the number count in each configuration: {md['polna']}")
 
     # Countmap
     # plt.figure(figsize=(18 / 2.54, 10 / 2.54),layout='tight')
@@ -239,9 +237,9 @@ def plotting_countmap(metaData, idout=None, path_dir: Path = Path("./")):
     vextent = [xmin - xdelta, xmax + xdelta, ymin - ydelta, ymax + ydelta]
 
     for jj, kk in enumerate(vsets[0:3]):
-        log.info(f"\tSubplot {jj} ({kk})")
+        print(f"\tSubplot {jj} ({kk})")
         curAll = md[kk]
-        log.info(curAll["count"], "\n")
+        print(curAll["count"], "\n")
 
         plt.subplot(1, 3, jj + 1)
         plt.title(f"{pp} {ll} (set {kk})", {"fontsize": 10})
@@ -486,7 +484,7 @@ class checks_waitTime_analysis:
         # Saving md
         file_report_md = f"report_{self.idcase}.md"
         with open(self.output_dir / file_report_md, "wt") as outf:
-            log.info(
+            print(
                 temp.render(
                     polna=self.metaData["polna"],
                     date_range=self.date_range[0] + " " + self.date_range[1],
@@ -555,7 +553,10 @@ if __name__ == "__main__":
         formatter_class=RawDescriptionHelpFormatter,
         epilog="""
         Usage example:
-        python3 proganalysis_waittime_v2023.py /Users/clopez/lspe-strip-bologna/test_data/ '2021-11-23 19:44:04 2021-11-23 20:38:47' -io analysis2021-11-29
+
+        python proganalysis_waittime.py -pd /Users/clopez/lspe-strip-bologna/test_data/ -dr '2021-11-23 19:44:04 2021-11-23 20:38:47' -io test2023-06-13
+
+        python proganalysis_waittime.py -pd /Users/clopez/lspe-strip-bologna/test_data/ -dr '2021-11-23 19:44:04 2021-11-23 20:38:47' -io test2023-06-13 -pkl MetaData_WAITTIME_V0_HA1_2021-11-23T19:44:04_test2023-06-13.pkl -od dir_idcase
 
         """,
     )
