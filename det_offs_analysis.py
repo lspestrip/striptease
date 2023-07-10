@@ -1,10 +1,12 @@
 # -*- encoding: utf-8 -*-
 
+from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 from copy import copy
 import logging as log
 
 log.basicConfig(level=log.INFO, format="[%(asctime)s %(levelname)s] %(message)s")
 from pathlib import Path
+import pickle
 import sys
 from typing import Dict, List, Tuple, Union
 
@@ -274,9 +276,7 @@ def fit_function(offset, angular_coefficient, saturation_offset):
     )
 
 
-def main():
-    from argparse import ArgumentParser, RawDescriptionHelpFormatter
-
+def parse_args() -> Namespace:
     parser = ArgumentParser(
         description="Analyze data produced in the pretuning detector offset test",
         formatter_class=RawDescriptionHelpFormatter,
@@ -379,8 +379,80 @@ def main():
         default="data/pretuning_closed_loop_warm.xlsx",
         help="The file containing the scanning strategy.",
     )
+    parser.add_argument(
+        "--start-point",
+        choices=("none", "pickle", "json", "netcdf"),
+        dest="start_point",
+        default="none",
+        help='The file from which the analysis shall start: "none" means starting from the raw HDF5 database. '
+        '"pickle" starts from a pickle containing the data. "json" starts from a json containing analyzed data. '
+        '"netcdf" starts from a structured xarray containing analyzed data.',
+    )
 
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def store_to_pickle(
+    ds: DataStorage,
+    tag_whole_test: Tag,
+    pickle_filename: str,
+    polarimeter: str,
+    delta: float,
+    detectors=["Q1", "Q2", "U1", "U2"],
+):
+    data = load_data(ds, tag_whole_test, polarimeter, detectors, delta)
+    with open(f"{pickle_filename}_{polarimeter}.pkl", "wb") as f:
+        pickle.dump(data, f)
+    return data
+
+
+def to_xarray(det_offs_analysis_json, polarimeter, offsets, detectors):
+    data_types = ["PWR", "DEM", "PWR_SUM", "DEM_DIFF"]
+    values = ["mean", "std", "nsamples"]
+
+    all_offsets = np.sort(
+        np.unique(
+            np.concatenate(
+                [
+                    offsets[polarimeter][:, detector]
+                    for detector in range(len(detectors))
+                ]
+            )
+        )
+    )
+    det_offs_analysis = xr.DataArray(
+        data=np.nan,
+        coords=[
+            ("data_type", data_types),
+            ("detector", detectors),
+            ("value", values),
+            ("offset", all_offsets),
+        ],
+    )
+
+    for data_type in data_types:
+        for detector_idx in range(len(detectors)):
+            detector = detectors[detector_idx]
+            for value in values:
+                for offset in offsets[polarimeter][:, detector_idx]:
+                    det_offs_analysis.loc[
+                        dict(
+                            data_type=data_type,
+                            detector=detector,
+                            value=value,
+                            offset=int(offset),
+                        )
+                    ] = det_offs_analysis_json[polarimeter][str(offset)][data_type][
+                        detector
+                    ][
+                        value
+                    ]
+
+    return det_offs_analysis
+
+
+def main():
+    args = parse_args()
 
     img_types = ["pdf", "svg", "png"]
     output_dir = Path(args.output_dir)
@@ -395,124 +467,74 @@ def main():
     mjd_range = (args.mjd_start, args.mjd_end)
     polarimeters = parse_polarimeters(args.polarimeters)
     detectors = ["Q1", "Q2", "U1", "U2"]
+    pickle_filename = f"{output_dir}/det_offs_analysis_data"
+    start_point = args.start_point
 
-    data = {
-        polarimeter: load_data(ds, mjd_range, polarimeter, detectors, args.delta)
-        for polarimeter in polarimeters
-    }
-
+    log.log(log.INFO, "Loading tags.")
     tags_all, tags_test, tag_whole_test, tags_pol, tags_acq, tags_global = load_tags(
         ds, mjd_range, test_name=args.test_name, polarimeters=polarimeters
     )
 
+    data = {}
+    if start_point == "none":
+        log.log(log.INFO, "Storing to pickle.")
+        for polarimeter in polarimeters:
+            log.log(log.INFO, f"Storing to pickle: {polarimeter}.")
+            data[polarimeter] = store_to_pickle(
+                ds, tag_whole_test, pickle_filename, polarimeter, args.delta, detectors
+            )
+    elif start_point == "pickle":
+        log.info("Loading from pickle.")
+        for polarimeter in polarimeters:
+            with open(f"{pickle_filename}_{polarimeter}.pkl", "rb") as f:
+                log.info(f"Loading from pickle: {polarimeter}.")
+                data[polarimeter] = pickle.load(f)
+
+    log.log(log.INFO, "Loading offsets.")
     offsets = load_offsets(polarimeters, excel_file=tuning_file)
 
-    # import pdb; pdb.set_trace()
-    det_offs_analysis_json = {
-        polarimeter: {
-            int(offsets[polarimeter][i, 0]): analyze_test(
-                data, polarimeter, tags_acq[i], detectors
-            )
-            for i in range(len(tags_acq))
-        }
-        for polarimeter in polarimeters
-    }
-
-    # import scipy as sp
-
-    # x = data_in_range(data["R0"]["PWR"], tags_acq[21])[1]
-    # plt.plot(x["PWRQ1"], marker=".")
-    # plt.show()
-    # plt.hist(x["PWRQ1"], bins=30)
-    # plt.show()
-    # print(sp.stats.shapiro(x["PWRQ1"]))
-    # print(sp.stats.normaltest(x["PWRQ1"]))
-    # print(sp.stats.anderson(x["PWRQ1"]))
-
-    # y = []
-    # for i in range(21, 21 + len(tags_acq[21:])):
-    # y.append(
-    # data_in_range(data["R0"]["PWR"], tags_acq[i])[1]["PWRQ1"]
-    # - det_offs_analysis_json["R0"][offsets["R0"][i, 0]]["PWR"]["Q1"]["mean"]
-    # )
-    # y = np.concatenate(y)
-
-    # plt.plot(x["PWRQ1"] - det_offs_analysis_json["R0"][offsets["R0"][21, 0]]["PWR"]["Q1"]["mean"], marker=".")
-    # plt.show()
-    # plt.plot(y, marker=".")
-    # plt.show()
-    # plt.hist(y, bins=30)
-    # plt.show()
-    # print(sp.stats.shapiro(y))
-    # print(sp.stats.normaltest(y))
-    # print(sp.stats.anderson(y))
-    # return
-
-    with open(output_file, "w") as f:
-        json.dump(det_offs_analysis_json, f, indent=0)
-
-    data_types = ["PWR", "DEM", "PWR_SUM", "DEM_DIFF"]
-    values = ["mean", "std", "nsamples"]
-
-    store_to_netcdf = True
-    if store_to_netcdf:
-        all_offsets = np.sort(
-            np.unique(
-                np.concatenate(
-                    [
-                        offsets[polarimeter][:, detector]
-                        for polarimeter in polarimeters
-                        for detector in range(len(detectors))
-                    ]
-                )
-            )
-        )
-        det_offs_analysis = xr.DataArray(
-            data=np.nan,
-            coords=[
-                ("polarimeter", polarimeters),
-                ("data_type", data_types),
-                ("detector", detectors),
-                ("value", values),
-                ("offset", all_offsets),
-            ],
-        )
-
+    det_offs_analysis_json = {}
+    if start_point == "none" or start_point == "pickle":
+        log.log(log.INFO, "Calculating values and storing to json")
         for polarimeter in polarimeters:
-            log.log(log.INFO, f"Converting {polarimeter} to xarray.")
-            for data_type in data_types:
-                log.log(log.INFO, f"Converting {polarimeter} {data_type} to xarray.")
-                for detector_idx in range(len(detectors)):
-                    detector = detectors[detector_idx]
-                    for value in values:
-                        for offset in offsets[polarimeter][:, detector_idx]:
-                            det_offs_analysis.loc[
-                                dict(
-                                    polarimeter=polarimeter,
-                                    data_type=data_type,
-                                    detector=detector,
-                                    value=value,
-                                    offset=int(offset),
-                                )
-                            ] = det_offs_analysis_json[polarimeter][offset][data_type][
-                                detector
-                            ][
-                                value
-                            ]
-        det_offs_analysis.to_netcdf(f"{output_dir}/det_offs_analysis.nc")
+            log.log(log.INFO, f"Calculating values: {polarimeter}.")
+            det_offs_analysis_json[polarimeter] = {
+                str(offsets[polarimeter][i, 0]): analyze_test(
+                    data, polarimeter, tags_acq[i], detectors
+                )
+                for i in range(len(tags_acq))
+            }
+            log.log(log.INFO, f"Storing to json: {polarimeter}.")
+            with open(f"{output_file}_{polarimeter}.json", "w") as f:
+                json.dump(det_offs_analysis_json[polarimeter], f, indent=0)
+    elif start_point == "json":
+        log.log(log.INFO, "Loading values from json.")
+        for polarimeter in polarimeters:
+            log.log(log.INFO, f"Loading values from json: {polarimeter}.")
+            with open(f"{output_file}_{polarimeter}.json", "r") as f:
+                det_offs_analysis_json[polarimeter] = json.load(f)
+
+    det_offs_analysis = {}
+    if start_point == "none" or start_point == "pickle" or start_point == "json":
+        log.log(log.INFO, "Converting to xarray and storing to netcdf.")
+        for polarimeter in polarimeters:
+            log.log(log.INFO, f"Converting to xarray: {polarimeter}.")
+            det_offs_analysis[polarimeter] = to_xarray(
+                det_offs_analysis_json, polarimeter, offsets, detectors
+            )
+            log.log(log.INFO, f"Storing to netcdf: {polarimeter}.")
+            det_offs_analysis[polarimeter].to_netcdf(
+                f"{output_dir}/det_offs_analysis_{polarimeter}.nc"
+            )
     else:
-        log.log(log.INFO, "Loading xarray.")
-        det_offs_analysis = xr.open_dataarray(f"{output_dir}/det_offs_analysis.nc")
+        log.log(log.INFO, "Loading xarray from netcdf.")
+        for polarimeter in polarimeters:
+            log.log(log.INFO, f"Loading xarray from netcdf: {polarimeter}.")
+            det_offs_analysis[polarimeter] = xr.open_dataarray(
+                f"{output_dir}/det_offs_analysis_{polarimeter}.nc"
+            )
 
-    # import scipy as sp
-    # test = det_offs_analysis.sel(data_type="PWR_SUM", polarimeter="R0", detector="Q1")
-    # test_mean = test.sel(value="mean")
-    # test_sigma = test.sel(value="std").where(test.sel(value="std") != 0, other=1.)
-    # print(test_sigma)
-    # popt, pcov = sp.optimize.curve_fit(fit_function, test.coords["offset"], test_mean, sigma=test_sigma, absolute_sigma=True)
-    # print(popt, pcov)
-
-    # return
+    return
 
     pwr_fit = det_offs_analysis.sel(
         data_type="PWR_SUM", value="mean", polarimeter=polarimeters[0]
