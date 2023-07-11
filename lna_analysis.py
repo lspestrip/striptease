@@ -213,7 +213,7 @@ def sigma_method(data):
     return np.std(odd - even) / np.sqrt(2)
 
 
-def analyze_test(data, polarimeter, tags_acq, detectors, idrains, offsets):
+def analyze_test(data, tags_acq, detectors, idrains, offsets):
     def analyze_type(data):
         return np.mean(data), np.std(data), sigma_method(data), len(data)
 
@@ -232,8 +232,8 @@ def analyze_test(data, polarimeter, tags_acq, detectors, idrains, offsets):
     for idrain in range(len(idrains)):
         for offset in range(len(offsets)):
             tag_acq = tags_acq[i]
-            pwr = data_in_range(data[polarimeter]["PWR"], tag_acq)[1]
-            dem = data_in_range(data[polarimeter]["DEM"], tag_acq)[1]
+            pwr = data_in_range(data["PWR"], tag_acq)[1]
+            dem = data_in_range(data["DEM"], tag_acq)[1]
 
             for detector in detectors:
                 pwr_det = pwr[f"PWR{detector}"]
@@ -445,6 +445,7 @@ def saturates(data, threshold=THRESHOLD):
 def do_analysis(lna_analysis, polarimeters, output_dir):
     img_types = ["png", "pdf", "svg"]
     lnas = ["HA1", "HA2", "HA3", "HB1", "HB2", "HB3"]
+    detectors = ["Q1", "Q2", "U1", "U2"]
 
     # Fit I(offs)
     pwr_fit_offset = lna_analysis.sel(data_type="PWR_SUM", value="mean").curvefit(
@@ -939,8 +940,93 @@ def parse_args() -> Namespace:
         default="data/pretuning_closed_loop_warm.xlsx",
         help="The file containing the scanning strategy.",
     )
+    parser.add_argument(
+        "--start-point",
+        choices=("none", "pickle", "json", "netcdf"),
+        dest="start_point",
+        default="none",
+        help='The file from which the analysis shall start: "none" means starting from the raw HDF5 database. '
+        '"pickle" starts from a pickle containing the data. "json" starts from a json containing analyzed data. '
+        '"netcdf" starts from a structured xarray containing analyzed data.',
+    )
 
     return parser.parse_args()
+
+
+def store_to_pickle(
+    ds: DataStorage,
+    tag: Tag,
+    pickle_filename: str,
+    polarimeter: str,
+    delta: float,
+    detectors=["Q1", "Q2", "U1", "U2"],
+):
+    data = load_data(ds, tag, polarimeter, detectors, delta)
+    with open(pickle_filename, "wb") as f:
+        pickle.dump(data, f)
+    return data
+
+
+def to_xarray(lna_analysis_json, polarimeter, idrains, offsets, lnas, detectors):
+    data_types = ["PWR", "DEM", "PWR_SUM", "DEM_DIFF"]
+    values = ["mean", "std", "sigma", "nsamples"]
+    all_offsets = np.sort(
+        np.unique(
+            np.concatenate(
+                [
+                    offsets[polarimeter][lna][:, detector]
+                    for lna in lnas
+                    for detector in range(len(detectors))
+                ]
+            )
+        )
+    )
+
+    coords = [(lna, idrain) for lna in lnas for idrain in idrains[polarimeter][lna]]
+    idx = pd.MultiIndex.from_tuples(coords, names=("lna", "idrain"))
+
+    lna_analysis = xr.DataArray(
+        data=np.nan,
+        coords=[
+            ("lna_idrain", idx),
+            ("data_type", data_types),
+            ("detector", detectors),
+            ("value", values),
+            ("offset", all_offsets),
+        ],
+    )
+
+    for lna in lnas:
+        log.info(f"Converting to xarray: {polarimeter} {lna}.")
+        for data_type in data_types:
+            for detector_idx in range(len(detectors)):
+                for value in values:
+                    for offset_idx in range(
+                        len(offsets[polarimeter][lna][:, detector_idx])
+                    ):
+                        for idrain_idx in range(len(idrains[polarimeter][lna])):
+                            lna_analysis.loc[
+                                dict(
+                                    lna=lna,
+                                    data_type=data_type,
+                                    detector=detectors[detector_idx],
+                                    value=value,
+                                    idrain=idrains[polarimeter][lna][idrain_idx],
+                                    offset=offsets[polarimeter][lna][
+                                        offset_idx, detector_idx
+                                    ],
+                                )
+                            ] = lna_analysis_json[polarimeter][lna][data_type][
+                                detectors[detector_idx]
+                            ][
+                                value
+                            ][
+                                idrain_idx
+                            ][
+                                offset_idx
+                            ]
+
+    return lna_analysis
 
 
 def main():
@@ -950,14 +1036,12 @@ def main():
     polarimeters = parse_polarimeters(args.polarimeters)
     detectors = ["Q1", "Q2", "U1", "U2"]
     lnas = ["HA1", "HA2", "HA3", "HB1", "HB2", "HB3"]
-    # lnas = ["HB3"]
     mjd_range = (args.mjd_start, args.mjd_end)
     output_dir = Path(args.output_dir)
-
-    store_to_pickle = False
+    start_point = args.start_point
     pickle_filename = f"{output_dir}/lna_analysis_data"
 
-    log.info("Loading tags")
+    log.info("Loading tags.")
 
     tags_all, tags_test, tags_test_lna, tags_pol, tags_acq, tags_global = load_tags(
         ds, mjd_range, test_name=args.test_name, polarimeters=polarimeters
@@ -972,197 +1056,87 @@ def main():
     # input()
     # return
 
-    if store_to_pickle:
-        data = {}
-        log.log(log.INFO, "Storing to pickle")
+    data = {}
+    if start_point == "none":
+        log.info("Storing to pickle.")
         for polarimeter in polarimeters:
+            log.info(f"Storing to pickle: {polarimeter}.")
             data[polarimeter] = {}
             for lna in lnas:
                 tag = tags_test_lna[lna][0]
-                data[polarimeter] = load_data(
-                    ds, tag, polarimeter, detectors, args.delta
+                data[polarimeter][lna] = {}
+                log.info(f"Storing to pickle: {polarimeter} {lna}.")
+                data[polarimeter][lna] = store_to_pickle(
+                    ds,
+                    tag,
+                    f"{pickle_filename}_{polarimeter}_{lna}.pkl",
+                    polarimeter,
+                    args.delta,
+                    detectors,
                 )
-                with open(f"{pickle_filename}_{polarimeter}_{lna}.pkl", "wb") as f:
-                    log.log(log.INFO, f"Storing to pickle: {polarimeter} {lna}")
-                    pickle.dump(data[polarimeter], f)
+    elif start_point == "pickle":
+        log.info("Loading from pickle.")
+        for polarimeter in polarimeters:
+            log.info(f"Loading from pickle: {polarimeter}.")
+            data[polarimeter] = {}
+            for lna in lnas:
+                log.info(f"Loading from pickle: {polarimeter} {lna}.")
+                with open(f"{pickle_filename}_{polarimeter}_{lna}.pkl", "rb") as f:
+                    data[polarimeter][lna] = pickle.load(f)
 
+    log.info("Loading idrains and offsets.")
     idrains, offsets = load_idrains_and_offsets(
         polarimeters, lnas, excel_file=args.tuning_file
     )
 
-    analyze = False
-    if analyze:
-        lna_analysis_json = {}
+    lna_analysis_json = {}
+    if start_point == "none" or start_point == "pickle":
+        log.info("Calculating values and storing to json.")
         for polarimeter in polarimeters:
-            log.info(f"Analyzing polarimeter {polarimeter}")
+            log.info(f"Calculating values: {polarimeter}.")
             lna_analysis_json[polarimeter] = {}
             for lna in lnas:
-                log.info(f"Analyzing polarimeter {polarimeter}: LNA {lna}")
-                with open(f"{pickle_filename}_{polarimeter}_{lna}.pkl", "rb") as f:
-                    log.info(f"Loading data: {polarimeter} {lna}")
-                    data = {}
-                    data[polarimeter] = pickle.load(f)
-                    # for lna in lnas:
-
-                    # fig, ax = plot_timeline(data, tag_whole_test, tags_global[lna], polarimeter, detectors)
-                    # fig.savefig(f"lna_timeline_{polarimeter}_{lna}.pdf")
-
-                    # plt.plot(data[polarimeter]["PWR"][0].value, data[polarimeter]["PWR"][1]["PWRQ1"], ".")
-                    # plt.show()
-
-                    log.info(f"Analyzing data: {polarimeter} {lna}")
-                    lna_analysis_json[polarimeter][lna] = analyze_test(
-                        data,
-                        polarimeter,
-                        tags_acq[lna],
-                        detectors,
-                        idrains[polarimeter][lna],
-                        offsets[polarimeter][lna]
-                        # ds, polarimeter, tags_acq[lna], detectors, idrains[polarimeter][lna], offsets[polarimeter][lna]
-                    )
-                    # i = 0
-                    # for idrain in idrains_and_offsets[polarimeter][lna]:
-                    # lna_analysis[polarimeter][lna][int(idrain)] = {}
-                    # for i in range(idrains_and_offsets[polarimeter][lna][idrain].shape[0]):
-                    # offset = int(idrains_and_offsets[polarimeter][lna][idrain][i, 0])
-                    # lna_analysis[polarimeter][lna][idrain][offset] = analyze_test(
-                    # data,
-                    # polarimeter,
-                    # tags_acq[lna][i],
-                    # detectors
-                    # )
-                    # lna_analysis[polarimeter][lna][idrain][offset]["mjd_range"] = (
-                    # tags_acq[lna][i].mjd_start, tags_acq[lna][i].mjd_end
-                    # )
-                    # i += 1
-                    # if i == 3:
-                    # return
-
-                    # ax, fig = plot_analysed_data(det_offs_analysis, polarimeter, offsets, detectors)
-                    # fig.savefig(f"analysis_{polarimeter}.pdf")
-
-        lna_analysis_json["mjd_range"] = mjd_range
-        with open(f"{output_dir}/{args.json_output}", "w") as f:
-            json.dump(lna_analysis_json, f, indent=5)
-    else:
-        with open(f"{output_dir}/{args.json_output}", "r") as f:
-            lna_analysis_json = json.load(f)
-
-    # with open(f"{output_dir}/det_offs_analysis.json", "r") as f:
-    # det_offs_analysis = json.load(f)
-
-    data_types = ["PWR", "DEM", "PWR_SUM", "DEM_DIFF"]
-    values = ["mean", "std", "sigma", "nsamples"]
-
-    store_to_netcdf = False
-    if store_to_netcdf:
-        # all_idrains = np.sort(
-        # np.unique(
-        # np.concatenate(
-        # [np.array([0])]
-        # + [
-        # idrains[polarimeter][lna]
-        # for lna in lnas
-        # for polarimeter in polarimeters
-        # ]
-        # )
-        # )
-        # )
-        all_offsets = np.sort(
-            np.unique(
-                np.concatenate(
-                    [
-                        offsets[polarimeter][lna][:, detector]
-                        for lna in lnas
-                        for polarimeter in polarimeters
-                        for detector in range(len(detectors))
-                    ]
+                log.info(f"Calculating values: {polarimeter} {lna}.")
+                lna_analysis_json[polarimeter][lna] = analyze_test(
+                    data[polarimeter][lna],
+                    tags_acq[lna],
+                    detectors,
+                    idrains[polarimeter][lna],
+                    offsets[polarimeter][lna],
                 )
-            )
-        )
 
-        coords = [
-            (lna, idrain)
-            for lna in lnas
-            # for idrain in np.concatenate((np.array([0]), np.array(idrains["R0"][lna])))
-            for idrain in idrains[polarimeters[0]][lna]
-        ]
-        idx = pd.MultiIndex.from_tuples(coords, names=("lna", "idrain"))
-
-        lna_analysis = xr.DataArray(
-            data=np.nan,
-            coords=[
-                ("polarimeter", polarimeters),
-                # ("lna", lnas),
-                ("lna_idrain", idx),
-                ("data_type", data_types),
-                ("detector", detectors),
-                ("value", values),
-                # ("idrain", all_idrains),
-                ("offset", all_offsets),
-            ],
-        )
-
+            lna_analysis_json[polarimeter]["mjd_range"] = mjd_range
+            log.info(f"Storing to json: {polarimeter}.")
+            with open(f"{output_dir}/{args.json_output}_{polarimeter}.json", "w") as f:
+                json.dump(lna_analysis_json[polarimeter], f, indent=5)
+    elif start_point == "json":
+        log.info("Loading values from json.")
         for polarimeter in polarimeters:
-            log.log(log.INFO, f"Converting {polarimeter} to xarray.")
-            for lna in lnas:
-                log.log(log.INFO, f"Converting {polarimeter} {lna} to xarray.")
-                for data_type in data_types:
-                    log.log(
-                        log.INFO,
-                        f"Converting {polarimeter} {lna} {data_type} to xarray.",
-                    )
-                    for detector_idx in range(len(detectors)):
-                        for value in values:
-                            for offset_idx in range(
-                                len(offsets[polarimeter][lna][:, detector_idx])
-                            ):
-                                for idrain_idx in range(len(idrains[polarimeter][lna])):
-                                    lna_analysis.loc[
-                                        dict(
-                                            polarimeter=polarimeter,
-                                            lna=lna,
-                                            data_type=data_type,
-                                            detector=detectors[detector_idx],
-                                            value=value,
-                                            idrain=idrains[polarimeter][lna][
-                                                idrain_idx
-                                            ],
-                                            offset=offsets[polarimeter][lna][
-                                                offset_idx, detector_idx
-                                            ],
-                                        )
-                                    ] = lna_analysis_json[polarimeter][lna][data_type][
-                                        detectors[detector_idx]
-                                    ][
-                                        value
-                                    ][
-                                        idrain_idx
-                                    ][
-                                        offset_idx
-                                    ]
-                                # lna_analysis.loc[
-                                # dict(
-                                # polarimeter=polarimeter,
-                                # lna=lna,
-                                # data_type=data_type,
-                                # detector=detectors[detector_idx],
-                                # value=value,
-                                # idrain=0,
-                                # offset=offsets[polarimeter][lna][
-                                # offset_idx, detector_idx
-                                # ],
-                                # )
-                                # ] = 0
+            log.info(f"Loading values from json: {polarimeter}.")
+            with open(f"{output_dir}/{args.json_output}_{polarimeter}.json", "r") as f:
+                lna_analysis_json[polarimeter] = json.load(f)
 
-        lna_analysis.reset_index("lna_idrain").to_netcdf(
-            f"{output_dir}/lna_analysis_xarray_multiindex.nc"
-        )
-    else:
-        log.log(log.INFO, "Loading xarray.")
-        lna_analysis = xr.open_dataarray(
-            f"{output_dir}/lna_analysis_xarray_multiindex.nc"
-        ).set_index(lna_idrain=["lna", "idrain"])
+    lna_analysis = {}
+    if start_point == "none" or start_point == "pickle" or start_point == "json":
+        log.info("Converting to xarray and storing to netcdf.")
+        for polarimeter in polarimeters:
+            log.info(f"Converting to xarray: {polarimeter}.")
+            lna_analysis[polarimeter] = to_xarray(
+                lna_analysis_json, polarimeter, idrains, offsets, lnas, detectors
+            )
+            log.info(f"Storing to netcdf: {polarimeter}.")
+            lna_analysis[polarimeter].reset_index("lna_idrain").to_netcdf(
+                f"{output_dir}/lna_analysis_{polarimeter}.nc"
+            )
+    elif start_point == "netcdf":
+        log.info("Loading xarray from netcdf.")
+        for polarimeter in polarimeters:
+            log.info(f"Loading xarray from netcdf: {polarimeter}.")
+            lna_analysis[polarimeter] = xr.open_dataarray(
+                f"{output_dir}/lna_analysis_{polarimeter}.nc"
+            ).set_index(lna_idrain=["lna", "idrain"])
+
+    return
 
     do_analysis(lna_analysis, polarimeters, output_dir)
 
