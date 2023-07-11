@@ -394,14 +394,14 @@ def parse_args() -> Namespace:
 
 def store_to_pickle(
     ds: DataStorage,
-    tag_whole_test: Tag,
+    tag: Tag,
     pickle_filename: str,
     polarimeter: str,
     delta: float,
     detectors=["Q1", "Q2", "U1", "U2"],
 ):
-    data = load_data(ds, tag_whole_test, polarimeter, detectors, delta)
-    with open(f"{pickle_filename}_{polarimeter}.pkl", "wb") as f:
+    data = load_data(ds, tag, polarimeter, detectors, delta)
+    with open(pickle_filename, "wb") as f:
         pickle.dump(data, f)
     return data
 
@@ -470,18 +470,23 @@ def main():
     pickle_filename = f"{output_dir}/det_offs_analysis_data"
     start_point = args.start_point
 
-    log.log(log.INFO, "Loading tags.")
+    log.info("Loading tags.")
     tags_all, tags_test, tag_whole_test, tags_pol, tags_acq, tags_global = load_tags(
         ds, mjd_range, test_name=args.test_name, polarimeters=polarimeters
     )
 
     data = {}
     if start_point == "none":
-        log.log(log.INFO, "Storing to pickle.")
+        log.info("Storing to pickle.")
         for polarimeter in polarimeters:
-            log.log(log.INFO, f"Storing to pickle: {polarimeter}.")
+            log.info(f"Storing to pickle: {polarimeter}.")
             data[polarimeter] = store_to_pickle(
-                ds, tag_whole_test, pickle_filename, polarimeter, args.delta, detectors
+                ds,
+                tag_whole_test,
+                f"{pickle_filename}_{polarimeter}.pkl",
+                polarimeter,
+                args.delta,
+                detectors,
             )
     elif start_point == "pickle":
         log.info("Loading from pickle.")
@@ -490,46 +495,46 @@ def main():
                 log.info(f"Loading from pickle: {polarimeter}.")
                 data[polarimeter] = pickle.load(f)
 
-    log.log(log.INFO, "Loading offsets.")
+    log.info("Loading offsets.")
     offsets = load_offsets(polarimeters, excel_file=tuning_file)
 
     det_offs_analysis_json = {}
     if start_point == "none" or start_point == "pickle":
-        log.log(log.INFO, "Calculating values and storing to json")
+        log.info("Calculating values and storing to json")
         for polarimeter in polarimeters:
-            log.log(log.INFO, f"Calculating values: {polarimeter}.")
+            log.info(f"Calculating values: {polarimeter}.")
             det_offs_analysis_json[polarimeter] = {
                 str(offsets[polarimeter][i, 0]): analyze_test(
                     data, polarimeter, tags_acq[i], detectors
                 )
                 for i in range(len(tags_acq))
             }
-            log.log(log.INFO, f"Storing to json: {polarimeter}.")
+            log.info(f"Storing to json: {polarimeter}.")
             with open(f"{output_file}_{polarimeter}.json", "w") as f:
                 json.dump(det_offs_analysis_json[polarimeter], f, indent=0)
     elif start_point == "json":
-        log.log(log.INFO, "Loading values from json.")
+        log.info("Loading values from json.")
         for polarimeter in polarimeters:
-            log.log(log.INFO, f"Loading values from json: {polarimeter}.")
+            log.info(f"Loading values from json: {polarimeter}.")
             with open(f"{output_file}_{polarimeter}.json", "r") as f:
                 det_offs_analysis_json[polarimeter] = json.load(f)
 
     det_offs_analysis = {}
     if start_point == "none" or start_point == "pickle" or start_point == "json":
-        log.log(log.INFO, "Converting to xarray and storing to netcdf.")
+        log.info("Converting to xarray and storing to netcdf.")
         for polarimeter in polarimeters:
-            log.log(log.INFO, f"Converting to xarray: {polarimeter}.")
+            log.info(f"Converting to xarray: {polarimeter}.")
             det_offs_analysis[polarimeter] = to_xarray(
                 det_offs_analysis_json, polarimeter, offsets, detectors
             )
-            log.log(log.INFO, f"Storing to netcdf: {polarimeter}.")
+            log.info(f"Storing to netcdf: {polarimeter}.")
             det_offs_analysis[polarimeter].to_netcdf(
                 f"{output_dir}/det_offs_analysis_{polarimeter}.nc"
             )
-    else:
-        log.log(log.INFO, "Loading xarray from netcdf.")
+    elif start_point == "netcdf":
+        log.info("Loading xarray from netcdf.")
         for polarimeter in polarimeters:
-            log.log(log.INFO, f"Loading xarray from netcdf: {polarimeter}.")
+            log.info(f"Loading xarray from netcdf: {polarimeter}.")
             det_offs_analysis[polarimeter] = xr.open_dataarray(
                 f"{output_dir}/det_offs_analysis_{polarimeter}.nc"
             )
@@ -541,7 +546,7 @@ def main():
     ).plot(x="offset", hue="detector")
     # plt.savefig("plot.png")
     # return
-    log.log(log.INFO, "Fitting PWR and PWR_SUM data.")
+    log.info("Fitting PWR and PWR_SUM data.")
     pwr_fit = det_offs_analysis.sel(
         data_type=["PWR", "PWR_SUM"], value="mean"
     ).curvefit("offset", fit_function)
@@ -706,7 +711,7 @@ def main():
                     for detector in detectors
                 }
 
-        log.log(log.INFO, "Generating Latex table.")
+        log.info("Generating Latex table.")
         for polarimeter in polarimeters:
             with open(output_dir / f"table_{polarimeter}", "w") as f:
                 row = f"{polarimeter}"
@@ -751,7 +756,7 @@ def main():
                     )
                 row += "\\hline\n"
                 f.write(row)
-        log.log(log.INFO, "Generating report.")
+        log.info("Generating report.")
         from jinja2 import Environment, FileSystemLoader, select_autoescape
 
         env = Environment(
