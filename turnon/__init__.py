@@ -11,7 +11,13 @@ import sys
 import pandas as pd
 import numpy as np
 from calibration import physical_units_to_adu
-from striptease import get_lna_num, get_polarimeter_index, StripProcedure
+from striptease import (
+    get_lna_num,
+    get_polarimeter_index,
+    StripProcedure,
+    CLOSED_LOOP_MODE,
+    OPEN_LOOP_MODE,
+)
 from striptease.biases import InstrumentBiases, BoardCalibration
 
 CalibrationCurve = namedtuple(
@@ -144,7 +150,7 @@ class SetupBoard(object):
                 log.warning(f"Unable to post command {addr}")
                 return
 
-    def enable_electronics(self, polarimeter, delay_sec=0.5, mode=5):
+    def enable_electronics(self, polarimeter, delay_sec=0.5, mode=OPEN_LOOP_MODE):
         url = self.conf.get_rest_base() + "/slo"
 
         cmd = {"board": self.board, "method": "SET", "timeout": 500}
@@ -192,7 +198,7 @@ class SetupBoard(object):
                 flush=True,
             )
 
-    def enable_all_electronics(self, mode=5):
+    def enable_all_electronics(self, mode=OPEN_LOOP_MODE):
         for (p, _) in self.pols:
             self.polarimeter_on(polarimeter=p, mode=mode)
 
@@ -501,6 +507,7 @@ class TurnOnOffProcedure(StripProcedure):
         det_offset: Optional[int] = None,
         zero_bias: bool = False,
         bias_file_name: Optional[str] = None,
+        closed_loop: bool = False,
     ):
         super(TurnOnOffProcedure, self).__init__()
         self.board = None
@@ -514,6 +521,10 @@ class TurnOnOffProcedure(StripProcedure):
         self.on_boards = set()
         self.off_boards = set()
         self.bias_file_name = bias_file_name
+        if closed_loop:
+            self.pol_mode = CLOSED_LOOP_MODE
+        else:
+            self.pol_mode = OPEN_LOOP_MODE
 
     def set_board_horn_polarimeter(self, new_board, new_horn, new_pol=None):
         self.board = new_board
@@ -590,7 +601,7 @@ class TurnOnOffProcedure(StripProcedure):
             comment=f"Enabling electronics for {self.horn}",
         ):
             board_setup.log(f"Enabling electronics for {self.horn}…")
-            board_setup.enable_electronics(polarimeter=self.horn)
+            board_setup.enable_electronics(polarimeter=self.horn, mode=self.pol_mode)
             board_setup.log("The electronics has been enabled")
 
         if self.polarimeter:
@@ -664,9 +675,6 @@ class TurnOnOffProcedure(StripProcedure):
 
                     if step_idx == 0:
                         board_setup.setup_VG(self.horn, lna, step=1.0)
-
-                    if False and cur_step == 1.0:
-                        # In mode 5, the following command should be useless…
                         board_setup.setup_ID(self.horn, lna, step=1.0)
 
                 if self.waittime_s > 0:
@@ -739,9 +747,6 @@ class TurnOnOffProcedure(StripProcedure):
 
                     if step_idx == 0:
                         board_setup.setup_VG(self.horn, lna, step=1.0)
-
-                    if False and cur_step == 1.0:
-                        # In mode 5, the following command should be useless…
                         board_setup.setup_ID(self.horn, lna, step=1.0)
 
                 if self.waittime_s > 0:

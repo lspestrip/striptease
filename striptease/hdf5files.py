@@ -19,6 +19,7 @@ from scipy.interpolate import interp1d
 
 from .biases import BiasConfiguration
 
+
 # Any MJD value smaller than this will be considered invalid. We must
 # perform this kind of checks because the electronics has the nasty
 # habit of registering a few samples here and there with dates that
@@ -624,7 +625,8 @@ class DataFile:
 
         data_type = data_type.upper()
 
-        scidata = self.hdf5_file[polarimeter]["pol_data"]
+        pol_group = self.hdf5_file[polarimeter]
+        scidata = pol_group["pol_data"]
 
         scitime = Time(scidata["m_jd"], format="mjd")
 
