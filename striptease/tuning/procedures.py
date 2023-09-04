@@ -1,10 +1,11 @@
 # -*- encoding: utf-8 -*-
 
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from copy import copy
 from enum import IntEnum
 import functools
-from typing import Callable, Dict, List, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 from calibration import CalibrationTables
 from striptease.procedures import StripProcedure
@@ -37,7 +38,6 @@ def parse_state(state: str) -> StripState:
     Args:
 
     - `state` (`str`): one of "on", "off", "zero-bias", "default."."""
-    assert ["on", "off", "zero-bias", "default"].count(state) > 0
     if state == "on":
         return StripState.ON
     elif state == "off":
@@ -46,6 +46,9 @@ def parse_state(state: str) -> StripState:
         return StripState.ZERO_BIAS
     elif state == "default":
         return StripState.DEFAULT
+    raise ValueError(
+        f'state must be one of "on", "off", "zero-bias", "default". Got {state} instead.'
+    )
 
 
 class TuningProcedure(StripProcedure, ABC):
@@ -241,7 +244,7 @@ class TuningProcedure(StripProcedure, ABC):
 
     def _test(
         self,
-        func: Callable[[object, str, int], Union[Scanner1D, Scanner2D]],
+        func: Callable[[TuningProcedure, str, int], Union[Scanner1D, Scanner2D]],
         tag: str,
         comment: str,
     ):
@@ -280,6 +283,18 @@ class TuningProcedure(StripProcedure, ABC):
                 )
             test_polarimeters = next_test_polarimeters
             step += 1
+
+    def _get_phsw_from_leg(self, leg: str) -> Tuple[int, int]:
+        """Return a tuple with the phsw indexes on the leg.
+
+        Args:
+
+        - `leg` (`str`): the leg of the phase switches (can be "HA" or "HB")."""
+        if leg == "HA":
+            return (0, 1)
+        elif leg == "HB":
+            return (2, 3)
+        raise (ValueError(f'leg must be one of "HA" or "HB". Got {leg} instead.'))
 
     def _zero_bias(self, leg: str):
         """Set vgate (and idrain if in closed loop) for all LNAs and phase switch biases to zero on all polarimeters on the specified leg.
@@ -379,7 +394,7 @@ class LNAPretuningProcedure(TuningProcedure):
     def __init__(
         self,
         test_name: str,
-        scanners: Dict[str, Union[Scanner1D, Scanner2D]],
+        scanners: Dict[str, Dict[str, Union[Scanner1D, Scanner2D]]],
         test_polarimeters: List[str] = [
             polarimeter for _, _, polarimeter in polarimeter_iterator()
         ],
@@ -418,11 +433,11 @@ class LNAPretuningProcedure(TuningProcedure):
         self.phsw_status = phsw_status
 
         if open_loop:
-            self._previous_vgate = {
+            self._previous_vgate: Dict[str, Optional[int]] = {
                 polarimeter: None for polarimeter in test_polarimeters
             }
         else:
-            self._previous_idrain = {
+            self._previous_idrain: Dict[str, Optional[int]] = {
                 polarimeter: None for polarimeter in test_polarimeters
             }
         self._previous_offset = {polarimeter: None for polarimeter in test_polarimeters}
@@ -533,12 +548,12 @@ class LNAPretuningProcedure(TuningProcedure):
             with StripTag(conn=self.conn, name=f"{self.test_name}_TEST_{lna}"):
                 if self.open_loop:
 
-                    def func(self, polarimeter, step):
+                    def func(self: LNAPretuningProcedure, polarimeter: str, step: int):
                         return self._test_open_loop(polarimeter, step, lna)
 
                 else:
 
-                    def func(self, polarimeter, step):
+                    def func(self: LNAPretuningProcedure, polarimeter: str, step: int):
                         return self._test_closed_loop(polarimeter, step, lna)
 
                 self._test(
@@ -567,6 +582,7 @@ class LNAPretuningProcedure(TuningProcedure):
         """
 
         scanner = self.scanners[polarimeter][lna]
+        assert isinstance(scanner, Scanner2D)
         idrain = int(scanner.x)
         idrain_step = scanner.index[0]
         offset = scanner.y.astype(int)
@@ -601,6 +617,7 @@ class LNAPretuningProcedure(TuningProcedure):
         """
 
         scanner = self.scanners[polarimeter][lna]
+        assert isinstance(scanner, Scanner2D)
         vgate = int(scanner.x)
         vgate_step = scanner.index[0]
         offset = scanner.y.astype(int)
@@ -621,17 +638,6 @@ class LNAPretuningProcedure(TuningProcedure):
                 self.conn.set_offsets(polarimeter, offset)
                 self._previous_offset[polarimeter] = offset
         return scanner
-
-    def _get_phsw_from_leg(self, leg: str) -> Tuple[str]:
-        """Return a tuple with the phsw indexes on the leg.
-
-        Args:
-
-        - `leg` (`str`): the leg of the phase switches (can be "HA" or "HB")."""
-        if leg == "HA":
-            return (0, 1)
-        elif leg == "HB":
-            return (2, 3)
 
     def _reset_phsw(self, leg: str):
         """Reset phase switches of all tested polarimeters on the requested leg according to self.phsw_status.
@@ -702,7 +708,7 @@ class OffsetTuningProcedure(TuningProcedure):
     def __init__(
         self,
         test_name: str,
-        scanners: Dict[str, Union[Scanner1D, Scanner2D]],
+        scanners: Dict[str, Dict[str, Union[Scanner1D, Scanner2D]]],
         test_polarimeters: List[str] = [
             polarimeter for _, _, polarimeter in polarimeter_iterator()
         ],
@@ -764,10 +770,12 @@ class OffsetTuningProcedure(TuningProcedure):
             name=f"{self.test_name}_TEST_DET_OFFS",
             comment="Perform a detector offset test.",
         ):
+
+            def func(self: OffsetTuningProcedure, polarimeter: str, step: int):
+                return self._test_offset(polarimeter, step)
+
             self._test(
-                func=lambda self, polarimeter, step: self._test_offset(
-                    polarimeter, step
-                ),
+                func=func,
                 tag=f"{self.test_name}_TEST_DET_OFFS",
                 comment="Test detector offset",
             )
@@ -813,6 +821,7 @@ class OffsetTuningProcedure(TuningProcedure):
         - `step` (`int`): the current step of the test.
         """
         scanner = self.scanners[polarimeter]["Offset"]
+        assert isinstance(scanner, Scanner1D)
         offset = scanner.x.astype(int)
         with StripTag(
             conn=self.command_emitter,
