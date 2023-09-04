@@ -23,6 +23,7 @@ from striptease import (
     polarimeter_iterator,
     Tag,
 )
+from striptease.hdf5db import extract_mjd_range
 from striptease.tuning import read_excel
 
 DEFAULT_POLARIMETERS = [polarimeter for _, _, polarimeter in polarimeter_iterator()]
@@ -45,19 +46,33 @@ def load_offsets(polarimeters, excel_file):
     return offsets
 
 
-def data_in_range(data: Tuple[Time, np.ndarray], tag: Tag) -> Tuple[Time, np.ndarray]:
+def data_in_range(
+    data: Tuple[Time, np.ndarray],
+    mjd_range: Union[
+        Tuple[float, float],
+        Tuple[Time, Time],
+        Tuple[str, str],
+        Tag,
+    ],
+) -> Tuple[Time, np.ndarray]:
+    mjd_start, mjd_end = extract_mjd_range(mjd_range)
     times, values = data
-    index_start, index_end = np.searchsorted(times.value, [tag.mjd_start, tag.mjd_end])
+    index_start, index_end = np.searchsorted(times.value, [mjd_start, mjd_end])
     return (times[index_start:index_end], values[index_start:index_end])
 
 
 def load_data(
     ds: DataStorage,
-    mjd_range: Tuple[str],
+    mjd_range: Union[
+        Tuple[float, float],
+        Tuple[Time, Time],
+        Tuple[str, str],
+        Tag,
+    ],
     polarimeter: str,
     detectors: Union[str, List[str], Tuple[str]] = ["Q1", "Q2", "U1", "U2"],
     delta=0.0,
-) -> Dict[str, Dict[str, Tuple[Time, np.ndarray]]]:
+) -> Dict[str, Tuple[Time, np.ndarray]]:
     if len(detectors) == 1:
         detectors = detectors[0]
     pwr = ds.load_sci(
@@ -90,7 +105,12 @@ def load_data(
 
 def load_tags(
     ds: DataStorage,
-    mjd_range: Tuple[str],
+    mjd_range: Union[
+        Tuple[float, float],
+        Tuple[Time, Time],
+        Tuple[str, str],
+        Tag,
+    ],
     test_name: str,
     polarimeters: Union[List[str], Tuple[str]],
 ):
@@ -131,7 +151,12 @@ def load_tags(
 
 def plot_timeline(
     data: Dict,
-    mjd_range: Tag,
+    mjd_range: Union[
+        Tuple[float, float],
+        Tuple[Time, Time],
+        Tuple[str, str],
+        Tag,
+    ],
     tags_global: List[Tag],
     polarimeter: str,
     detectors: Union[List[str], Tuple[str]],
@@ -163,7 +188,17 @@ def sigma_method(data):
     return np.std(odd - even) / np.sqrt(2)
 
 
-def analyze_test(data, polarimeter, tag_acq, detectors):
+def analyze_test(
+    data,
+    polarimeter,
+    mjd_range: Union[
+        Tuple[float, float],
+        Tuple[Time, Time],
+        Tuple[str, str],
+        Tag,
+    ],
+    detectors,
+):
     def analyze_type(data):
         return {
             "mean": np.mean(data),
@@ -174,8 +209,8 @@ def analyze_test(data, polarimeter, tag_acq, detectors):
 
     analysis = {"PWR": {}, "DEM": {}, "PWR_SUM": {}, "DEM_DIFF": {}}
 
-    pwr = data_in_range(data[polarimeter]["PWR"], tag_acq)[1]
-    dem = data_in_range(data[polarimeter]["DEM"], tag_acq)[1]
+    pwr = data_in_range(data[polarimeter]["PWR"], mjd_range)[1]
+    dem = data_in_range(data[polarimeter]["DEM"], mjd_range)[1]
 
     for detector in detectors:
 

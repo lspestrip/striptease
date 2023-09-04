@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from copy import copy
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
 
 import numpy as np
 
@@ -12,6 +12,7 @@ from . import scanners
 
 
 class Scanner1D(ABC):
+    x: Any
     """An abstract class representing a one dimensional scanner.
 
     Args:
@@ -131,6 +132,8 @@ class IrregularScanner(Scanner1D):
 
 
 class Scanner2D(ABC):
+    x: Any
+    y: Any
     """Abstract base class representing a scanning strategy to explore a 2D plane.
 
     Args:
