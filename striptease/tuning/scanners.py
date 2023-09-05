@@ -6,6 +6,8 @@ from typing import Any, Dict, List, Union
 
 import numpy as np
 
+from striptease import polarimeter_iterator
+
 from . import scanners
 
 # One dimensional scanners
@@ -160,7 +162,7 @@ class Scanner2D(ABC):
     def index(self) -> List[int]:
         ...
 
-    def plot(self):
+    def plot(self) -> None:
         """Show a plot of the scanning strategy."""
         from matplotlib import pyplot as plt
         import numpy as np
@@ -414,13 +416,13 @@ class SpiralScanner(Scanner2D):
 
     @property
     def index(self) -> List[int]:
-        self.index = [self.n_arm, self.step]
+        return [self.n_arm, self.step]
 
 
 # Excel-file functions
 
 
-def _list_to_array(x):
+def _list_to_array(x: List) -> List:
     new_list = []
     for element in x:
         if isinstance(element, list):
@@ -434,7 +436,9 @@ def _list_to_array(x):
     return new_list
 
 
-def _read_test(excel_file, polarimeter: str, test: str) -> Union[Scanner2D, Scanner1D]:
+def _read_test(
+    excel_file: Dict, polarimeter: str, test: str
+) -> Union[Scanner2D, Scanner1D]:
     """Read the cells regarding one test in the excel file and return the corresponding scanner.
 
     Args:
@@ -496,14 +500,16 @@ def read_excel(
     excel_file = pd.read_excel(filename, header=(0, 1), index_col=0).to_dict(
         orient="index"
     )
-    scanners = {}
-    for polarimeter in set(excel_file) - {
-        "DUMMY"
-    }:  # Iterate over all polarimeters except the DUMMY one
-        scanners[polarimeter] = {}
-        for test in tests:
-            if dummy_polarimeter:
-                scanners[polarimeter][test] = _read_test(excel_file, "DUMMY", test)
-            else:
-                scanners[polarimeter][test] = _read_test(excel_file, polarimeter, test)
+    all_polarimeters = [polarimeter for _, _, polarimeter in polarimeter_iterator()]
+    assert set(excel_file) == set(all_polarimeters) | {"DUMMY"}
+    scanners = {
+        polarimeter: {
+            test: _read_test(excel_file, "DUMMY", test)
+            if dummy_polarimeter
+            else _read_test(excel_file, polarimeter, test)
+            for test in tests
+        }
+        for polarimeter in set(all_polarimeters)
+    }
+
     return scanners
