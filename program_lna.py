@@ -34,7 +34,7 @@ class LNAOffsetProcedure(StripProcedure):
     def __init__(
         self,
         test_name: str,
-        scanners: Dict[str, Union[Scanner1D, Scanner2D]],
+        scanners: Dict[str, Dict[str, Union[Scanner1D, Scanner2D]]],
         test_polarimeters: List[str] = [
             polarimeter for _, _, polarimeter in polarimeter_iterator()
         ],
@@ -51,10 +51,12 @@ class LNAOffsetProcedure(StripProcedure):
         end_state=StripState.ZERO_BIAS,
     ):
         super().__init__()
-        self.lna_pretuning_procedure = LNAPretuningProcedure(  # Set end_state as ZERO_BIAS, to match the start_state of the OffsetTuningProcedure.
+        self.test_polarimeters = test_polarimeters
+        self.scanners = scanners
+        self.first_offset_tuning_procedure = OffsetTuningProcedure(  # Set end_state as ZERO_BIAS, to match the start_state of lna_pretuning_procedure.
             start_state=start_state,
             end_state=StripState.ZERO_BIAS,
-            test_name=test_name + "_LNA",
+            test_name=test_name + "_OFF1",
             test_polarimeters=test_polarimeters,
             turnon_polarimeters=turnon_polarimeters,
             bias_file_name=bias_file_name,
@@ -65,15 +67,33 @@ class LNAOffsetProcedure(StripProcedure):
             hk_scan_boards=hk_scan_boards,
             open_loop=open_loop,
             scanners=scanners,
+            command_emitter=self.command_emitter,
+        )
+        self.first_offset_tuning_procedure.conn = self.conn
+        self.first_offset_tuning_procedure.conf = self.conf
+        self.lna_pretuning_procedure = LNAPretuningProcedure(  # Set end_state as ZERO_BIAS, to match the start_state of second_offset_tuning_procedure.
+            start_state=StripState.ZERO_BIAS,
+            end_state=StripState.ZERO_BIAS,
+            test_name=test_name + "_LNA",
+            test_polarimeters=test_polarimeters,
+            turnon_polarimeters=turnon_polarimeters,
+            bias_file_name=bias_file_name,
+            stable_acquisition_time=stable_acquisition_time,
+            turnon_acqisition_time=turnon_acqisition_time,
+            turnon_wait_time=turnon_wait_time,
+            message="",
+            hk_scan_boards=hk_scan_boards,
+            open_loop=open_loop,
+            scanners=scanners,
             phsw_status=phsw_status,
             command_emitter=self.command_emitter,
         )
         self.lna_pretuning_procedure.conn = self.conn
         self.lna_pretuning_procedure.conf = self.conf
-        self.offset_tuning_procedure = OffsetTuningProcedure(
+        self.second_offset_tuning_procedure = OffsetTuningProcedure(
             start_state=StripState.ZERO_BIAS,
             end_state=end_state,
-            test_name=test_name + "_OFF",
+            test_name=test_name + "_OFF2",
             test_polarimeters=test_polarimeters,
             turnon_polarimeters=turnon_polarimeters,
             bias_file_name=bias_file_name,
@@ -86,12 +106,15 @@ class LNAOffsetProcedure(StripProcedure):
             scanners=scanners,
             command_emitter=self.command_emitter,
         )
-        self.offset_tuning_procedure.conn = self.conn
-        self.offset_tuning_procedure.conf = self.conf
+        self.second_offset_tuning_procedure.conn = self.conn
+        self.second_offset_tuning_procedure.conf = self.conf
 
     def run(self):
+        self.first_offset_tuning_procedure.run()
         self.lna_pretuning_procedure.run()
-        self.offset_tuning_procedure.run()
+        for polarimeter in self.test_polarimeters:
+            self.scanners[polarimeter]["Offset"].reset()
+        self.second_offset_tuning_procedure.run()
 
 
 if __name__ == "__main__":
