@@ -58,7 +58,7 @@ Once you have a working connection to the server, you can use the
 method :meth:`striptease.StripConnection.slo_command` to send «slow»
 commands to the server. This kind of commands is the most common, and
 you are going to use it 95% of the time. The following command
-retrieves the drain voltage for HEMT #0 from detector `R0`::
+retrieves the drain voltage for HEMT ``#0`` from detector ``R0``::
 
   vd0_hk = conn.slo_command(
       method="GET",
