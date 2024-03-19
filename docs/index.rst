@@ -19,6 +19,7 @@ Welcome to Striptease's documentation!
    runlog
    unittests
    development
+   tuning
 
 Indices and tables
 ==================
