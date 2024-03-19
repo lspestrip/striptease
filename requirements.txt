@@ -23,4 +23,4 @@ sphinxcontrib.asciinema~=0.3.3
 telegram-send~=0.34
 Jinja2~=3.1.2
 python-telegram-bot~=13.5
-xarray~=2024.2.0
+xarray~=2023.1.0
