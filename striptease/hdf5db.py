@@ -96,7 +96,7 @@ def scan_data_path(
 ) -> sqlite3.Connection:
 
     db_path = Path(path) / database_name
-    db = sqlite3.connect(str(db_path))
+    db = sqlite3.connect(db_path)
     create_storage_db(db)
 
     curs = db.cursor()
