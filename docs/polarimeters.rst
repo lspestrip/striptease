@@ -50,7 +50,7 @@ Polarimeter names
 Switching between modules and polarimeters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Each «module» (e.g., I0) is associated with a «polarimeter»
+Each «module» (e.g., ``I0``) is associated with a «polarimeter»
 (``STRIP34``), and it is often the case that procedures and data
 analysis codes need to jump from one representation to another.
 
@@ -274,7 +274,7 @@ mode, depending on how the gate and drain are set:
 2. In *closed loop mode*, the drain current :math:`I_d` and drain
    voltage :math:`V_d` are set by the user, and a retro-feedback
    circuit in the electronics adapts the gate voltage :math:`V_g` to
-   make sure that the drain current $I_d$ is kept at the level
+   make sure that the drain current :math:`I_d` is kept at the level
    specified by the user.
 
 The following figure depicts the difference between the two modes,
@@ -332,9 +332,9 @@ The default configuration of the phase switches is the following:
 - The second phase switch (leg B) oscillates at 50 Hz.
 
 There is no need to send sequences of commands to make each pin diode
-switch, as the electronics is smart enough to understand how to do so.
-You can either tell the electronics to switch or to stay fixed at some
-position.
+switch regularly as time passes, as the electronics is smart enough to
+understand how to do so. You can either tell the electronics to switch
+or to stay fixed at some position.
 
 The values to be sent to the pin diodes are listed in the enumeration
 class :class:`.PhswPinMode`; they can be sent to the diodes using the
