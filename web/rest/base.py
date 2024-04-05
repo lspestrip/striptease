@@ -148,8 +148,8 @@ class Connection(object):
             elif not found:
                 # Emit a warning and fall back to HTTPS
                 logging.warning(
-                    f"Unable to translate {message=} into command {socket_msg=} and send it "
-                    + f"to socket through {url=}, falling back to HTTP"
+                    f"Unable to translate {message} into command {socket_msg} and send it "
+                    + f"to socket through {url}, falling back to HTTP"
                 )
             else:
                 # Quietly fall back to HTTPS
