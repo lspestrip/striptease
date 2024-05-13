@@ -13,12 +13,23 @@ from shutil import copyfileobj
 from typing import Any, Dict, Union, Optional
 import urllib.request as urlreq
 from urllib.parse import urljoin
+from urllib.error import HTTPError
 
 import h5py
 import numpy as np
 
 DEFAULT_UNIT_TEST_SERVER = "https://striptest.fisica.unimi.it"
 DEFAULT_UNIT_TEST_CACHE_PATH = Path.home() / ".strip" / "unittests" / "unittests.db"
+
+
+class UnitTestAccessError(OSError):
+    """Error raisen whenever a unit-test file cannot be loaded"""
+
+    def __init__(self, message: str):
+        self.message = message
+
+    def __str__(self):
+        return "UnitTestAccessError: {}".format(self.message)
 
 
 class UnitTestType(Enum):
@@ -154,7 +165,17 @@ def __download_test(
     db: sqlite3.Connection, test_num: int, server: str, local_cache: Path
 ) -> Optional[UnitTest]:
     # Download the metadata from the db (JSON record)
-    response = urlreq.urlopen(unit_test_json_url(test_num, server))
+    try:
+        response = urlreq.urlopen(unit_test_json_url(test_num, server))
+    except HTTPError as err:
+        raise UnitTestAccessError(
+            "unable to download test #{test_num}, reason: {reason} (HTTP error {code}, URL {url})".format(
+                test_num=test_num,
+                reason=str(err.reason),
+                code=err.code,
+                url=err.url,
+            )
+        ) from err
     metadata_str = response.read().decode("utf-8")
 
     # This is for validation
