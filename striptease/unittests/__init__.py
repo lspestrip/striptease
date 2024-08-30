@@ -18,7 +18,7 @@ from urllib.error import HTTPError
 import h5py
 import numpy as np
 
-DEFAULT_UNIT_TEST_SERVER = "https://striptest.fisica.unimi.it"
+DEFAULT_UNIT_TEST_SERVER = "https://striptest2.fisica.unimi.it"
 DEFAULT_UNIT_TEST_CACHE_PATH = Path.home() / ".strip" / "unittests" / "unittests.db"
 
 

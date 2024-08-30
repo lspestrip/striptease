@@ -6,7 +6,7 @@ acquired during the unit tests of the Strip polarimeters. These tests
 were done at the cryogenic laboratory of the University of Milan
 Bicocca, and they are used as reference in some of the system-level
 tests. The tests are currently available at
-https://striptest.fisica.unimi.it/unittests/; the library provides a
+https://striptest2.fisica.unimi.it/unittests/; the library provides a
 simple interface to download the data from there and load them into
 Python objects.
 
@@ -29,7 +29,7 @@ Here is an example that shows how to use these functionalities::
 
   print(f"{test.url}, {test.polarimeter_name}")
   # Output:
-  # https://striptest.fisica.unimi.it/unittests/tests/354, STRIP02
+  # https://striptest2.fisica.unimi.it/unittests/tests/354, STRIP02
 
   # The "test" variable only contains metadata about the test.
   # To actually load the datasets, use "u.load_unit_test_data".
@@ -93,7 +93,7 @@ data measured while exercising each of the components in the
 to ``dict`` types.
 
 Here is an example, using test `#354
-<https://striptest.fisica.unimi.it/unittests/tests/354>`_ as a
+<https://striptest2.fisica.unimi.it/unittests/tests/354>`_ as a
 testbed::
 
   import striptease.unittests as u
@@ -136,7 +136,7 @@ Polarimetric tests (timelines)
 Timeline data acquired during a Strip unit test is stored in objects
 of type :class:`.UnitTestTimestream`. The following example shows how
 to plot the demodulated data acquired during test `#355
-<https://striptest.fisica.unimi.it/unittests/tests/355>`_ (STRIP02)::
+<https://striptest2.fisica.unimi.it/unittests/tests/355>`_ (STRIP02)::
 
   import striptease.unittests as u
   import matplotlib.pylab as plt
