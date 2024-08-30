@@ -338,7 +338,7 @@ Usage examples:
     # Read the biases for a closed-loop test from the Unit Test database,
     # containing the results of the tests done in Bicocca
     python3 program_open_closed_loop.py \\
-        --open-loop=https://striptest.fisica.unimi.it/unittests/tests/500/ \\
+        --open-loop=https://striptest2.fisica.unimi.it/unittests/tests/500/ \\
         B6 > my_test.json
 
     # Read the biases from a HDF5 file, considering the average value of
@@ -358,7 +358,7 @@ Usage examples:
     # The --print-biases switch is handy if you want to check what are
     # the biases that are going to be used for a test
     python3 program_open_closed_loop.py \\
-        --open-loop=https://striptest.fisica.unimi.it/unittests/tests/500/ \\
+        --open-loop=https://striptest2.fisica.unimi.it/unittests/tests/500/ \\
         --print-biases \\
         B6
 """.format(
