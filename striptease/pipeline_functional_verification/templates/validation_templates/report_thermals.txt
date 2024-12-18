@@ -1,0 +1,13 @@
+## Analysis of the Thermal Sensors in the status {{status}}.
+
+### Info about the Thermal Sensors
+
+{{ th_table }}
+
+### Output of the Thermal Sensors
+
+![LSPE-Strip Official img]({{ report_to_plot }}/Thermal_Output/Thermal_status_{{ status }}.png)
+
+### FFT of the Output of the Thermal Sensors
+
+![LSPE-Strip Official img]({{ report_to_plot }}/Thermal_Output/FFT/FFT_Thermal_status_{{ status }}.png)

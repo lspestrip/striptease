@@ -1,0 +1,41 @@
+# Report for the wait time procedure analysis
+
+Command line:
+
+${cmmd_line}
+
+This analysis is focused on the ${polna} case performed between ${date_range}.
+
+The dictionary with the information and results are saved in ${fileout}.
+
+The wait time and voltage configurations are:
+
+WT: ${metdat['WT_in']} 
+
+VD: ${metdat['VD_in']} 
+
+The count map for the WT dataset is:
+
+% for cc in metdat['WT']['count']:
+	${cc}
+% endfor
+
+
+# Results
+
+Plot of the count map:
+
+![](${figname['count']})
+
+Plots of the input/output configurations of wait time:
+
+![](${figname['waittime']})
+
+Plots of the input/output configurations of voltage:
+
+![](${figname['voltage']})
+
+Plot of the wait time measured for each set:
+
+![](${figname['settingtime']})
+

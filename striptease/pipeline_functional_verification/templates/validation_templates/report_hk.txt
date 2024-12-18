@@ -1,0 +1,16 @@
+## Analysis of the Bias Housekeeping parameters
+
+### Polarimeter {{ pol_name }}
+
+{{ hk_table }}
+
+<hr style="width:100%;text-align:left;margin-left:0">
+
+
+{% for item in ["V", "I", "O", "M", "P"] %}
+
+### Output of the HK Parameters {{ item }} of the Polarimeter {{ pol_name }}
+
+![LSPE-Strip Official img]({{ report_to_plot }}/HK/{{ pol_name }}_HK_{{ item }}.png)
+
+{% endfor %}

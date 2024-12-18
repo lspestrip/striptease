@@ -1,0 +1,8 @@
+## Correlation Plots
+
+{% for file in png_files %}
+
+Correlation Plot of {{ file[:-13]}}
+
+![LSPE-Strip Official img]({{ report_to_plot }}/Correlation_Plot/{{ file }})
+{% endfor %}
