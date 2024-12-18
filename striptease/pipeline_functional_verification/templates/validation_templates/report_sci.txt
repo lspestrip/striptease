@@ -1,0 +1,21 @@
+## Analysis of the Scientific Data
+### Polarimeter {{ pol_name }}
+{% for type in ["DEMODULATED", "TOTPOWER"] %}
+
+### Output of the {{ type }} Scientific Data - Polarimeter {{ pol_name }}
+![LSPE-Strip Official img]({{ report_to_plot }}/SCIDATA/{{ type }}/{{ name_pol}}__{{ type }}.png)
+
+### RMS of the {{ type }} Scientific Data - Polarimeter {{ pol_name }}
+![LSPE-Strip Official img]({{ report_to_plot }}/RMS/{{ type }}/{{ name_pol}}__RMS_{{ type }}.png)
+
+{% if fft %}
+
+### FFT of {{ type }} Scientific Data - Polarimeter {{ pol_name }}
+![LSPE-Strip Official img]({{ report_to_plot }}/FFT/{{ type }}/{{ name_pol}}__FFT_{{ type }}.png)
+
+### FFT of RMS of {{ type }} Scientific Data - Polarimeter {{ pol_name }}
+![LSPE-Strip Official img]({{ report_to_plot }}/FFT/RMS/{{ type }}/{{ name_pol}}__FFT_RMS_{{ type }}.png)
+
+{% endif %}
+
+{% endfor %}

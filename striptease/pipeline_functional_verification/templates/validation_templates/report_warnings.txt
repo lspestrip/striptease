@@ -1,0 +1,32 @@
+## Warnings!
+
+{% if sampling_warn %}
+### Sampling Warnings
+
+{% for msg in sampling_warn%}{{ msg }}{% endfor %}
+
+{% endif %}
+
+{% if t_warn %}
+### Time Warnings
+
+{% for msg in t_warn %}
+{{ msg }}
+{% endfor %}
+
+{% endif %}
+
+{% if corr_warn %}
+### Correlation Warnings
+High correlations found:
+
+| Data 1 | Data 2 | Correlation Value |
+|:------:|:------:|:-----------------:|
+{% for msg in corr_warn %}{{ msg }}{% endfor %}
+{% endif %}
+
+{% if spike_warn %}
+### Spike Warnings
+
+{% for msg in spike_warn %}{{ msg }}{% endfor %}
+{% endif %}

@@ -1,0 +1,20 @@
+## Correlation Matrices
+
+{% for file in png_files %}
+
+Correlation Matrix of {{ file[:-12]}}
+
+![LSPE-Strip Official img]({{ report_to_plot }}/Correlation_Matrix/{{ file }})
+{% endfor %}
+
+
+{% if cross %}
+## Cross Correlation Matrices
+
+{% for file in png_cross_files %}
+
+Correlation Plot of {{ file[:-12]}}
+
+![LSPE-Strip Official img]({{ report_to_plot }}/Cross_Corr/{{ file }})
+{% endfor %}
+{% endif %}

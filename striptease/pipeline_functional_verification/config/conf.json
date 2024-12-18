@@ -1,0 +1,24 @@
+{
+    "user_conf" : "~/.strip/conf.json",
+    "urls":
+    {
+	     "schema"      : "https",
+	     "base"        : "striper.oas.inaf.it:8000",
+	     "login"       : "/rest/login",
+	     "logout"      : "/rest/logout",
+	     "ws_pol_base" : "/ws/hk",
+	     "wamp_url" : "/wamp",
+	     "wamp_realm"  : "realm1"
+    },
+    "board_associations": {
+      "1": "bias1_cal.xlsx",
+      "2": "bias2_cal.xlsx",
+      "3": "bias3_cal.xlsx",
+      "4": "bias4_cal.xlsx",
+      "5": "bias5_cal.xlsx",
+      "6": "bias6_cal.xlsx",
+      "7": "bias7_cal.xlsx",
+      "8": "bias8_cal.xlsx",
+      "9": "bias9_cal.xlsx"
+    }
+}

@@ -1,0 +1,22 @@
+# Test report for the functional verification test campaign of Strip
+
+## General Info
+
+- The analysis was run with the following command line:
+`{{ command_line }}`
+
+- The data files were loaded from the following path: `{{ path_file }}`
+
+- Analysis date: `{{ analysis_date }}`
+
+- The plots of this analysis can be found at the following path: `{{ report_to_plot }}`
+
+- The reports of this analysis can be found at the following path: `{{ output_report_dir }}`
+
+<hr style="width:100%;text-align:left;margin-left:0">
+
+## Flags of the modality
+
+{% for cur_flag in args_dict.keys() %}
+- `{{ cur_flag }}`: `{{ args_dict[cur_flag] }}`
+{% endfor %}

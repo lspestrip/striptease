@@ -1,0 +1,21 @@
+# Test report for the reference test of polarimeter ${polarimeter}
+
+The data files were loaded from the following path: ${data_storage_path}
+
+The analysis was run on ${analysis_date} with the following command line:
+
+```
+${command_line}
+```
+
+% for cur_result in analysis_results:
+# Tag ${cur_result["tag"].name}
+
+- Time period: ${cur_result["tag"].mjd_start} - ${cur_result["tag"].mjd_end}
+- Status of the phase switch: ${cur_result["phsw_status"]}
+
+Plot of DEMQ1:
+
+![](${cur_result["DEMQ1_histogram_file_name"]})
+
+% endfor

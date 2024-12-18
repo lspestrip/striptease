@@ -1,0 +1,28 @@
+## Analysis of the Scientific Output
+### Polarimeter {{ pol_name }}
+
+{% for type in ["DEM", "PWR"] %}
+{% for eoa in ["EOA", "EO", "E", "O", "A", "EA", "EO"] %}
+
+### Output of the {{ type }} Output {{ eoa }} - Polarimeter {{ pol_name }}
+![LSPE-Strip Official img]({{ report_to_plot }}/OUTPUT/{{ type }}/{{ name_pol}}__{{ type }}_{{ eoa }}.png)
+
+{% if rms %}
+### RMS of the {{ type }} Output {{ eoa }} - Polarimeter {{ pol_name }}
+![LSPE-Strip Official img]({{ report_to_plot }}/RMS/{{ type }}/{{ name_pol}}__RMS_{{ type }}_{{ eoa }}.png)
+{% endif %}
+
+{% if fft %}
+
+### FFT of {{ type }} Output {{ eoa }} - Polarimeter {{ pol_name }}
+![LSPE-Strip Official img]({{ report_to_plot }}/FFT/{{ type }}/{{ name_pol}}__FFT_{{ type }}_{{ eoa }}.png)
+
+{% if rms %}
+### FFT of RMS of {{ type }} Output {{ eoa }} - Polarimeter {{ pol_name }}
+![LSPE-Strip Official img]({{ report_to_plot }}/FFT/RMS/{{ type }}/{{ name_pol}}__FFT_RMS_{{ type }}_{{ eoa }}.png)
+{% endif %}
+
+{% endif %}
+
+{% endfor %}
+{% endfor %}
