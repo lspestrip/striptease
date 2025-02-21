@@ -170,7 +170,7 @@ def main(stdscr):
                 open_tags.add(cmddict["tag"])
                 indent_level_incr = 4
             else:
-                if not cmddict["tag"] in open_tags:
+                if cmddict["tag"] not in open_tags:
                     msg = f"Tag {cmddict['tag']} is being closed, but the tags currently open are {', '.join(open_tags)}"
                     warning(stdscr, msg)
                 else:

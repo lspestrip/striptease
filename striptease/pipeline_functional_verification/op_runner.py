@@ -15,14 +15,14 @@ import toml
 
 def load_toml_config(toml_file_path):
     """
-        Load the arguments of a TOML file into a dict.
+    Load the arguments of a TOML file into a dict.
 
-            Parameters:\n
-        - **toml_file_path** (`str`): path to the TOML configuration file
+        Parameters:\n
+    - **toml_file_path** (`str`): path to the TOML configuration file
     """
     try:
         # Open the TOML file to read the instructions
-        with open(toml_file_path, 'r') as toml_file:
+        with open(toml_file_path, "r") as toml_file:
             # Loading the arguments from the toml_file
             config = toml.load(toml_file)
         return config
@@ -33,10 +33,12 @@ def load_toml_config(toml_file_path):
 
 def main():
     # Create an argument parser to accept the TOML file as an argument
-    parser = argparse.ArgumentParser(description='Run the official pipeline for functional verification of Strip '
-                                                 'with arguments from a TOML file')
+    parser = argparse.ArgumentParser(
+        description="Run the official pipeline for functional verification of Strip "
+        "with arguments from a TOML file"
+    )
     # Add the argument config_file
-    parser.add_argument('config_file', help='Path to the TOML configuration file')
+    parser.add_argument("config_file", help="Path to the TOML configuration file")
 
     # Call .parse_args() on the parser to get the Namespace object that contains all the user’s arguments.
     args = parser.parse_args()
@@ -45,12 +47,12 @@ def main():
     config = load_toml_config(args.config_file)
 
     # Extract the arguments from the TOML file
-    program_args = config.get('official_pipeline_args', {})
+    program_args = config.get("official_pipeline_args", {})
 
     # Build the command to call the pipeline
     command = [
-        'python',  # Use the Python interpreter
-        'official_pipeline.py',  # Name of the program
+        "python",  # Use the Python interpreter
+        "official_pipeline.py",  # Name of the program
     ]
 
     # Counter for the positional arguments
@@ -66,7 +68,7 @@ def main():
 
         if pos_arg < n_pos_arg:
             # Positional arguments added to the command
-            command.extend([f'{value}'])
+            command.extend([f"{value}"])
             pos_arg += 1
         else:
             # Flags (need '--')
@@ -74,10 +76,10 @@ def main():
                 pass
             elif value == "true":
                 # Boolean flags added to the command
-                command.extend(['--' + key])
+                command.extend(["--" + key])
             else:
                 # Other flags added to the command
-                command.extend(['--' + key, f"{value}"])
+                command.extend(["--" + key, f"{value}"])
 
     # Execute the pipeline with the specified arguments
     try:
@@ -86,5 +88,5 @@ def main():
         logging.error(f"Error calling 'official_pipeline.py': {e}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

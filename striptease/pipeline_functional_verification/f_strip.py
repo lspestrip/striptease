@@ -49,7 +49,9 @@ def binning_func(data_array, bin_length: int):
     else:
         chunk_n = int(len(data_array) / bin_length)
         for i in range(chunk_n):
-            new_data_array.append(np.mean(data_array[i * bin_length:i * bin_length + bin_length]))
+            new_data_array.append(
+                np.mean(data_array[i * bin_length : i * bin_length + bin_length])
+            )
         return new_data_array
 
 
@@ -64,7 +66,7 @@ def csv_to_json(csv_file_path: str, json_file_path):
     json_array = []
 
     # read csv file
-    with open(csv_file_path, encoding='utf-8') as csv_file:
+    with open(csv_file_path, encoding="utf-8") as csv_file:
         # load csv file data using csv library's dictionary reader
         csvReader = csv.DictReader(csv_file)
 
@@ -81,23 +83,33 @@ def csv_to_json(csv_file_path: str, json_file_path):
     Path(json_dir).mkdir(parents=True, exist_ok=True)
 
     # convert python json_array to JSON String and write to file
-    with open(json_file_path, 'w', encoding='utf-8') as json_file:
+    with open(json_file_path, "w", encoding="utf-8") as json_file:
         json_string = json.dumps(json_array, indent=4)
         json_file.write(json_string)
 
 
-def data_plot(pol_name: str,
-              dataset: dict,
-              timestamps: list,
-              start_datetime: str,
-              begin: int, end: int,
-              type: str,
-              even: str, odd: str, all: str,
-              demodulated: bool, rms: bool,
-              fft: bool, noise_level: bool,
-              window: int, smooth_len: int, nperseg: int,
-              output_plot_dir: str, output_report_dir: str,
-              show: bool):
+def data_plot(
+    pol_name: str,
+    dataset: dict,
+    timestamps: list,
+    start_datetime: str,
+    begin: int,
+    end: int,
+    type: str,
+    even: str,
+    odd: str,
+    all: str,
+    demodulated: bool,
+    rms: bool,
+    fft: bool,
+    noise_level: bool,
+    window: int,
+    smooth_len: int,
+    nperseg: int,
+    output_plot_dir: str,
+    output_report_dir: str,
+    show: bool,
+):
     """
     Generic function that create a Plot of the dataset provided.\n
     Parameters:\n
@@ -130,7 +142,7 @@ def data_plot(pol_name: str,
     name_plot = f"{pol_name} "
 
     # Initialize the marker size in the legend
-    marker_scale = 2.
+    marker_scale = 2.0
     # ------------------------------------------------------------------------------------------------------------------
     # Step 1: define the operations: FFT, RMS, OUTPUT
 
@@ -179,19 +191,20 @@ def data_plot(pol_name: str,
     # Step 3: Creating the Plot
 
     # Updating the start datatime for the plot title
-    begin_date = date_update(n_samples=begin, start_datetime=start_datetime, sampling_frequency=100)
+    begin_date = date_update(
+        n_samples=begin, start_datetime=start_datetime, sampling_frequency=100
+    )
 
     # Creating the figure with the subplots
     fig, axs = plt.subplots(nrows=2, ncols=4, constrained_layout=True, figsize=(20, 12))
     # Title of the figure
-    fig.suptitle(f'POL {name_plot}\nDate: {begin_date}', fontsize=14)
+    fig.suptitle(f"POL {name_plot}\nDate: {begin_date}", fontsize=14)
 
     logging.info(f"Plot of POL {name_plot}")
     # The 4 plots are repeated on two rows (uniform Y-scale below)
     for row in range(2):
         col = 0  # type: int
         for exit in ["Q1", "Q2", "U1", "U2"]:
-
             # Plot Statistics
             # Mean
             m = ""
@@ -209,12 +222,16 @@ def data_plot(pol_name: str,
                     # Set the y-axis of the current plot as the first of the raw
                     axs[row, col].sharey(axs[1, 0])
                 except ValueError as e:
-                    logging.warning(f"{e} "
-                                    f"Negative data found in Spectral Analysis (FFT): impossible to use log scale.\n\n")
+                    logging.warning(
+                        f"{e} "
+                        f"Negative data found in Spectral Analysis (FFT): impossible to use log scale.\n\n"
+                    )
                     continue
                 except Exception as e:
-                    logging.warning(f"{e} "
-                                    f"Negative data found in Spectral Analysis (FFT): impossible to use log scale.\n\n")
+                    logging.warning(
+                        f"{e} "
+                        f"Negative data found in Spectral Analysis (FFT): impossible to use log scale.\n\n"
+                    )
                     continue
 
             # ----------------------------------------------------------------------------------------------------------
@@ -223,24 +240,47 @@ def data_plot(pol_name: str,
                 # Avoid ValueError during Scientific Data Processing
                 try:
                     # Creating a dict with the Scientific Data of an exit of a specific type and their new timestamps
-                    sci_data = demodulation(dataset=dataset, timestamps=timestamps,
-                                            type=type, exit=exit, begin=begin, end=end)
+                    sci_data = demodulation(
+                        dataset=dataset,
+                        timestamps=timestamps,
+                        type=type,
+                        exit=exit,
+                        begin=begin,
+                        end=end,
+                    )
 
                     # --------------------------------------------------------------------------------------------------
                     # RMS Calculation
                     if rms:
                         # Calculate the RMS of the Scientific Data
-                        rms_sd = RMS(sci_data["sci_data"], window=window, exit=exit, eoa=0, begin=begin, end=end)
+                        rms_sd = RMS(
+                            sci_data["sci_data"],
+                            window=window,
+                            exit=exit,
+                            eoa=0,
+                            begin=begin,
+                            end=end,
+                        )
 
                         # ----------------------------------------------------------------------------------------------
                         # Plot of FFT of the RMS of the SciData DEMODULATED/TOTPOWER
                         if fft:
                             # f, s = fourier_transformed(times, values, nperseg, f_max, f_min)
-                            f, s = scipy.signal.welch(rms_sd, fs=50, nperseg=min(len(rms_sd), nperseg),
-                                                      scaling="spectrum")
-                            axs[row, col].plot(f[f < 25.], s[f < 25.],
-                                               linewidth=0.2, marker=".", markersize=2, color="mediumvioletred",
-                                               label=f"{name_plot[3:]}")
+                            f, s = scipy.signal.welch(
+                                rms_sd,
+                                fs=50,
+                                nperseg=min(len(rms_sd), nperseg),
+                                scaling="spectrum",
+                            )
+                            axs[row, col].plot(
+                                f[f < 25.0],
+                                s[f < 25.0],
+                                linewidth=0.2,
+                                marker=".",
+                                markersize=2,
+                                color="mediumvioletred",
+                                label=f"{name_plot[3:]}",
+                            )
                         # ----------------------------------------------------------------------------------------------
 
                         # ----------------------------------------------------------------------------------------------
@@ -260,9 +300,15 @@ def data_plot(pol_name: str,
                             min_val = round(min(rms_sd), 2)
 
                             # Plot RMS
-                            axs[row, col].plot(sci_data["times"][begin:len(rms_sd) + begin], rms_sd,
-                                               linewidth=0.2, marker=".", markersize=2,
-                                               color="mediumvioletred", label=f"{name_plot[3:]}")
+                            axs[row, col].plot(
+                                sci_data["times"][begin : len(rms_sd) + begin],
+                                rms_sd,
+                                linewidth=0.2,
+                                marker=".",
+                                markersize=2,
+                                color="mediumvioletred",
+                                label=f"{name_plot[3:]}",
+                            )
                         # ----------------------------------------------------------------------------------------------
                     # --------------------------------------------------------------------------------------------------
 
@@ -271,56 +317,94 @@ def data_plot(pol_name: str,
                     else:
                         # Plot of the FFT of the SciData DEMODULATED/TOTPOWER ------------------------------------------
                         if fft:
-                            f, s = fourier_transformed(times=sci_data["times"][begin:end],
-                                                       values=sci_data["sci_data"][exit][begin:end],
-                                                       nperseg=nperseg, f_max=25., f_min=0)
+                            f, s = fourier_transformed(
+                                times=sci_data["times"][begin:end],
+                                values=sci_data["sci_data"][exit][begin:end],
+                                nperseg=nperseg,
+                                f_max=25.0,
+                                f_min=0,
+                            )
 
-                            axs[row, col].plot(f, s,
-                                               linewidth=0.2, marker=".", markersize=2, color="mediumpurple",
-                                               label=f"{name_plot[3:]}")
+                            axs[row, col].plot(
+                                f,
+                                s,
+                                linewidth=0.2,
+                                marker=".",
+                                markersize=2,
+                                color="mediumpurple",
+                                label=f"{name_plot[3:]}",
+                            )
 
                             # Computing Noise Level: WN + 1/f
                             if noise_level:
                                 # Filter the fft to get the WN level
-                                freq_fil, fft_fil = wn_filter_fft(f[50:], s[50:], mad_number=6.0)
+                                freq_fil, fft_fil = wn_filter_fft(
+                                    f[50:], s[50:], mad_number=6.0
+                                )
                                 # Create the WN array
                                 wn = np.ones(len(f)) * np.median(fft_fil)
                                 # Filtered the fft to get the 1/f noise curve
                                 x_fil_data, y_fil_data = one_f_filter_fft(f, s)
                                 # Get the fitted y values
-                                y_fit, slope = get_y_fit_data(x_fil_data=x_fil_data, y_fil_data=y_fil_data)
+                                y_fit, slope = get_y_fit_data(
+                                    x_fil_data=x_fil_data, y_fil_data=y_fil_data
+                                )
                                 # Get the knee frequency
-                                knee_f = get_knee_freq(x=x_fil_data, y=y_fit, target_y=wn[0])
+                                knee_f = get_knee_freq(
+                                    x=x_fil_data, y=y_fit, target_y=wn[0]
+                                )
 
                                 # Write info on the file only the 2nd time
                                 if row == 1:
                                     # Define the name of the noise report file
-                                    noise_report_name = dir_format(f"Noise_Report_{start_datetime}.txt")
+                                    noise_report_name = dir_format(
+                                        f"Noise_Report_{start_datetime}.txt"
+                                    )
                                     # Write the info about the current polarimeter
-                                    with open(f"{output_report_dir}/{noise_report_name}", "a") as file:
-                                        file.write(f"{pol_name}\t{name_plot[20:]}\t{exit}\t"
-                                                   f"{np.round(wn[0], 2)}\t"
-                                                   f"{np.round(slope, 2)}\t"
-                                                   f"{np.round(knee_f, 2)}\n")
+                                    with open(
+                                        f"{output_report_dir}/{noise_report_name}", "a"
+                                    ) as file:
+                                        file.write(
+                                            f"{pol_name}\t{name_plot[20:]}\t{exit}\t"
+                                            f"{np.round(wn[0], 2)}\t"
+                                            f"{np.round(slope, 2)}\t"
+                                            f"{np.round(knee_f, 2)}\n"
+                                        )
 
                                 # Plotting the WN and 1/f
                                 # 1/f Fitted
-                                axs[row, col].plot(x_fil_data, y_fit, color="limegreen",
-                                                   label=f"1/f fitted data. Slope: {np.round(slope, 2)}")
+                                axs[row, col].plot(
+                                    x_fil_data,
+                                    y_fit,
+                                    color="limegreen",
+                                    label=f"1/f fitted data. Slope: {np.round(slope, 2)}",
+                                )
                                 # WN level
-                                axs[row, col].plot(f, wn,  color="orange",
-                                                   label=f"WN level: {np.round(wn[0], 2)} ADU**2/Hz")
+                                axs[row, col].plot(
+                                    f,
+                                    wn,
+                                    color="orange",
+                                    label=f"WN level: {np.round(wn[0], 2)} ADU**2/Hz",
+                                )
                                 # Knee_freq
-                                axs[row, col].plot(knee_f, wn[0], "*", color="black",
-                                                   label=f"Knee Frequency = {np.round(knee_f, 2)}GHz")
+                                axs[row, col].plot(
+                                    knee_f,
+                                    wn[0],
+                                    "*",
+                                    color="black",
+                                    label=f"Knee Frequency = {np.round(knee_f, 2)}GHz",
+                                )
                                 # Set xy scale log
-                                axs[row, col].set_xscale('log')
-                                axs[row, col].set_yscale('log')
+                                axs[row, col].set_xscale("log")
+                                axs[row, col].set_yscale("log")
 
                         # Plot of the SciData DEMODULATED/TOTPOWER -----------------------------------------------------
                         elif not fft:
                             # Smoothing of the SciData  Smooth_len=1 -> No smoothing
-                            y = mob_mean(sci_data["sci_data"][exit][begin:end], smooth_len=smooth_len)
+                            y = mob_mean(
+                                sci_data["sci_data"][exit][begin:end],
+                                smooth_len=smooth_len,
+                            )
 
                             # Calculate Plot Statistics
                             # Mean
@@ -333,9 +417,15 @@ def data_plot(pol_name: str,
                             min_val = round(min(y), 2)
 
                             # Plot SciData
-                            axs[row, col].plot(sci_data["times"][begin:len(y) + begin], y,
-                                               linewidth=0.2, marker=".", markersize=2,
-                                               color="mediumpurple", label=f"{name_plot[3:]}")
+                            axs[row, col].plot(
+                                sci_data["times"][begin : len(y) + begin],
+                                y,
+                                linewidth=0.2,
+                                marker=".",
+                                markersize=2,
+                                color="mediumpurple",
+                                label=f"{name_plot[3:]}",
+                            )
                     # --------------------------------------------------------------------------------------------------
 
                 except ValueError as e:
@@ -349,14 +439,15 @@ def data_plot(pol_name: str,
                 # If even, odd, all are equal to 0
                 if not (even or odd or all):
                     # Do not plot anything
-                    logging.error("No plot can be printed if even, odd, all values are all 0.")
+                    logging.error(
+                        "No plot can be printed if even, odd, all values are all 0."
+                    )
                     raise SystemExit(1)
 
                 # When at least one in even, odd, all is different from 0
                 else:
                     # Avoid ValueError during Scientific Output Processing
                     try:
-
                         # ----------------------------------------------------------------------------------------------
                         # RMS Calculations
                         if rms:
@@ -365,43 +456,105 @@ def data_plot(pol_name: str,
                             rms_all = []
                             # Calculate the RMS of the Scientific Output: Even, Odd, All
                             if even:
-                                rms_even = RMS(dataset[type], window=window, exit=exit, eoa=2, begin=begin, end=end)
+                                rms_even = RMS(
+                                    dataset[type],
+                                    window=window,
+                                    exit=exit,
+                                    eoa=2,
+                                    begin=begin,
+                                    end=end,
+                                )
                             if odd:
-                                rms_odd = RMS(dataset[type], window=window, exit=exit, eoa=1, begin=begin, end=end)
+                                rms_odd = RMS(
+                                    dataset[type],
+                                    window=window,
+                                    exit=exit,
+                                    eoa=1,
+                                    begin=begin,
+                                    end=end,
+                                )
                             if all:
-                                rms_all = RMS(dataset[type], window=window, exit=exit, eoa=0, begin=begin, end=end)
+                                rms_all = RMS(
+                                    dataset[type],
+                                    window=window,
+                                    exit=exit,
+                                    eoa=0,
+                                    begin=begin,
+                                    end=end,
+                                )
 
                             # ------------------------------------------------------------------------------------------
                             # Plot of FFT of the RMS of the Output DEM/PWR
                             if fft:
                                 if even:
-                                    f, s = scipy.signal.welch(rms_even, fs=50, nperseg=min(len(rms_even), nperseg),
-                                                              scaling="spectrum")
-                                    axs[row, col].plot(f[f < 25.], s[f < 25.], color="royalblue",
-                                                       linewidth=0.2, marker=".", markersize=2,
-                                                       alpha=even, label=f"Even samples")
+                                    f, s = scipy.signal.welch(
+                                        rms_even,
+                                        fs=50,
+                                        nperseg=min(len(rms_even), nperseg),
+                                        scaling="spectrum",
+                                    )
+                                    axs[row, col].plot(
+                                        f[f < 25.0],
+                                        s[f < 25.0],
+                                        color="royalblue",
+                                        linewidth=0.2,
+                                        marker=".",
+                                        markersize=2,
+                                        alpha=even,
+                                        label="Even samples",
+                                    )
                                 if odd:
-                                    f, s = scipy.signal.welch(rms_odd, fs=50, nperseg=min(len(rms_odd), nperseg),
-                                                              scaling="spectrum")
-                                    axs[row, col].plot(f[f < 25.], s[f < 25.], color="crimson",
-                                                       linewidth=0.2, marker=".", markersize=2,
-                                                       alpha=odd, label=f"Odd samples")
+                                    f, s = scipy.signal.welch(
+                                        rms_odd,
+                                        fs=50,
+                                        nperseg=min(len(rms_odd), nperseg),
+                                        scaling="spectrum",
+                                    )
+                                    axs[row, col].plot(
+                                        f[f < 25.0],
+                                        s[f < 25.0],
+                                        color="crimson",
+                                        linewidth=0.2,
+                                        marker=".",
+                                        markersize=2,
+                                        alpha=odd,
+                                        label="Odd samples",
+                                    )
                                 if all:
-                                    f, s = scipy.signal.welch(rms_all, fs=100, nperseg=min(len(rms_all), nperseg),
-                                                              scaling="spectrum")
-                                    axs[row, col].plot(f[f < 25.], s[f < 25.], color="forestgreen",
-                                                       linewidth=0.2, marker=".", markersize=2,
-                                                       alpha=all, label="All samples")
+                                    f, s = scipy.signal.welch(
+                                        rms_all,
+                                        fs=100,
+                                        nperseg=min(len(rms_all), nperseg),
+                                        scaling="spectrum",
+                                    )
+                                    axs[row, col].plot(
+                                        f[f < 25.0],
+                                        s[f < 25.0],
+                                        color="forestgreen",
+                                        linewidth=0.2,
+                                        marker=".",
+                                        markersize=2,
+                                        alpha=all,
+                                        label="All samples",
+                                    )
                             # ------------------------------------------------------------------------------------------
 
                             # ------------------------------------------------------------------------------------------
                             # Plot of RMS of the Output DEM/PWR
                             else:
                                 if even:
-                                    axs[row, col].plot(timestamps[begin:end - 1:2][:-window - smooth_len + 1],
-                                                       mob_mean(rms_even, smooth_len=smooth_len)[:-1],
-                                                       color="royalblue", linewidth=0.2, marker=".", markersize=2,
-                                                       alpha=even, label="Even Output")
+                                    axs[row, col].plot(
+                                        timestamps[begin : end - 1 : 2][
+                                            : -window - smooth_len + 1
+                                        ],
+                                        mob_mean(rms_even, smooth_len=smooth_len)[:-1],
+                                        color="royalblue",
+                                        linewidth=0.2,
+                                        marker=".",
+                                        markersize=2,
+                                        alpha=even,
+                                        label="Even Output",
+                                    )
                                     # Plot Statistics
                                     # Mean
                                     m += f"\nEven = {round(np.mean(rms_even), 2)}"
@@ -409,10 +562,18 @@ def data_plot(pol_name: str,
                                     std += f"\nEven = {round(np.std(rms_even), 2)}"
 
                                 if odd:
-                                    axs[row, col].plot(timestamps[begin + 1:end:2][:-window - smooth_len + 1],
-                                                       mob_mean(rms_odd, smooth_len=smooth_len)[:-1],
-                                                       color="crimson", linewidth=0.2, marker=".", markersize=2,
-                                                       alpha=odd, label="Odd Output")
+                                    axs[row, col].plot(
+                                        timestamps[begin + 1 : end : 2][
+                                            : -window - smooth_len + 1
+                                        ],
+                                        mob_mean(rms_odd, smooth_len=smooth_len)[:-1],
+                                        color="crimson",
+                                        linewidth=0.2,
+                                        marker=".",
+                                        markersize=2,
+                                        alpha=odd,
+                                        label="Odd Output",
+                                    )
                                     # Plot Statistics
                                     # Mean
                                     m += f"\nOdd = {round(np.mean(rms_odd), 2)}"
@@ -420,10 +581,18 @@ def data_plot(pol_name: str,
                                     std += f"\nOdd = {round(np.std(rms_odd), 2)}"
 
                                 if all != 0:
-                                    axs[row, col].plot(timestamps[begin:end][:-window - smooth_len + 1],
-                                                       mob_mean(rms_all, smooth_len=smooth_len)[:-1],
-                                                       linewidth=0.2, marker=".", markersize=2,
-                                                       color="forestgreen", alpha=all, label="All Output")
+                                    axs[row, col].plot(
+                                        timestamps[begin:end][
+                                            : -window - smooth_len + 1
+                                        ],
+                                        mob_mean(rms_all, smooth_len=smooth_len)[:-1],
+                                        linewidth=0.2,
+                                        marker=".",
+                                        markersize=2,
+                                        color="forestgreen",
+                                        alpha=all,
+                                        label="All Output",
+                                    )
                                     # Plot Statistics
                                     # Mean
                                     m += f"\nAll = {round(np.mean(rms_all), 2)}"
@@ -439,29 +608,59 @@ def data_plot(pol_name: str,
                             # Plot of the FFT of the Output DEM/PWR
                             if fft:
                                 if even:
-                                    f, s = fourier_transformed(times=timestamps[begin:end - 1:2],
-                                                               values=dataset[type][exit][begin:end - 1:2],
-                                                               nperseg=nperseg, f_max=25., f_min=0)
-                                    axs[row, col].plot(f, s,
-                                                       color="royalblue", alpha=even,
-                                                       linewidth=0.2, marker=".", markersize=2,
-                                                       label="Even samples")
+                                    f, s = fourier_transformed(
+                                        times=timestamps[begin : end - 1 : 2],
+                                        values=dataset[type][exit][begin : end - 1 : 2],
+                                        nperseg=nperseg,
+                                        f_max=25.0,
+                                        f_min=0,
+                                    )
+                                    axs[row, col].plot(
+                                        f,
+                                        s,
+                                        color="royalblue",
+                                        alpha=even,
+                                        linewidth=0.2,
+                                        marker=".",
+                                        markersize=2,
+                                        label="Even samples",
+                                    )
                                 if odd:
-                                    f, s = fourier_transformed(times=timestamps[begin + 1:end:2],
-                                                               values=dataset[type][exit][begin + 1:end:2],
-                                                               nperseg=nperseg, f_max=25., f_min=0)
-                                    axs[row, col].plot(f, s,
-                                                       color="crimson", alpha=odd,
-                                                       linewidth=0.2, marker=".", markersize=2,
-                                                       label="Odd samples")
+                                    f, s = fourier_transformed(
+                                        times=timestamps[begin + 1 : end : 2],
+                                        values=dataset[type][exit][begin + 1 : end : 2],
+                                        nperseg=nperseg,
+                                        f_max=25.0,
+                                        f_min=0,
+                                    )
+                                    axs[row, col].plot(
+                                        f,
+                                        s,
+                                        color="crimson",
+                                        alpha=odd,
+                                        linewidth=0.2,
+                                        marker=".",
+                                        markersize=2,
+                                        label="Odd samples",
+                                    )
                                 if all:
-                                    f, s = fourier_transformed(times=timestamps[begin:end],
-                                                               values=dataset[type][exit][begin:end],
-                                                               nperseg=nperseg, f_max=25., f_min=0)
-                                    axs[row, col].plot(f, s,
-                                                       color="forestgreen", alpha=all,
-                                                       linewidth=0.2, marker=".", markersize=2,
-                                                       label="All samples")
+                                    f, s = fourier_transformed(
+                                        times=timestamps[begin:end],
+                                        values=dataset[type][exit][begin:end],
+                                        nperseg=nperseg,
+                                        f_max=25.0,
+                                        f_min=0,
+                                    )
+                                    axs[row, col].plot(
+                                        f,
+                                        s,
+                                        color="forestgreen",
+                                        alpha=all,
+                                        linewidth=0.2,
+                                        marker=".",
+                                        markersize=2,
+                                        label="All samples",
+                                    )
 
                             # ------------------------------------------------------------------------------------------
 
@@ -470,43 +669,72 @@ def data_plot(pol_name: str,
                             else:
                                 if not rms:
                                     if even != 0:
-                                        axs[row, col].plot(timestamps[begin:end - 1:2][:- smooth_len],
-                                                           mob_mean(dataset[type][exit][begin:end - 1:2],
-                                                                    smooth_len=smooth_len)[:-1],
-                                                           color="royalblue", alpha=even,
-                                                           marker="*", markersize=0.005, linestyle=" ",
-                                                           label="Even Output")
-                                        marker_scale = 1000.
+                                        axs[row, col].plot(
+                                            timestamps[begin : end - 1 : 2][
+                                                :-smooth_len
+                                            ],
+                                            mob_mean(
+                                                dataset[type][exit][
+                                                    begin : end - 1 : 2
+                                                ],
+                                                smooth_len=smooth_len,
+                                            )[:-1],
+                                            color="royalblue",
+                                            alpha=even,
+                                            marker="*",
+                                            markersize=0.005,
+                                            linestyle=" ",
+                                            label="Even Output",
+                                        )
+                                        marker_scale = 1000.0
 
                                         # Plot Statistics
                                         # Mean
-                                        m += f"\nEven = {round(np.mean(dataset[type][exit][begin:end - 1:2]), 2)}"
+                                        m += f"\nEven = {round(np.mean(dataset[type][exit][begin : end - 1 : 2]), 2)}"
                                         # Std deviation
-                                        std += f"\nEven = {round(np.std(dataset[type][exit][begin:end - 1:2]), 2)}"
+                                        std += f"\nEven = {round(np.std(dataset[type][exit][begin : end - 1 : 2]), 2)}"
 
                                     if odd != 0:
-                                        axs[row, col].plot(timestamps[begin + 1:end:2][:- smooth_len],
-                                                           mob_mean(dataset[type][exit][begin + 1:end:2],
-                                                                    smooth_len=smooth_len)[:-1],
-                                                           color="crimson", alpha=odd,
-                                                           marker="*", markersize=0.005, linestyle=" ",
-                                                           label="Odd Output")
-                                        marker_scale = 1000.
+                                        axs[row, col].plot(
+                                            timestamps[begin + 1 : end : 2][
+                                                :-smooth_len
+                                            ],
+                                            mob_mean(
+                                                dataset[type][exit][
+                                                    begin + 1 : end : 2
+                                                ],
+                                                smooth_len=smooth_len,
+                                            )[:-1],
+                                            color="crimson",
+                                            alpha=odd,
+                                            marker="*",
+                                            markersize=0.005,
+                                            linestyle=" ",
+                                            label="Odd Output",
+                                        )
+                                        marker_scale = 1000.0
 
                                         # Plot Statistics
                                         # Mean
-                                        m += f"\nOdd = {round(np.mean(dataset[type][exit][begin + 1:end:2]), 2)}"
+                                        m += f"\nOdd = {round(np.mean(dataset[type][exit][begin + 1 : end : 2]), 2)}"
                                         # Std deviation
-                                        std += f"\nOdd = {round(np.std(dataset[type][exit][begin + 1:end:2]), 2)}"
+                                        std += f"\nOdd = {round(np.std(dataset[type][exit][begin + 1 : end : 2]), 2)}"
 
                                     if all != 0:
-                                        axs[row, col].plot(timestamps[begin:end][:- smooth_len],
-                                                           mob_mean(dataset[type][exit][begin:end],
-                                                                    smooth_len=smooth_len)[:-1],
-                                                           color="forestgreen", alpha=all,
-                                                           marker="*", markersize=0.005, linestyle=" ",
-                                                           label="All Output")
-                                        marker_scale = 1000.
+                                        axs[row, col].plot(
+                                            timestamps[begin:end][:-smooth_len],
+                                            mob_mean(
+                                                dataset[type][exit][begin:end],
+                                                smooth_len=smooth_len,
+                                            )[:-1],
+                                            color="forestgreen",
+                                            alpha=all,
+                                            marker="*",
+                                            markersize=0.005,
+                                            linestyle=" ",
+                                            label="All Output",
+                                        )
+                                        marker_scale = 1000.0
 
                                         # Plot Statistics
                                         # Mean
@@ -525,7 +753,7 @@ def data_plot(pol_name: str,
             # Subplots properties
             # ----------------------------------------------------------------------------------------------------------
             # Title subplot
-            title = f'{exit}'
+            title = f"{exit}"
             if not fft:
                 title += f"\n$Mean$:{m}\n$STD$:{std}"
                 if demodulated:
@@ -544,14 +772,18 @@ def data_plot(pol_name: str,
                 x_label = "Frequency [Hz]"
 
                 try:
-                    axs[row, col].set_xscale('log')
+                    axs[row, col].set_xscale("log")
                 except ValueError as e:
-                    logging.warning(f"{e} "
-                                    f"Negative data found in Spectral Analysis (FFT): impossible to use log scale.\n\n")
+                    logging.warning(
+                        f"{e} "
+                        f"Negative data found in Spectral Analysis (FFT): impossible to use log scale.\n\n"
+                    )
                     continue
                 except Exception as e:
-                    logging.warning(f"{e} "
-                                    f"Negative data found in Spectral Analysis (FFT): impossible to use log scale.\n\n")
+                    logging.warning(
+                        f"{e} "
+                        f"Negative data found in Spectral Analysis (FFT): impossible to use log scale.\n\n"
+                    )
                     continue
 
             # X-axis label
@@ -563,14 +795,18 @@ def data_plot(pol_name: str,
                 y_label = "Power Spectral Density [ADU**2/Hz]"
 
                 try:
-                    axs[row, col].set_yscale('log')
+                    axs[row, col].set_yscale("log")
                 except ValueError as e:
-                    logging.warning(f"{e} "
-                                    f"Negative data found in Spectral Analysis (FFT): impossible to use log scale.\n\n")
+                    logging.warning(
+                        f"{e} "
+                        f"Negative data found in Spectral Analysis (FFT): impossible to use log scale.\n\n"
+                    )
                     continue
                 except Exception as e:
-                    logging.warning(f"{e} "
-                                    f"Negative data found in Spectral Analysis (FFT): impossible to use log scale.\n\n")
+                    logging.warning(
+                        f"{e} "
+                        f"Negative data found in Spectral Analysis (FFT): impossible to use log scale.\n\n"
+                    )
                     continue
 
             else:
@@ -581,7 +817,9 @@ def data_plot(pol_name: str,
             axs[row, col].set_ylabel(f"{y_label}", size=10)
 
             # Legend
-            axs[row, col].legend(loc="lower left", markerscale=marker_scale, fontsize=10)
+            axs[row, col].legend(
+                loc="lower left", markerscale=marker_scale, fontsize=10
+            )
 
             # Skipping to the following column of the subplot grid
             col += 1
@@ -594,15 +832,17 @@ def data_plot(pol_name: str,
     # Creating the name of the png file: introducing _ in place of white spaces
     name_file = dir_format(name_plot)
 
-    logging.debug(f"Title plot: {name_plot}, name file: {name_file}, name dir: {path_dir}")
+    logging.debug(
+        f"Title plot: {name_plot}, name file: {name_file}, name dir: {path_dir}"
+    )
 
     # Output dir path
-    path = f'{output_plot_dir}/{path_dir}/'
+    path = f"{output_plot_dir}/{path_dir}/"
     # Checking existence of the dir
     Path(path).mkdir(parents=True, exist_ok=True)
     try:
         # Save the png figure
-        fig.savefig(f'{path}{name_file}.png')
+        fig.savefig(f"{path}{name_file}.png")
     except ValueError as e:
         logging.warning(f"{e}. Impossible to save the pictures.\n\n")
         pass
@@ -629,7 +869,9 @@ def datetime_check(date_str: str) -> bool:
         return False
 
 
-def date_update(start_datetime: str, n_samples: int, sampling_frequency: int, ms=False) -> Time:
+def date_update(
+    start_datetime: str, n_samples: int, sampling_frequency: int, ms=False
+) -> Time:
     """
     Calculates and returns the new Gregorian date in which the analysis begins, given a number of samples that
     must be skipped from the beginning of the dataset.
@@ -649,7 +891,11 @@ def date_update(start_datetime: str, n_samples: int, sampling_frequency: int, ms
     if not ms:
         new_date = Time(jdate, format="mjd").to_datetime().strftime("%Y-%m-%d %H:%M:%S")
     else:
-        new_date = Time(jdate, format="mjd").to_datetime().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        new_date = (
+            Time(jdate, format="mjd")
+            .to_datetime()
+            .strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        )
 
     return new_date
 
@@ -663,18 +909,18 @@ def diff_cons(v):
     The difference between each couple of samples of even-odd index is computed.
     """
     n = (len(v) // 2) * 2
-    diff = (v[0:n:2] - v[1:n + 1:2])
+    diff = v[0:n:2] - v[1 : n + 1 : 2]
     return diff
 
 
 def down_sampling(list1: [], list2: [], label1: str, label2: str) -> ():
     """
-    Create a new list operating the down-sampling (using median values) on the longest of the two arrays.\n
-    Parameters:\n
-   - **list1**, **list2** (``list``): array-like objects
-    - **label1**, **label2** (``str``): names of the dataset. Used for labels for future plots.
-    Return:\n
-    A tuple containing: the interpolated array, the long array and the two data labels.
+     Create a new list operating the down-sampling (using median values) on the longest of the two arrays.\n
+     Parameters:\n
+    - **list1**, **list2** (``list``): array-like objects
+     - **label1**, **label2** (``str``): names of the dataset. Used for labels for future plots.
+     Return:\n
+     A tuple containing: the interpolated array, the long array and the two data labels.
     """
     # Define the lengths of the arrays
     l1 = len(list1)
@@ -696,16 +942,18 @@ def down_sampling(list1: [], list2: [], label1: str, label2: str) -> ():
         # Define the array that must be down-sampled
         long_v, short_v = (list1, list2) if len(list1) > len(list2) else (list2, list1)
         # Define the correct labels
-        long_label, short_label = (label1, label2) if len(list1) > len(list2) else (label2, label1)
+        long_label, short_label = (
+            (label1, label2) if len(list1) > len(list2) else (label2, label1)
+        )
 
         # Down-sampling of the longest array
         down_sampled_data = []
         for i in range(0, len_v, points_med):
-            group = long_v[i:i + points_med]
+            group = long_v[i : i + points_med]
             down_sampled_data.append(np.median(group))
 
         # Avoid length mismatch
-        down_sampled_data = down_sampled_data[:min(l1, l2)]
+        down_sampled_data = down_sampled_data[: min(l1, l2)]
 
         return down_sampled_data, short_v, long_label, short_label
 
@@ -748,7 +996,9 @@ def double_dem(dataset: list, type: str):
     return dataset
 
 
-def demodulation(dataset: dict, timestamps: list, type: str, exit: str, begin=0, end=-1) -> Dict[str, Any]:
+def demodulation(
+    dataset: dict, timestamps: list, type: str, exit: str, begin=0, end=-1
+) -> Dict[str, Any]:
     """
     Demodulation\n
     Calculate the double demodulation of the dataset.
@@ -842,10 +1092,12 @@ def eoa_values(eoa_str: str) -> []:
             eoa_dict[key].append(1)
 
     # Store the combinations of 0 and 1 depending on which letters were provided
-    eoa_combinations = [(val1, val2, val3)
-                        for val1 in eoa_dict["E"]
-                        for val2 in eoa_dict["O"]
-                        for val3 in eoa_dict["A"]]
+    eoa_combinations = [
+        (val1, val2, val3)
+        for val1 in eoa_dict["E"]
+        for val2 in eoa_dict["O"]
+        for val3 in eoa_dict["A"]
+    ]
 
     return eoa_combinations
 
@@ -864,11 +1116,16 @@ def error_propagation_corr(cov, params: list, wn_level: float) -> float:
     sig_c = (params[0] / wn_level) ** one_alpha
     der_f = sig_c
     der_sigma = one_alpha * sig_c * params[2] / wn_level
-    der_alpha = params[2] * sig_c * np.log(params[0] / wn_level) * one_alpha ** 2
+    der_alpha = params[2] * sig_c * np.log(params[0] / wn_level) * one_alpha**2
 
     return np.sqrt(
-        der_f ** 2 * cov[2, 2] + der_sigma ** 2 * cov[0, 0] + der_alpha ** 2 * cov[1, 1] +
-        2 * der_f * der_sigma * cov[2, 0] + 2 * der_f * der_alpha * cov[2, 1] + 2 * der_alpha * der_sigma * cov[0, 1])
+        der_f**2 * cov[2, 2]
+        + der_sigma**2 * cov[0, 0]
+        + der_alpha**2 * cov[1, 1]
+        + 2 * der_f * der_sigma * cov[2, 0]
+        + 2 * der_f * der_alpha * cov[2, 1]
+        + 2 * der_alpha * der_sigma * cov[0, 1]
+    )
 
 
 def find_jump(v, exp_med: float, tolerance: float) -> {}:
@@ -910,9 +1167,18 @@ def find_jump(v, exp_med: float, tolerance: float) -> {}:
     n = 0
 
     # Initializing the dict with the information about time jumps
-    jumps = {"n": n, "idx": idx, "value": value, "s_value": s_value,
-             "median": med_dt, "exp_med": exp_med, "tolerance": tolerance, "median_ok": median_ok,
-             "5per": np.percentile(dt, 5), "95per": np.percentile(dt, 95)}
+    jumps = {
+        "n": n,
+        "idx": idx,
+        "value": value,
+        "s_value": s_value,
+        "median": med_dt,
+        "exp_med": exp_med,
+        "tolerance": tolerance,
+        "median_ok": median_ok,
+        "5per": np.percentile(dt, 5),
+        "95per": np.percentile(dt, 95),
+    }
 
     # Store the info
     for i, item in enumerate(err_t):
@@ -948,7 +1214,7 @@ def find_spike(v, data_type: str, threshold=4.4, n_chunk=10) -> []:
     # Start spike algorithm
     for i in range(steps):
         # logging.debug(f"Step: {i+1}/{steps}.")
-        new_v = v[i:-1 - i:steps]
+        new_v = v[i : -1 - i : steps]
         # Length of the new vector
         l = len(new_v)
         # Calculate the length of a chunk used to divide the array
@@ -956,7 +1222,7 @@ def find_spike(v, data_type: str, threshold=4.4, n_chunk=10) -> []:
         # Repeat the research of the spikes on every chunk of data
         for n_rip in range(n_chunk):
             # Creating a sub array dividing the new_v in n_chunk
-            _v_ = new_v[n_rip * len_chunk:(n_rip + 1) * len_chunk - 1]
+            _v_ = new_v[n_rip * len_chunk : (n_rip + 1) * len_chunk - 1]
             # Calculate the Median
             med_v = scn.median(_v_)  # type:float
             # Calculate the Mean Absolute Deviation
@@ -972,14 +1238,16 @@ def find_spike(v, data_type: str, threshold=4.4, n_chunk=10) -> []:
             # If the data_type is an FFT
             if data_type == "FFT":
                 # Selecting local spikes UP: avoiding contour spikes
-                spike_idx = [i for i in spike_idx if v[i] > v[i - 1] and v[i] > v[i + 1]]
+                spike_idx = [
+                    i for i in spike_idx if v[i] > v[i - 1] and v[i] > v[i + 1]
+                ]
 
     if len(spike_idx) > 0:
         logging.warning(f"Found Spike in {data_type}!\n")
     return spike_idx
 
 
-def fourier_transformed(times: list, values: list, nperseg: int, f_max=25., f_min=0.):
+def fourier_transformed(times: list, values: list, nperseg: int, f_max=25.0, f_min=0.0):
     """
     Compute the Fast Fourier Transformed of an array of data (update from Nicole Grillo's Bachelor Thesis 2023).
     Parameters:\n
@@ -991,8 +1259,9 @@ def fourier_transformed(times: list, values: list, nperseg: int, f_max=25., f_mi
     - **fft** (``list``): array-like object containing the transformed data.
     """
 
-    freq, fft = scipy.signal.welch(values, fs=1 / np.median(times[1:] - times[:-1]),
-                                   nperseg=nperseg)
+    freq, fft = scipy.signal.welch(
+        values, fs=1 / np.median(times[1:] - times[:-1]), nperseg=nperseg
+    )
 
     mask = (freq > f_min) & (freq <= f_max)
     freq = freq[mask]
@@ -1020,7 +1289,7 @@ def get_y_fit_data(x_fil_data: list, y_fil_data: list) -> (list, float):
     # Compute the y values for the regression line
     log_y_fit = slope * log_x + intercept
     # Get back to the original scale
-    y_fit = 10 ** log_y_fit
+    y_fit = 10**log_y_fit
 
     return y_fit, slope
 
@@ -1052,7 +1321,7 @@ def get_knee_freq(x: list, y: list, target_y: float):
 
     # Calculate the x-value for the given y-value
     log_x_target = slope * log_target_y + intercept
-    x_target = 10 ** log_x_target
+    x_target = 10**log_x_target
 
     return x_target
 
@@ -1118,7 +1387,7 @@ def get_tag_times(file_path: str, tag_name: str) -> []:
 
     # Find the Star-time and the End-time
     for index, value in enumerate(data_tags["tag"]):
-        if tag_name == value.decode('UTF-8'):
+        if tag_name == value.decode("UTF-8"):
             # Set start-time of the tag and convert it into unix
             t_0j = data_tags["mjd_start"][index]
             # Append start-time of the tag to the list (JD)
@@ -1141,12 +1410,15 @@ def get_tag_times(file_path: str, tag_name: str) -> []:
             t_tag.append(t_1.value[:-4])
 
             logging.info(
-                f"Start Datetime = {t_tag[0]} MJD ({t_tag[2]})\nEnd Datetime = {t_tag[1]} MJD ({t_tag[3]})\n")
+                f"Start Datetime = {t_tag[0]} MJD ({t_tag[2]})\nEnd Datetime = {t_tag[1]} MJD ({t_tag[3]})\n"
+            )
 
     return t_tag
 
 
-def interpolation(list1: [], list2: [], time1: [], time2: [], label1: str, label2: str) -> ():
+def interpolation(
+    list1: [], list2: [], time1: [], time2: [], label1: str, label2: str
+) -> ():
     """
     Create a new list operating the down-sampling (using median values) on the longest of the two arrays.
     Parameters:\n
@@ -1169,8 +1441,11 @@ def interpolation(list1: [], list2: [], time1: [], time2: [], label1: str, label
             raise SystemExit(1)
         else:
             # Find the longest list (x) and the shortest to be interpolated
-            x, short_list, label_x, label_y = (list1, list2, label1, label2) if len(list1) > len(list2) \
+            x, short_list, label_x, label_y = (
+                (list1, list2, label1, label2)
+                if len(list1) > len(list2)
                 else (list2, list1, label2, label1)
+            )
             x_t, short_t = (time1, time2) if x is list1 else (time2, time1)
 
             # Interpolation of the shortest list
@@ -1190,7 +1465,7 @@ def letter_combo(in_str: str) -> []:
 
     for length in range(1, 4):
         for i in range(len(in_str) - length + 1):
-            result.append(in_str[i:i + length])
+            result.append(in_str[i : i + length])
 
     return result
 
@@ -1204,7 +1479,7 @@ def mean_cons(v):
     The mean on each couple of samples of even-odd index is computed.
     """
     n = (len(v) // 2) * 2
-    mean = (v[0:n:2] + v[1:n + 1:2]) / 2
+    mean = (v[0:n:2] + v[1 : n + 1 : 2]) / 2
     return mean
 
 
@@ -1220,16 +1495,20 @@ def merge_report(md_reports_path: str, total_report_path: str):
     output_directory.mkdir(parents=True, exist_ok=True)
 
     # List all files .md that start with a number in the directory
-    files = [f for f in Path(md_reports_path).iterdir() if f.suffix == '.md' and f.name[0].isdigit()]
+    files = [
+        f
+        for f in Path(md_reports_path).iterdir()
+        if f.suffix == ".md" and f.name[0].isdigit()
+    ]
 
     # Sort files based on the number at the beginning of their names
-    files_sorted = sorted(files, key=lambda x: (int(x.name.split('_')[0]), x.name))
+    files_sorted = sorted(files, key=lambda x: (int(x.name.split("_")[0]), x.name))
 
     # Create or overwrite the destination file
-    with open(total_report_path, 'w', encoding='utf-8') as outfile:
+    with open(total_report_path, "w", encoding="utf-8") as outfile:
         for file_path in files_sorted:
-            with file_path.open('r', encoding='utf-8') as infile:
-                outfile.write(infile.read() + '\n\n')
+            with file_path.open("r", encoding="utf-8") as infile:
+                outfile.write(infile.read() + "\n\n")
 
 
 @njit
@@ -1243,7 +1522,7 @@ def mob_mean(v, smooth_len: int):
     m = np.zeros(len(v) - smooth_len + 1)
     for i in np.arange(len(m)):
         # Compute the mean on a number smooth_len of elements, than move forward the window by 1 element in the array
-        m[i] = np.mean(v[i:i + smooth_len])
+        m[i] = np.mean(v[i : i + smooth_len])
     return m
 
 
@@ -1277,9 +1556,16 @@ def name_check(names: list) -> bool:
     return True
 
 
-def noise_characterisation(times: list, values: dict, nperseg: int,
-                           output_dir: str, pol_name: str, data_type: str,
-                           f_max=50., f_min=0) -> []:
+def noise_characterisation(
+    times: list,
+    values: dict,
+    nperseg: int,
+    output_dir: str,
+    pol_name: str,
+    data_type: str,
+    f_max=50.0,
+    f_min=0,
+) -> []:
     """
     Plot the Fast Fourier Transformed of a dataset and evaluate the White noise level and the 1/f noise.
     Use two different methods: delta-method and interpolation. (from Nicole Grillo's Bachelor Thesis 2023).\n
@@ -1301,10 +1587,12 @@ def noise_characterisation(times: list, values: dict, nperseg: int,
     var = {}
     # Initialize a figure for the plots
     fig, axs = plt.subplots(nrows=2, ncols=4, constrained_layout=True, figsize=(18, 10))
-    fig.suptitle(f'{pol_name} FFT Plots', fontsize=15)
+    fig.suptitle(f"{pol_name} FFT Plots", fontsize=15)
 
     for i, exit in enumerate(["Q1", "Q2", "U1", "U2"]):
-        freq, fft = fourier_transformed(times, values=values[exit], nperseg=nperseg, f_max=f_max, f_min=f_min)
+        freq, fft = fourier_transformed(
+            times, values=values[exit], nperseg=nperseg, f_max=f_max, f_min=f_min
+        )
 
         # Fitting section
         # params: [sigma, alpha, f_knee] see below the function "noise_interpolation"
@@ -1317,20 +1605,36 @@ def noise_characterisation(times: list, values: dict, nperseg: int,
         # Evaluate White Noise with delta method
         wn_delta = delta_method(values[exit])
 
-        var[f"err_sigma_interpol_{exit}"] = results_rounding(np.sqrt(cov[0][0]), np.sqrt(cov[0][0]))
-        var[f"err_alpha_interpol_{exit}"] = results_rounding(np.sqrt(cov[1][1]), np.sqrt(cov[1][1]))
-        var[f"err_fknee_interpol_{exit}"] = results_rounding(np.sqrt(cov[2][2]), np.sqrt(cov[2][2]))
+        var[f"err_sigma_interpol_{exit}"] = results_rounding(
+            np.sqrt(cov[0][0]), np.sqrt(cov[0][0])
+        )
+        var[f"err_alpha_interpol_{exit}"] = results_rounding(
+            np.sqrt(cov[1][1]), np.sqrt(cov[1][1])
+        )
+        var[f"err_fknee_interpol_{exit}"] = results_rounding(
+            np.sqrt(cov[2][2]), np.sqrt(cov[2][2])
+        )
 
-        wn_level_pwr = wn_delta ** 2 * 2 / 50
+        wn_level_pwr = wn_delta**2 * 2 / 50
 
-        var[f"sigma_fknee_delta_{exit}"] = results_rounding(error_propagation_corr(cov, params, wn_level_pwr),
-                                                            error_propagation_corr(cov, params, wn_level_pwr))
-        var[f"{exit}_fknee_delta"] = results_rounding(params[2] / (wn_level_pwr / params[0]) ** (1 / params[1]),
-                                                      var[f"sigma_fknee_delta_{exit}"])
-        var[f"{exit}_fknee_interp"] = results_rounding(params[2], var[f"err_fknee_interpol_{exit}"])
+        var[f"sigma_fknee_delta_{exit}"] = results_rounding(
+            error_propagation_corr(cov, params, wn_level_pwr),
+            error_propagation_corr(cov, params, wn_level_pwr),
+        )
+        var[f"{exit}_fknee_delta"] = results_rounding(
+            params[2] / (wn_level_pwr / params[0]) ** (1 / params[1]),
+            var[f"sigma_fknee_delta_{exit}"],
+        )
+        var[f"{exit}_fknee_interp"] = results_rounding(
+            params[2], var[f"err_fknee_interpol_{exit}"]
+        )
         var[f"{exit}_wn"] = np.sqrt(params[0] * 50) / np.sqrt(2)
-        var[f"sigma{exit}_f"] = results_rounding(params[0], var[f"err_sigma_interpol_{exit}"])
-        var[f"alpha{exit}_f"] = results_rounding(params[1], var[f"err_alpha_interpol_{exit}"])
+        var[f"sigma{exit}_f"] = results_rounding(
+            params[0], var[f"err_sigma_interpol_{exit}"]
+        )
+        var[f"alpha{exit}_f"] = results_rounding(
+            params[1], var[f"err_alpha_interpol_{exit}"]
+        )
         var[f"{exit}_wn_delta"] = wn_delta
 
         # --------------------------------------------------------------------------------------------------------------
@@ -1338,12 +1642,12 @@ def noise_characterisation(times: list, values: dict, nperseg: int,
         # --------------------------------------------------------------------------------------------------------------
 
         # Interpolation plots
-        axs[0][i].plot(freq[idx], fft[idx], color='royalblue', label='data')
-        axs[0][i].plot(freq[idx], ps[idx], color='black', label='interp method')
-        axs[0][i].set_yscale('log')
-        axs[0][i].set_xscale('log')
+        axs[0][i].plot(freq[idx], fft[idx], color="royalblue", label="data")
+        axs[0][i].plot(freq[idx], ps[idx], color="black", label="interp method")
+        axs[0][i].set_yscale("log")
+        axs[0][i].set_xscale("log")
         axs[0][i].set_title(f"{pol_name} - {exit}")
-        axs[0][i].set(xlabel='Frequency [Hz]', ylabel='Power [ADU^2/Hz]')
+        axs[0][i].set(xlabel="Frequency [Hz]", ylabel="Power [ADU^2/Hz]")
         axs[0][i].legend(fontsize="x-small")
 
         # Delta Method plots
@@ -1352,21 +1656,28 @@ def noise_characterisation(times: list, values: dict, nperseg: int,
         # Fill the array with the white noise pwr level
         white_noise_delta.fill(wn_level_pwr)
         # Calculate the 1/f signal
-        one_over_f = (params[0] * (params[2] / freq) ** params[1])
+        one_over_f = params[0] * (params[2] / freq) ** params[1]
 
         # FFT Plot
-        axs[1][i].plot(freq, fft, color='royalblue', label='data', marker="*", markersize=2)
+        axs[1][i].plot(
+            freq, fft, color="royalblue", label="data", marker="*", markersize=2
+        )
         # One over f Signal
-        axs[1][i].plot(freq, one_over_f, color='black', label='interp method')
+        axs[1][i].plot(freq, one_over_f, color="black", label="interp method")
         # WN Delta method
-        axs[1][i].plot(freq, white_noise_delta, color='red', label='delta method')
+        axs[1][i].plot(freq, white_noise_delta, color="red", label="delta method")
         # Knee frequency
-        axs[1][i].plot(var[f"{exit}_fknee_delta"], params[0] * (params[2] / var[f"{exit}_fknee_delta"]) **
-                       params[1], marker="o", markersize=3.5, markerfacecolor="gold")
-        axs[1][i].set_yscale('log')
-        axs[1][i].set_xscale('log')
+        axs[1][i].plot(
+            var[f"{exit}_fknee_delta"],
+            params[0] * (params[2] / var[f"{exit}_fknee_delta"]) ** params[1],
+            marker="o",
+            markersize=3.5,
+            markerfacecolor="gold",
+        )
+        axs[1][i].set_yscale("log")
+        axs[1][i].set_xscale("log")
         axs[0][i].set_title(f"{pol_name} - {exit}")
-        axs[1][i].set(xlabel='Frequency [Hz]', ylabel='Power [ADU^2/Hz]')
+        axs[1][i].set(xlabel="Frequency [Hz]", ylabel="Power [ADU^2/Hz]")
         axs[1][i].legend(fontsize="x-small")
 
         # var[f"{data_type}{exit}_plots_file_name"] = str(plot_file_name)
@@ -1475,20 +1786,21 @@ def RMS(data: dict, window: int, exit: str, eoa: int, begin=0, end=-1) -> []:
         try:
             rms = np.std(rolling_window(data[exit][begin:end], window), axis=1)
         except ValueError as e:
-            logging.warning(f"{e}. "
-                            f"Impossible to compute RMS.\n\n")
+            logging.warning(f"{e}. Impossible to compute RMS.\n\n")
     elif eoa == 1:
         try:
-            rms = np.std(rolling_window(data[exit][begin + 1:end:2], window), axis=1)
+            rms = np.std(
+                rolling_window(data[exit][begin + 1 : end : 2], window), axis=1
+            )
         except ValueError as e:
-            logging.warning(f"{e}. "
-                            f"Impossible to compute RMS.\n\n")
+            logging.warning(f"{e}. Impossible to compute RMS.\n\n")
     elif eoa == 2:
         try:
-            rms = np.std(rolling_window(data[exit][begin:end - 1:2], window), axis=1)
+            rms = np.std(
+                rolling_window(data[exit][begin : end - 1 : 2], window), axis=1
+            )
         except ValueError as e:
-            logging.warning(f"{e}. "
-                            f"Impossible to compute RMS.\n\n")
+            logging.warning(f"{e}. Impossible to compute RMS.\n\n")
     else:
         logging.error("Wrong EOA value: it must be 0,1 or 2.")
         raise SystemExit(1)
@@ -1519,8 +1831,8 @@ def same_length(array1, array2) -> []:
     """
     l1 = len(array1)
     l2 = len(array2)
-    array1 = array1[:min(l1, l2)]
-    array2 = array2[:min(l1, l2)]
+    array1 = array1[: min(l1, l2)]
+    array2 = array2[: min(l1, l2)]
     return [array1, array2]
 
 
@@ -1536,10 +1848,15 @@ def select_spike(spike_idx: list, s: list, freq: list) -> []:
     idx_sel = []
     # Divide the array in sub-arrays on the base of the frequency
     for a in range(-16, 8):
-        s_spike = [s[i] for i in spike_idx if (10 ** (a / 4) < freq[i] < 10 ** ((a + 1) / 4))]
+        s_spike = [
+            s[i] for i in spike_idx if (10 ** (a / 4) < freq[i] < 10 ** ((a + 1) / 4))
+        ]
         # Keep only the idx of the maxes
-        idx_sel += [i for i in spike_idx if
-                    (10 ** (a / 4) < freq[i] < 10 ** ((a + 1) / 4)) and s[i] == max(s_spike)]
+        idx_sel += [
+            i
+            for i in spike_idx
+            if (10 ** (a / 4) < freq[i] < 10 ** ((a + 1) / 4)) and s[i] == max(s_spike)
+        ]
     return idx_sel
 
 
@@ -1553,12 +1870,14 @@ def tab_cap_time(pol_name: str, file_name: str, output_dir: str) -> str:
     This specific function creates a tabular that collects the jumps in the dataset (JT).
     """
     new_file_name = f"JT_{pol_name}_{file_name}.csv"
-    cap = [["# Jump", "Jump value [JHD]", "Jump value [s]", "Gregorian Date", "JHD Date"]]
+    cap = [
+        ["# Jump", "Jump value [JHD]", "Jump value [s]", "Gregorian Date", "JHD Date"]
+    ]
 
-    path = f'../RESULTS/PIPELINE/{output_dir}/Time_Jump/'
+    path = f"../RESULTS/PIPELINE/{output_dir}/Time_Jump/"
     Path(path).mkdir(parents=True, exist_ok=True)
     # Open the file to append the heading
-    with open(f"{path}/{new_file_name}", 'a', newline='') as file:
+    with open(f"{path}/{new_file_name}", "a", newline="") as file:
         writer = csv.writer(file)
         writer.writerows(cap)
 

@@ -716,7 +716,7 @@ class Spectrum:
             avwhite = 2.0 * wnl
             avwhitelog = np.log10(avwhite)
             fklog = (avwhitelog - intercept) / slope
-            fk = 10 ** fklog
+            fk = 10**fklog
 
             result = [wnl, fk, slope, intercept]
 

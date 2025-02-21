@@ -62,7 +62,7 @@ class Connection(object):
         The output should be ``True`` and ``False``.
         """
 
-        return not (self.id is None)
+        return self.id is not None
 
     def has_login(self):
         return self.conf.get_user() is not None and self.conf.get_password() is not None
@@ -176,7 +176,7 @@ class Connection(object):
             else:
                 break
 
-        if not (response is None):
+        if response is not None:
             if response.status_code != 200:
                 response.raise_for_status()
             else:

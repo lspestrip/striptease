@@ -65,7 +65,7 @@ def pretty_print_procedure(
             else:
                 kind = "tag_stop"
 
-        if not (kind in types):
+        if kind not in types:
             continue
 
         table.add_row(

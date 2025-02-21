@@ -90,11 +90,11 @@ class Tag:
 
 
 def check_group_and_subgroup(group, subgroup):
-    if not group.upper() in VALID_GROUPS:
+    if group.upper() not in VALID_GROUPS:
         valid_choices = ", ".join(['"' + x + '"' for x in VALID_GROUPS])
         raise ValueError(f"Group {group.upper()} must be one of {valid_choices}")
 
-    if not subgroup.upper() in VALID_SUBGROUPS:
+    if subgroup.upper() not in VALID_SUBGROUPS:
         valid_choices = ", ".join(['"' + x + '"' for x in VALID_SUBGROUPS])
         raise ValueError(f"Subgroup {subgroup.upper()} must be one of {valid_choices}")
 
@@ -621,7 +621,7 @@ class DataFile:
         if len(polarimeter) == 2:
             polarimeter = "POL_" + polarimeter.upper()
 
-        if not data_type.upper() in VALID_DATA_TYPES:
+        if data_type.upper() not in VALID_DATA_TYPES:
             raise ValueError(f"Invalid data type {data_type}")
 
         data_type = data_type.upper()
@@ -632,7 +632,7 @@ class DataFile:
         scitime = Time(scidata["m_jd"], format="mjd")
 
         if isinstance(detector, str):
-            if not detector.upper() in VALID_DETECTORS:
+            if detector.upper() not in VALID_DETECTORS:
                 raise ValueError(f"Invalid detector {detector}")
             detector = detector.upper()
 

@@ -44,7 +44,7 @@ def load_idrains_and_offsets(polarimeters, lnas, excel_file):
                 if int(scanner.x) == idrains[polarimeter][lna][0]:
                     offsets[polarimeter][lna].append(copy(scanner.y))
                 # Scan subsequent rows: save all remaining idrains
-                elif not int(scanner.x) in idrains[polarimeter][lna]:
+                elif int(scanner.x) not in idrains[polarimeter][lna]:
                     idrains[polarimeter][lna].append(int(scanner.x))
             idrains[polarimeter][lna] = np.array(idrains[polarimeter][lna], dtype=int)
             offsets[polarimeter][lna] = np.array(offsets[polarimeter][lna], dtype=int)

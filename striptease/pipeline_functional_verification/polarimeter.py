@@ -10,7 +10,6 @@
 import logging
 import numpy as np
 import scipy.stats as scs
-import scipy.signal
 
 from astropy.time import Time
 import astropy.units as u
@@ -19,22 +18,29 @@ from matplotlib import pyplot as plt
 from pathlib import Path
 from rich.logging import RichHandler
 from striptease import DataStorage
-from typing import List, Dict, Any
+from typing import Dict, Any, List
 
 # MyLibraries & MyModules
 import f_strip as fz
 
 # Use the module logging to produce nice messages on the shell
-logging.basicConfig(level="INFO", format='%(message)s',
-                    datefmt="[%X]", handlers=[RichHandler()])
+logging.basicConfig(
+    level="INFO", format="%(message)s", datefmt="[%X]", handlers=[RichHandler()]
+)
 
 
 ########################################################################################################
 # Class: Polarimeter
 ########################################################################################################
 class Polarimeter:
-
-    def __init__(self, name_pol: str, path_file: str, start_datetime: str, end_datetime: str, output_plot_dir: str):
+    def __init__(
+        self,
+        name_pol: str,
+        path_file: str,
+        start_datetime: str,
+        end_datetime: str,
+        output_plot_dir: str,
+    ):
         """
         Constructor
 
@@ -74,14 +80,39 @@ class Polarimeter:
         self.data = {"DEM": dem, "PWR": power}
 
         # Dictionary for Housekeeping Analysis
-        self.hk_list = {"V": ["VG0_HK", "VD0_HK", "VG1_HK", "VD1_HK", "VG2_HK", "VD2_HK", "VG3_HK", "VD3_HK",
-                              "VG4_HK", "VD4_HK", "VD5_HK", "VG5_HK"],
-                        "I": ["IG0_HK", "ID0_HK", "IG1_HK", "ID1_HK", "IG2_HK", "ID2_HK", "IG3_HK", "ID3_HK",
-                              "IG4_HK", "ID4_HK", "IG5_HK", "ID5_HK"],
-                        "O": ["DET0_OFFS", "DET1_OFFS", "DET2_OFFS", "DET3_OFFS"],
-                        "M": ["POL_MODE"],
-                        "P": ["PIN0_CON", "PIN1_CON", "PIN2_CON", "PIN3_CON"]
-                        }
+        self.hk_list = {
+            "V": [
+                "VG0_HK",
+                "VD0_HK",
+                "VG1_HK",
+                "VD1_HK",
+                "VG2_HK",
+                "VD2_HK",
+                "VG3_HK",
+                "VD3_HK",
+                "VG4_HK",
+                "VD4_HK",
+                "VD5_HK",
+                "VG5_HK",
+            ],
+            "I": [
+                "IG0_HK",
+                "ID0_HK",
+                "IG1_HK",
+                "ID1_HK",
+                "IG2_HK",
+                "ID2_HK",
+                "IG3_HK",
+                "ID3_HK",
+                "IG4_HK",
+                "ID4_HK",
+                "IG5_HK",
+                "ID5_HK",
+            ],
+            "O": ["DET0_OFFS", "DET1_OFFS", "DET2_OFFS", "DET3_OFFS"],
+            "M": ["POL_MODE"],
+            "P": ["PIN0_CON", "PIN1_CON", "PIN2_CON", "PIN3_CON"],
+        }
         # Dictionaries for HK parameters: Voltages, Currents, Offsets, Pol_Mode, Pin_Con
         tensions = {}
         currents = {}
@@ -94,8 +125,20 @@ class Polarimeter:
         t_offset = {}
         t_pol_mode = {}
         t_pin_con = {}
-        self.hk = {"V": tensions, "I": currents, "O": offset, "M": pol_mode, "P": pin_con}
-        self.hk_t = {"V": t_tensions, "I": t_currents, "O": t_offset, "M": t_pol_mode, "P": t_pin_con}
+        self.hk = {
+            "V": tensions,
+            "I": currents,
+            "O": offset,
+            "M": pol_mode,
+            "P": pin_con,
+        }
+        self.hk_t = {
+            "V": t_tensions,
+            "I": t_currents,
+            "O": t_offset,
+            "M": t_pol_mode,
+            "P": t_pin_con,
+        }
 
         # Warnings lists
         time_warning = []
@@ -103,11 +146,13 @@ class Polarimeter:
         corr_warning = []
         eo_warning = []
         spike_warning = []
-        self.warnings = {"time_warning": time_warning,
-                         "sampling_warning": sampling_warning,
-                         "corr_warning": corr_warning,
-                         "eo_warning": eo_warning,
-                         "spike_warning": spike_warning}
+        self.warnings = {
+            "time_warning": time_warning,
+            "sampling_warning": sampling_warning,
+            "corr_warning": corr_warning,
+            "eo_warning": eo_warning,
+            "spike_warning": spike_warning,
+        }
 
     def Load_Pol(self):
         """
@@ -117,8 +162,12 @@ class Polarimeter:
         """
         for type in self.data.keys():
             for exit in ["Q1", "Q2", "U1", "U2"]:
-                self.times, self.data[type][exit] = self.ds.load_sci(mjd_range=self.date, polarimeter=self.name,
-                                                                     data_type=type, detector=exit)
+                self.times, self.data[type][exit] = self.ds.load_sci(
+                    mjd_range=self.date,
+                    polarimeter=self.name,
+                    data_type=type,
+                    detector=exit,
+                )
         # Reset the sampling frequency
         self.STRIP_SAMPLING_FREQ = 0
 
@@ -130,8 +179,12 @@ class Polarimeter:
                 - **type** (``str``) *"DEM"* or *"PWR"*
         """
         for exit in ["Q1", "Q2", "U1", "U2"]:
-            self.times, self.data[type][exit] = self.ds.load_sci(mjd_range=self.date, polarimeter=self.name,
-                                                                 data_type=type, detector=exit)
+            self.times, self.data[type][exit] = self.ds.load_sci(
+                mjd_range=self.date,
+                polarimeter=self.name,
+                data_type=type,
+                detector=exit,
+            )
         # Reset the sampling frequency
         self.STRIP_SAMPLING_FREQ = 0
 
@@ -143,7 +196,9 @@ class Polarimeter:
             Parameters:\n
                 - **range** (``Time``) is an array-like object containing the Time objects: start_date and end_date.
         """
-        self.times, _ = self.ds.load_sci(mjd_range=range, polarimeter=self.name, data_type="DEM", detector="Q1")
+        self.times, _ = self.ds.load_sci(
+            mjd_range=range, polarimeter=self.name, data_type="DEM", detector="Q1"
+        )
         # Reset the sampling frequency
         self.STRIP_SAMPLING_FREQ = 0
 
@@ -164,14 +219,22 @@ class Polarimeter:
             # Julian Date increased
             self.date[0] += s * (n_samples / 100)
             # Gregorian Date conversion
-            self.gdate[0] = Time(self.date[0], format="mjd").to_datetime().strftime("%Y-%m-%d %H:%M:%S")
+            self.gdate[0] = (
+                Time(self.date[0], format="mjd")
+                .to_datetime()
+                .strftime("%Y-%m-%d %H:%M:%S")
+            )
             return self.gdate[0]
         else:
             new_jdate = self.date[0]
             # Julian Date increased
             new_jdate += s * (n_samples / 100)
             # Gregorian Date conversion
-            new_date = Time(new_jdate, format="mjd").to_datetime().strftime("%Y-%m-%d %H:%M:%S")
+            new_date = (
+                Time(new_jdate, format="mjd")
+                .to_datetime()
+                .strftime("%Y-%m-%d %H:%M:%S")
+            )
             return new_date
 
     def Clip_Values(self):
@@ -194,10 +257,12 @@ class Polarimeter:
                         break
 
         # Cleansing operations
-        self.times = self.times[begin_zerovalues_idx:end_zerovalues_idx + 1]
+        self.times = self.times[begin_zerovalues_idx : end_zerovalues_idx + 1]
         for type in [x for x in self.data.keys() if not self.data[x] == {}]:
             for exit in ["Q1", "Q2", "U1", "U2"]:
-                self.data[type][exit] = self.data[type][exit][begin_zerovalues_idx:end_zerovalues_idx + 1]
+                self.data[type][exit] = self.data[type][exit][
+                    begin_zerovalues_idx : end_zerovalues_idx + 1
+                ]
 
         # Updating the new beginning time of the dataset
         _ = self.Date_Update(n_samples=begin_zerovalues_idx, modify=True)
@@ -210,14 +275,18 @@ class Polarimeter:
         """
         # Calculate the Strip Sampling Frequency
         self.STRIP_SAMPLING_FREQ = int(
-            len(self.times) / (self.times[-1].datetime - self.times[0].datetime).total_seconds())
+            len(self.times)
+            / (self.times[-1].datetime - self.times[0].datetime).total_seconds()
+        )
 
         if warning:
             if int(self.STRIP_SAMPLING_FREQ) != 100:
-                msg = f"Sampling frequency is {self.STRIP_SAMPLING_FREQ} different from the std value of 100.\n " \
-                      f"This can cause inversions in even-odd sampling. \n" \
-                      f"Some changes in the offset might have occurred: Some channel turned off?\n" \
-                      f"There is at least a hole in the sampling: after the normalization, seconds are not significant."
+                msg = (
+                    f"Sampling frequency is {self.STRIP_SAMPLING_FREQ} different from the std value of 100.\n "
+                    f"This can cause inversions in even-odd sampling. \n"
+                    f"Some changes in the offset might have occurred: Some channel turned off?\n"
+                    f"There is at least a hole in the sampling: after the normalization, seconds are not significant."
+                )
                 logging.error(msg)
                 self.warnings["eo_warning"].append(msg)
 
@@ -228,8 +297,11 @@ class Polarimeter:
         """
         for i in range(0, j_info["n"] - 1, 2):
             print(i)
-            self.times[j_info["idx"][i] + 1:j_info["idx"][i + 1] + 1] += \
-                u.day * np.mean([np.abs(j_info["value"][i]), np.abs(j_info["value"][i + 1])])
+            self.times[
+                j_info["idx"][i] + 1 : j_info["idx"][i + 1] + 1
+            ] += u.day * np.mean(
+                [np.abs(j_info["value"][i]), np.abs(j_info["value"][i + 1])]
+            )
 
     def Norm(self, norm_mode: int):
         """
@@ -268,8 +340,10 @@ class Polarimeter:
         # self.Clip_Values()
 
         if self.STRIP_SAMPLING_FREQ > 0:
-            logging.warning(f"The dataset has already been normalized. "
-                            f"Strip Sampling Frequency = {self.STRIP_SAMPLING_FREQ}.")
+            logging.warning(
+                f"The dataset has already been normalized. "
+                f"Strip Sampling Frequency = {self.STRIP_SAMPLING_FREQ}."
+            )
             return 0
         # 1. Calculate Strip Sampling Frequency
         self.STRIP_SAMPLING_FREQUENCY_HZ()
@@ -320,11 +394,12 @@ class Polarimeter:
             group = "DAQ" if item == "O" else "BIAS"
             # Iterate over specific HK
             for hk_name in self.hk_list[item]:
-                self.hk_t[item][hk_name], self.hk[item][hk_name] = self.ds.load_hk(mjd_range=self.date,
-                                                                                   group=group,
-                                                                                   subgroup=f"POL_{self.name}",
-                                                                                   par=hk_name
-                                                                                   )
+                self.hk_t[item][hk_name], self.hk[item][hk_name] = self.ds.load_hk(
+                    mjd_range=self.date,
+                    group=group,
+                    subgroup=f"POL_{self.name}",
+                    par=hk_name,
+                )
 
     def Norm_HouseKeeping(self) -> []:
         """
@@ -344,8 +419,10 @@ class Polarimeter:
                 # If the lengths are different print and store a warning
                 if l1 != l2:
                     good_sampling = False
-                    msg = (f"The House-Keeping: {hk_name} has a sampling problem. "
-                           f"The array of Timestamps has a wrong length\n")
+                    msg = (
+                        f"The House-Keeping: {hk_name} has a sampling problem. "
+                        f"The array of Timestamps has a wrong length\n"
+                    )
                     logging.error(msg)
 
                     # [MD] Append the message with the problematic HK
@@ -355,7 +432,9 @@ class Polarimeter:
                     problematic_hk.append(f"{self.name} - {hk_name}")
 
                 # Convert to seconds the timestamps of Housekeeping Parameters: Offsets, Currents and Voltages
-                self.hk_t[item][hk_name] = self.hk_t[item][hk_name].unix - self.hk_t[item][hk_name][0].unix
+                self.hk_t[item][hk_name] = (
+                    self.hk_t[item][hk_name].unix - self.hk_t[item][hk_name][0].unix
+                )
 
         # In the end if there are no sampling problems a message is printed and stored
         if good_sampling:
@@ -402,25 +481,33 @@ class Polarimeter:
         hk_min = {"I": I_min, "V": V_min, "O": O_min}
 
         # Initialize a dict for the results of the analysis of the HK
-        results = {"max": hk_max, "min": hk_min, "mean": mean, "dev_std": dev_std, "nan_percent": nan_percent}
+        results = {
+            "max": hk_max,
+            "min": hk_min,
+            "mean": mean,
+            "dev_std": dev_std,
+            "nan_percent": nan_percent,
+        }
 
         # Cycle over the HK (excluding the "M": POL_MODE and "P": PIN_CON)
         for item in (k for k in self.hk_list.keys() if k not in ["M", "P"]):
             for hk_name in self.hk_list[item]:
-                results["nan_percent"][item][hk_name] = 0.
+                results["nan_percent"][item][hk_name] = 0.0
 
                 data = self.hk[item][hk_name]
                 m = np.mean(data)
                 # Check if the mean isnan
                 if np.isnan(m):
-                    n_nan = len([t for t in np.isnan(data) if t == True])
+                    n_nan = len([t for t in np.isnan(data) if t])
 
                     # No data -> 100% nan values
                     if len(data) == 0:
-                        results["nan_percent"][item][hk_name] = 100.
+                        results["nan_percent"][item][hk_name] = 100.0
                     # Calculate % nan
                     else:
-                        results["nan_percent"][item][hk_name] = round((n_nan / len(data)), 4) * 100.
+                        results["nan_percent"][item][hk_name] = (
+                            round((n_nan / len(data)), 4) * 100.0
+                        )
 
                     # If the nan % is smaller than 5% remove the nan values and calculate the mean once more
                     if results["nan_percent"][item][hk_name] < 5:
@@ -471,37 +558,52 @@ class Polarimeter:
                 title = f"Offset {unit}"
 
             # [MD] Heading of the table
-            md_table += (f"\n"
-                         f"- {title}\n\n"
-                         f"| Parameter | Max Value {unit} | Min Value {unit} | Mean {unit} | Std_Dev {unit} | NaN % |"
-                         "\n"
-                         " |:---------:|:-----------:|:-----------:|:------:|:---------:|:-----:|"
-                         "\n"
-                         )
+            md_table += (
+                f"\n"
+                f"- {title}\n\n"
+                f"| Parameter | Max Value {unit} | Min Value {unit} | Mean {unit} | Std_Dev {unit} | NaN % |"
+                "\n"
+                " |:---------:|:-----------:|:-----------:|:------:|:---------:|:-----:|"
+                "\n"
+            )
             # [CSV] Heading of the table
             csv_table.append([""])
             csv_table.append([f"{title}"])
             csv_table.append([""])
-            csv_table.append(["Parameter", f"Max Value {unit}", f"Min Value {unit}",
-                              f"Mean {unit}", f"Std_Dev {unit}", "NaN %"])
+            csv_table.append(
+                [
+                    "Parameter",
+                    f"Max Value {unit}",
+                    f"Min Value {unit}",
+                    f"Mean {unit}",
+                    f"Std_Dev {unit}",
+                    "NaN %",
+                ]
+            )
             csv_table.append([""])
 
             for hk_name in self.hk_list[item]:
                 # [MD] Filling the table with values
-                md_table += (f"|{hk_name}|{round(results['max'][item][hk_name], 4)}|"
-                             f"{round(results['min'][item][hk_name], 4)}|"
-                             f"{round(results['mean'][item][hk_name], 4)}|"
-                             f"{round(results['dev_std'][item][hk_name], 4)}|"
-                             f"{round(results['nan_percent'][item][hk_name], 4)}|"
-                             f"\n"
-                             )
+                md_table += (
+                    f"|{hk_name}|{round(results['max'][item][hk_name], 4)}|"
+                    f"{round(results['min'][item][hk_name], 4)}|"
+                    f"{round(results['mean'][item][hk_name], 4)}|"
+                    f"{round(results['dev_std'][item][hk_name], 4)}|"
+                    f"{round(results['nan_percent'][item][hk_name], 4)}|"
+                    f"\n"
+                )
 
                 # [CSV] Filling the table with values
-                csv_table.append([f"{hk_name}", f"{round(results['max'][item][hk_name], 4)}",
-                                  f"{round(results['min'][item][hk_name], 4)}",
-                                  f"{round(results['mean'][item][hk_name], 4)}",
-                                  f"{round(results['dev_std'][item][hk_name], 4)}",
-                                  f"{round(results['nan_percent'][item][hk_name], 4)}"])
+                csv_table.append(
+                    [
+                        f"{hk_name}",
+                        f"{round(results['max'][item][hk_name], 4)}",
+                        f"{round(results['min'][item][hk_name], 4)}",
+                        f"{round(results['mean'][item][hk_name], 4)}",
+                        f"{round(results['dev_std'][item][hk_name], 4)}",
+                        f"{round(results['nan_percent'][item][hk_name], 4)}",
+                    ]
+                )
 
         # Initialize a dictionary with the two tables: MD and CSV
         table = {"md": md_table, "csv": csv_table}
@@ -542,8 +644,11 @@ class Polarimeter:
         # Cycle over the HK (excluding the "M": POL_MODE and "P": PIN_CON)
         for item in (k for k in self.hk_list.keys() if k not in ["M", "P"]):
             for hk_name in self.hk_list[item]:
-                jumps = fz.find_jump(self.hk_t[item][hk_name],
-                                     exp_med=sam_exp_med[item], tolerance=sam_tolerance[item])
+                jumps = fz.find_jump(
+                    self.hk_t[item][hk_name],
+                    exp_med=sam_exp_med[item],
+                    tolerance=sam_tolerance[item],
+                )
 
                 # Store the dict if there are jumps
                 if jumps["n"] > 0:
@@ -552,23 +657,38 @@ class Polarimeter:
 
         # No Jumps detected
         if good_sampling:
-            sampling_results["md"].append(["\nThe sampling of the House-Keeping parameters is good: "
-                                           "no jumps in the HK Timestamps\n"])
-            sampling_results["csv"].append(["House-Keeping Sampling:", "GOOD", "No jumps in HK Timestamps"])
+            sampling_results["md"].append(
+                [
+                    "\nThe sampling of the House-Keeping parameters is good: "
+                    "no jumps in the HK Timestamps\n"
+                ]
+            )
+            sampling_results["csv"].append(
+                ["House-Keeping Sampling:", "GOOD", "No jumps in HK Timestamps"]
+            )
             sampling_results["csv"].append([""])
 
         # Jumps detected
         else:
-
             # [MD] Preparing Table caption
             sampling_results["md"].append(
                 "| HK Name | # Jumps | &Delta;t Median [s] | Exp &Delta;t [s] | Tolerance "
                 "| 5th percentile | 95th percentile |\n"
                 "|:---------:|:-------:|:-------------------:|:-----------------------:|:---------:"
-                "|:--------------:|:---------------:|\n")
+                "|:--------------:|:---------------:|\n"
+            )
             # [CSV] Preparing Table caption
-            sampling_results["csv"].append(["HK Name", "# Jumps", "Delta t Median [s]", "Exp Delta t Median [s]",
-                                            "Tolerance", "5th percentile", "95th percentile"])
+            sampling_results["csv"].append(
+                [
+                    "HK Name",
+                    "# Jumps",
+                    "Delta t Median [s]",
+                    "Exp Delta t Median [s]",
+                    "Tolerance",
+                    "5th percentile",
+                    "95th percentile",
+                ]
+            )
             sampling_results["csv"].append([""])
 
             # Saving...
@@ -578,16 +698,21 @@ class Polarimeter:
                     f"|{name}|{sampling_info[name]['n']}"
                     f"|{sampling_info[name]['median']}|{sampling_info[name]['exp_med']}"
                     f"|{sampling_info[name]['tolerance']}"
-                    f"|{sampling_info[name]['5per']}|{sampling_info[name]['95per']}|\n")
+                    f"|{sampling_info[name]['5per']}|{sampling_info[name]['95per']}|\n"
+                )
 
                 # [CSV] Storing TS sampling information
-                sampling_results["csv"].append([f"{name}",
-                                                f"{sampling_info[name]['n']}",
-                                                f"{sampling_info[name]['median']}",
-                                                f"{sampling_info[name]['exp_med']}",
-                                                f"{sampling_info[name]['tolerance']}",
-                                                f"{sampling_info[name]['5per']}",
-                                                f"{sampling_info[name]['95per']}"])
+                sampling_results["csv"].append(
+                    [
+                        f"{name}",
+                        f"{sampling_info[name]['n']}",
+                        f"{sampling_info[name]['median']}",
+                        f"{sampling_info[name]['exp_med']}",
+                        f"{sampling_info[name]['tolerance']}",
+                        f"{sampling_info[name]['5per']}",
+                        f"{sampling_info[name]['95per']}",
+                    ]
+                )
 
         return sampling_results
 
@@ -614,7 +739,9 @@ class Polarimeter:
         # --------------------------------------------------------------------------------------------------------------
         # Step 1: define data
         if hk_kind not in ["V", "I", "O", "M", "P"]:
-            logging.error(f"Wrong name: no HK parameters is defined by {hk_kind}. Choose between V, I, O, M or P")
+            logging.error(
+                f"Wrong name: no HK parameters is defined by {hk_kind}. Choose between V, I, O, M or P"
+            )
             raise SystemExit(1)
 
         # Voltage
@@ -628,7 +755,7 @@ class Polarimeter:
         # Current
         elif hk_kind == "I":
             col = "gold"
-            label = "Current [$\mu$A]"
+            label = "Current [$\\mu$A]"
             n_rows = 6
             n_col = 2
             fig_size = (8, 15)
@@ -667,11 +794,19 @@ class Polarimeter:
 
         hk_name = self.hk_list[hk_kind]
 
-        fig, axs = plt.subplots(nrows=n_rows, ncols=n_col, constrained_layout=True, figsize=fig_size, sharey='row')
-        fig.suptitle(f'Plot {self.name} Housekeeping parameters: {hk_kind}\nDate: {self.gdate[0]}', fontsize=14)
+        fig, axs = plt.subplots(
+            nrows=n_rows,
+            ncols=n_col,
+            constrained_layout=True,
+            figsize=fig_size,
+            sharey="row",
+        )
+        fig.suptitle(
+            f"Plot {self.name} Housekeeping parameters: {hk_kind}\nDate: {self.gdate[0]}",
+            fontsize=14,
+        )
         for i in range(n_rows):
             for j in range(n_col):
-
                 # Set plot title
                 plot_title = f"{hk_name[2 * i + j]}"
 
@@ -685,8 +820,12 @@ class Polarimeter:
 
                 # Modality of Biasing Open-Closed Loop (one plot only)
                 if hk_kind == "M":
-                    axs.scatter(self.hk_t[hk_kind][hk_name[2 * i + j]][:min(l1, l2)],
-                                self.hk[hk_kind][hk_name[2 * i + j]][:min(l1, l2)], marker=".", color=col)
+                    axs.scatter(
+                        self.hk_t[hk_kind][hk_name[2 * i + j]][: min(l1, l2)],
+                        self.hk[hk_kind][hk_name[2 * i + j]][: min(l1, l2)],
+                        marker=".",
+                        color=col,
+                    )
                     # X-Axis
                     axs.set_xlabel("Time [s]")
                     # Y-Axis
@@ -696,19 +835,35 @@ class Polarimeter:
 
                 # Other HK: V, I, O, P
                 else:
-                    axs[i, j].scatter(self.hk_t[hk_kind][hk_name[2 * i + j]][:min(l1, l2)],
-                                      self.hk[hk_kind][hk_name[2 * i + j]][:min(l1, l2)], marker=".", color=col)
+                    axs[i, j].scatter(
+                        self.hk_t[hk_kind][hk_name[2 * i + j]][: min(l1, l2)],
+                        self.hk[hk_kind][hk_name[2 * i + j]][: min(l1, l2)],
+                        marker=".",
+                        color=col,
+                    )
 
                     if hk_kind in ["I", "V", "O"]:
                         # Calculate Plot Statistics
                         # Mean
-                        m = round(np.mean(self.hk[hk_kind][hk_name[2 * i + j]][:min(l1, l2)]), 2)
+                        m = round(
+                            np.mean(
+                                self.hk[hk_kind][hk_name[2 * i + j]][: min(l1, l2)]
+                            ),
+                            2,
+                        )
                         # std deviation
-                        std = round(np.std(self.hk[hk_kind][hk_name[2 * i + j]][:min(l1, l2)]), 2)
+                        std = round(
+                            np.std(self.hk[hk_kind][hk_name[2 * i + j]][: min(l1, l2)]),
+                            2,
+                        )
                         # Max value
-                        max_val = round(max(self.hk[hk_kind][hk_name[2 * i + j]][:min(l1, l2)]), 4)
+                        max_val = round(
+                            max(self.hk[hk_kind][hk_name[2 * i + j]][: min(l1, l2)]), 4
+                        )
                         # Min value
-                        min_val = round(min(self.hk[hk_kind][hk_name[2 * i + j]][:min(l1, l2)]), 4)
+                        min_val = round(
+                            min(self.hk[hk_kind][hk_name[2 * i + j]][: min(l1, l2)]), 4
+                        )
                         plot_title += f"\n$Mean$={m} - $STD$={std}\n$Max$={max_val} - $Min$={min_val}"
 
                     # X-Axis
@@ -722,19 +877,28 @@ class Polarimeter:
         name_file = f"{self.name}_HK_{hk_kind}"
 
         # Creating the directory path
-        path = f'{self.output_plot_dir}/HK/'
+        path = f"{self.output_plot_dir}/HK/"
         Path(path).mkdir(parents=True, exist_ok=True)
-        fig.savefig(f'{path}{name_file}.png')
+        fig.savefig(f"{path}{name_file}.png")
 
         # If true, show the plot on video
         if show:
             plt.show()
         plt.close(fig)
 
-    def Plot_Band(self, type: str, demodulated: bool, output_path: str,
-                  s_start: int, s_duration: int,
-                  f_i: float, f_f: float,
-                  binning: bool, binning_length=5, show=True):
+    def Plot_Band(
+        self,
+        type: str,
+        demodulated: bool,
+        output_path: str,
+        s_start: int,
+        s_duration: int,
+        f_i: float,
+        f_f: float,
+        binning: bool,
+        binning_length=5,
+        show=True,
+    ):
         """
         Plot the bands of the 4 exits PWR/DEM or TOT_POWER/DEMODULATED of the Polarimeter\n
         Parameters:\n
@@ -778,12 +942,15 @@ class Polarimeter:
         # --------------------------------------------------------------------------------------------------------------
         # Write on the file the information about the bands
         # Create band file name
-        band_file_name = f"{self.name}_Bands_{fz.dir_format(self.gdate[0].value)}_{data_name}"
+        band_file_name = (
+            f"{self.name}_Bands_{fz.dir_format(self.gdate[0].value)}_{data_name}"
+        )
         # Open file
         file_out = open(f"{output_path}/{band_file_name}.txt", "w")
         # Write
         file_out.write(
-            f"Channel Name  exit BW Cent_freq Max_Signal_value Min_Signal_value \n")
+            "Channel Name  exit BW Cent_freq Max_Signal_value Min_Signal_value \n"
+        )
         # Close file
         file_out.close()
         # --------------------------------------------------------------------------------------------------------------
@@ -805,8 +972,7 @@ class Polarimeter:
         # --------------------------------------------------------------------------------------------------------------
         # Plotting the Bands
         # --------------------------------------------------------------------------------------------------------------
-        fig, axs = plt.subplots(2, 2, gridspec_kw={'hspace': 0.5},
-                                figsize=(13, 12))
+        fig, axs = plt.subplots(2, 2, gridspec_kw={"hspace": 0.5}, figsize=(13, 12))
         axs = np.reshape(axs, 4)
         # Setting Figure Title
         fig_title = f"{channel_name} - {data_name}\nDate: {self.gdate[0]}"
@@ -815,7 +981,6 @@ class Polarimeter:
         fig.suptitle(f"{fig_title}", size=15)
 
         for o, exit in enumerate(["Q1", "Q2", "U1", "U2"]):
-
             # Set the grid for the subplots
             axs[o].grid(True)
 
@@ -830,7 +995,6 @@ class Polarimeter:
             Min = []
 
             for i in range(s_num):
-
                 # X-axis
                 # ------------------------------------------------------------------------------------------------------
                 # Number of samples from the beginning of the experiment
@@ -843,7 +1007,9 @@ class Polarimeter:
                     samples_number += 1 * fs
 
                 # Create the frequency array in the range between the f_i and the f_f
-                freq = np.arange(samples_number) * (f_f - f_i) / (samples_number - 1) + f_i
+                freq = (
+                    np.arange(samples_number) * (f_f - f_i) / (samples_number - 1) + f_i
+                )
                 # Frequency step between consecutive values (needed in Band width formula below)
                 delta_f = freq[1] - freq[0]
                 # ------------------------------------------------------------------------------------------------------
@@ -868,7 +1034,12 @@ class Polarimeter:
                 Sum_Int_sq = np.sum(Int_sq, dtype=np.float64)
 
                 # Band Width formula
-                BW.append(round(((np.square(Sum_Int, dtype=np.float64)) * delta_f) / Sum_Int_sq, 2))
+                BW.append(
+                    round(
+                        ((np.square(Sum_Int, dtype=np.float64)) * delta_f) / Sum_Int_sq,
+                        2,
+                    )
+                )
                 # Band Center
                 Cent_freq.append(round(sum(Int_0 * freq) / Sum_Int, 2))
                 # Max Value of the Signal
@@ -882,7 +1053,8 @@ class Polarimeter:
                 file_out = open(f"{output_path}/{band_file_name}.txt", "a")
                 # Write
                 file_out.write(
-                    f"{channel_name} {exit} {BW[i]} {Cent_freq[i]} {Max[i]} {Min[i]}\n")
+                    f"{channel_name} {exit} {BW[i]} {Cent_freq[i]} {Max[i]} {Min[i]}\n"
+                )
                 # Close
                 file_out.close()
                 # ------------------------------------------------------------------------------------------------------
@@ -890,9 +1062,14 @@ class Polarimeter:
                 # Binning operation
                 # ------------------------------------------------------------------------------------------------------
                 if binning:
-                    axs[o].plot(fz.binning_func(data_array=freq, bin_length=binning_length),
-                                fz.binning_func(data_array=Int_0 * (-1), bin_length=binning_length),
-                                ".", markersize=0.5)
+                    axs[o].plot(
+                        fz.binning_func(data_array=freq, bin_length=binning_length),
+                        fz.binning_func(
+                            data_array=Int_0 * (-1), bin_length=binning_length
+                        ),
+                        ".",
+                        markersize=0.5,
+                    )
                 # ------------------------------------------------------------------------------------------------------
                 else:
                     # Plot of the Normalized Signal
@@ -910,9 +1087,11 @@ class Polarimeter:
             Max_mean = round(np.mean(Max), 2)
             Min_mean = round(np.mean(Min), 2)
             # Set title
-            axs[o].set_title(f'{exit}\nBW={str(BW_mean)}\n'
-                             f'Cent_f={str(Cent_freq_mean)}\n'
-                             f'Max={Max_mean}\nMin={Min_mean}')
+            axs[o].set_title(
+                f"{exit}\nBW={str(BW_mean)}\n"
+                f"Cent_f={str(Cent_freq_mean)}\n"
+                f"Max={Max_mean}\nMin={Min_mean}"
+            )
             # Set X Axis label
             axs[o].set_xlabel("Frequency [GHz]", size=13)
             # Set Y Axis label
@@ -945,7 +1124,7 @@ class Polarimeter:
         # Saving the beginning date
         begin_date = self.Date_Update(n_samples=begin, modify=False)
         # Title of the figure
-        fig.suptitle(f'{self.name} Output {type} - Date: {begin_date}', fontsize=18)
+        fig.suptitle(f"{self.name} Output {type} - Date: {begin_date}", fontsize=18)
 
         o = 0
         for exit in ["Q1", "Q2", "U1", "U2"]:
@@ -965,9 +1144,18 @@ class Polarimeter:
             min_val = round(min(self.data[type][exit][begin:end]), 4)
 
             # Plot of DEM/PWR Outputs
-            ax.plot(self.times[begin:end], self.data[type][exit][begin:end], "*",  markersize=0.005, linestyle=" ")
+            ax.plot(
+                self.times[begin:end],
+                self.data[type][exit][begin:end],
+                "*",
+                markersize=0.005,
+                linestyle=" ",
+            )
             # Title
-            ax.set_title(f"{exit}\n$Mean$={m} - $STD$={std}\n$Max$={max_val} - $Min$={min_val}", size=14)
+            ax.set_title(
+                f"{exit}\n$Mean$={m} - $STD$={std}\n$Max$={max_val} - $Min$={min_val}",
+                size=14,
+            )
             # X-Axis
 
             ax.set_xlabel("Time [s]", size=15)
@@ -979,7 +1167,7 @@ class Polarimeter:
         path = f"{self.output_plot_dir}/OUTPUT/"
         Path(path).mkdir(parents=True, exist_ok=True)
         # Save the figure
-        fig.savefig(f'{path}{self.name}_{type}.png', dpi=400)
+        fig.savefig(f"{path}{self.name}_{type}.png", dpi=400)
         # Show the figure
         if show:
             plt.show()
@@ -999,9 +1187,11 @@ class Polarimeter:
             *False* -> save the figure only
         """
 
-        fig, axs = plt.subplots(nrows=1, ncols=2, constrained_layout=True, figsize=(13, 3))
+        fig, axs = plt.subplots(
+            nrows=1, ncols=2, constrained_layout=True, figsize=(13, 3)
+        )
         # Timestamps: dot-shape jumps expected
-        axs[0].plot(np.arange(len(self.times)), self.times.value, '*')
+        axs[0].plot(np.arange(len(self.times)), self.times.value, "*")
         axs[0].set_title(f"{self.name} Timestamps")
         axs[0].set_xlabel("# Sample")
         axs[0].set_ylabel("Time [s]")
@@ -1010,14 +1200,14 @@ class Polarimeter:
         deltat = self.times.value[:-1] - self.times.value[1:]  # t_n - t_(n+1)
         # Plot Delta-time
         axs[1].plot(deltat, "*", color="forestgreen")
-        axs[1].set_title(f"$\Delta$t {self.name}")
+        axs[1].set_title(f"$\\Delta$t {self.name}")
         axs[1].set_xlabel("# Sample")
-        axs[1].set_ylabel("$\Delta$ t [s]")
+        axs[1].set_ylabel("$\\Delta$ t [s]")
         axs[1].set_ylim(-1.0, 1.0)
 
-        path = f'{self.output_plot_dir}/{self.date_dir}/Timestamps_Jump_Analysis/'
+        path = f"{self.output_plot_dir}/{self.date_dir}/Timestamps_Jump_Analysis/"
         Path(path).mkdir(parents=True, exist_ok=True)
-        fig.savefig(f'{path}{self.name}_Timestamps.png')
+        fig.savefig(f"{path}{self.name}_Timestamps.png")
         if show:
             plt.show()
         plt.close(fig)
@@ -1051,8 +1241,10 @@ class Polarimeter:
 
         # No Jumps detected
         if jumps["n"] == 0:
-            sam_warn = ("\nThe sampling of the Scientific Output is good: "
-                        "no jumps found in the Timestamps.\n")
+            sam_warn = (
+                "\nThe sampling of the Scientific Output is good: "
+                "no jumps found in the Timestamps.\n"
+            )
             logging.info(sam_warn)
             # Saving the warning message
             self.warnings["sampling_warning"].append(sam_warn + "\n")
@@ -1065,30 +1257,56 @@ class Polarimeter:
             self.warnings["sampling_warning"].append(t_warn + "\n")
 
             # [MD] Preparing Table Heading
-            md_tab_content = (f"\nTime Jumps Pol {self.name}\n"
-                              f"| # Jump | Jump value [JHD] | Jump value [s] | Gregorian Date | Julian Date [JHD]|\n"
-                              f"|:------:|:----------------:|:--------------:|:--------------:|:----------------:|\n")
+            md_tab_content = (
+                f"\nTime Jumps Pol {self.name}\n"
+                f"| # Jump | Jump value [JHD] | Jump value [s] | Gregorian Date | Julian Date [JHD]|\n"
+                f"|:------:|:----------------:|:--------------:|:--------------:|:----------------:|\n"
+            )
 
             # [CSV] Preparing Table Heading
             csv_results.append([""])
             csv_results.append([f"Time Jumps Pol {self.name}"])
             csv_results.append([""])
-            csv_results.append(["# Jump", "Jump value [JHD]", "Jump value [s]", "Gregorian Date", "Julian Date [JHD]"])
+            csv_results.append(
+                [
+                    "# Jump",
+                    "Jump value [JHD]",
+                    "Jump value [s]",
+                    "Gregorian Date",
+                    "Julian Date [JHD]",
+                ]
+            )
 
             # Initializing the jump number
             i = 1
 
-            for idx, j_value, j_val_s in zip(jumps["idx"], jumps["value"], jumps["s_value"]):
+            for idx, j_value, j_val_s in zip(
+                jumps["idx"], jumps["value"], jumps["s_value"]
+            ):
                 # Saving the Julian Date at which the Jump happened
                 jump_instant = self.times.value[idx]
                 # Saving the Gregorian Date at which the Jump happened
-                greg_jump_instant = Time(jump_instant, format="mjd").to_datetime().strftime("%Y-%m-%d %H:%M:%S")
+                greg_jump_instant = (
+                    Time(jump_instant, format="mjd")
+                    .to_datetime()
+                    .strftime("%Y-%m-%d %H:%M:%S")
+                )
 
                 # [MD] Storing Polarimeter jumps information
-                md_tab_content += f"|{i}|{j_value}|{j_val_s}|{greg_jump_instant}|{jump_instant}|\n"
+                md_tab_content += (
+                    f"|{i}|{j_value}|{j_val_s}|{greg_jump_instant}|{jump_instant}|\n"
+                )
 
                 # [CSV] Storing Polarimeter jumps information
-                csv_results.append([f"{i}", f"{j_value}", f"{j_val_s}", f"{greg_jump_instant}", f"{jump_instant}"])
+                csv_results.append(
+                    [
+                        f"{i}",
+                        f"{j_value}",
+                        f"{j_val_s}",
+                        f"{greg_jump_instant}",
+                        f"{jump_instant}",
+                    ]
+                )
 
                 # Increasing the jump number
                 i += 1
@@ -1126,13 +1344,15 @@ class Polarimeter:
 
         for type in self.data.keys():
             for exit in self.data[type].keys():
-
                 # Compute FFT Measures using welch method
                 if fft:
-                    x_data, y_data = fz.fourier_transformed(times=self.times, values=self.data[type][exit],  # fs=100,
-                                                            nperseg=min(len(self.data[type][exit]), nperseg))
-                    x_data = [x for x in x_data if x < 25.]
-                    y_data = y_data[:len(x_data)]
+                    x_data, y_data = fz.fourier_transformed(
+                        times=self.times,
+                        values=self.data[type][exit],  # fs=100,
+                        nperseg=min(len(self.data[type][exit]), nperseg),
+                    )
+                    x_data = [x for x in x_data if x < 25.0]
+                    y_data = y_data[: len(x_data)]
                     threshold = 3
                     n_chunk = 10
                     data_type = "FFT"
@@ -1147,7 +1367,9 @@ class Polarimeter:
                     data_name = type
 
                 # Find and store spikes indexes
-                spike_idxs = fz.find_spike(y_data, data_type=data_type, threshold=threshold, n_chunk=n_chunk)
+                spike_idxs = fz.find_spike(
+                    y_data, data_type=data_type, threshold=threshold, n_chunk=n_chunk
+                )
 
                 # No spikes detected
                 if len(spike_idxs) == 0:
@@ -1165,42 +1387,69 @@ class Polarimeter:
                                 "\n| Spike Number | Data Type | Exit "
                                 "| Gregorian Date | Julian Date [JHD]| Spike Value - Median [ADU]| MAD [ADU] |\n"
                                 "|:------------:|:---------:|:----:"
-                                "|:--------------:|:----------------:|:-------------------------:|:---------:|\n")
+                                "|:--------------:|:----------------:|:-------------------------:|:---------:|\n"
+                            )
 
                             # [CSV] Storing Table Heading
                             csv_spike_tab.append([""])
-                            csv_spike_tab.append(["Spike Number", "Data Type", "Exit",
-                                                  "Gregorian Date", "Julian Date [JHD]",
-                                                  "Spike Value - Median [ADU]", "MAD [ADU]"])
+                            csv_spike_tab.append(
+                                [
+                                    "Spike Number",
+                                    "Data Type",
+                                    "Exit",
+                                    "Gregorian Date",
+                                    "Julian Date [JHD]",
+                                    "Spike Value - Median [ADU]",
+                                    "MAD [ADU]",
+                                ]
+                            )
                             cap = True
 
                         for idx, item in enumerate(spike_idxs):
                             # Calculate the Gregorian date in which the spike happened
-                            greg_date = fz.date_update(start_datetime=self.gdate[0],
-                                                       n_samples=item, sampling_frequency=100, ms=True)
+                            greg_date = fz.date_update(
+                                start_datetime=self.gdate[0],
+                                n_samples=item,
+                                sampling_frequency=100,
+                                ms=True,
+                            )
                             # Gregorian date string to a datetime object
-                            greg_datetime = datetime.strptime(f"{greg_date}000",
-                                                              "%Y-%m-%d %H:%M:%S.%f")
+                            greg_datetime = datetime.strptime(
+                                f"{greg_date}000", "%Y-%m-%d %H:%M:%S.%f"
+                            )
                             # Datetime object to a Julian date
                             julian_date = Time(greg_datetime).jd
 
                             # [MD] Fill the table with spikes information
-                            rows += f"|{idx + 1}|{data_name}|{exit}|{greg_date}|{julian_date}" \
-                                    f"|{np.round(y_data[item] - np.median(y_data), 6)}" \
-                                    f"|{np.round(scs.median_abs_deviation(y_data), 6)}|\n"
+                            rows += (
+                                f"|{idx + 1}|{data_name}|{exit}|{greg_date}|{julian_date}"
+                                f"|{np.round(y_data[item] - np.median(y_data), 6)}"
+                                f"|{np.round(scs.median_abs_deviation(y_data), 6)}|\n"
+                            )
 
                             # [CSV] Fill the table with spikes information
-                            csv_spike_tab.append([f"{idx + 1}", f"{data_name}", f"{exit}",
-                                                  f"{greg_date}", f"{julian_date}",
-                                                  f"{np.round(y_data[item] - np.median(y_data), 6)}",
-                                                  f"{np.round(scs.median_abs_deviation(y_data), 6)}"])
+                            csv_spike_tab.append(
+                                [
+                                    f"{idx + 1}",
+                                    f"{data_name}",
+                                    f"{exit}",
+                                    f"{greg_date}",
+                                    f"{julian_date}",
+                                    f"{np.round(y_data[item] - np.median(y_data), 6)}",
+                                    f"{np.round(scs.median_abs_deviation(y_data), 6)}",
+                                ]
+                            )
 
                     # Spikes in the FFT
                     else:
                         # Select the more relevant spikes
-                        spike_idxs = fz.select_spike(spike_idx=spike_idxs, s=y_data, freq=x_data)
+                        spike_idxs = fz.select_spike(
+                            spike_idx=spike_idxs, s=y_data, freq=x_data
+                        )
 
-                        logging.warning(f"# Spikes found in {data_name} {exit}: {len(spike_idxs)}.\n\n")
+                        logging.warning(
+                            f"# Spikes found in {data_name} {exit}: {len(spike_idxs)}.\n\n"
+                        )
 
                         # Create the caption for the table of the spikes in FFT
                         if not cap:
@@ -1209,26 +1458,43 @@ class Polarimeter:
                                 "\n| Spike Number | Data Type | Exit | Frequency Spike "
                                 "|Spike Value - Median [ADU]| MAD [ADU] |\n"
                                 "|:------------:|:---------:|:----:|:---------------:"
-                                "|:------------------------:|:---------:|\n")
+                                "|:------------------------:|:---------:|\n"
+                            )
 
                             # [CSV] Storing Table Heading
                             csv_spike_tab.append([""])
-                            csv_spike_tab.append(["Spike Number", "Data Type", "Exit", "Frequency Spike",
-                                                  "Spike Value - Median [ADU]", "MAD [ADU]"])
+                            csv_spike_tab.append(
+                                [
+                                    "Spike Number",
+                                    "Data Type",
+                                    "Exit",
+                                    "Frequency Spike",
+                                    "Spike Value - Median [ADU]",
+                                    "MAD [ADU]",
+                                ]
+                            )
                             cap = True
 
                         for idx, item in enumerate(spike_idxs):
                             # [MD] Storing FFT spikes information
-                            rows += (f"|{idx + 1}|{data_name}|{exit}"
-                                     f"|{np.round(x_data[item], 6)}"
-                                     f"|{np.round(y_data[item] - np.median(y_data), 6)}"
-                                     f"|{np.round(scs.median_abs_deviation(y_data), 6)}|\n")
+                            rows += (
+                                f"|{idx + 1}|{data_name}|{exit}"
+                                f"|{np.round(x_data[item], 6)}"
+                                f"|{np.round(y_data[item] - np.median(y_data), 6)}"
+                                f"|{np.round(scs.median_abs_deviation(y_data), 6)}|\n"
+                            )
 
                             # [CSV] Storing FFT spikes information
-                            csv_spike_tab.append([f"{idx + 1}", f"{data_name}", f"{exit}",
-                                                  f"{np.round(x_data[item], 6)}",
-                                                  f"{np.round(y_data[item] - np.median(y_data), 6)}",
-                                                  f"{np.round(scs.median_abs_deviation(y_data), 6)}"])
+                            csv_spike_tab.append(
+                                [
+                                    f"{idx + 1}",
+                                    f"{data_name}",
+                                    f"{exit}",
+                                    f"{np.round(x_data[item], 6)}",
+                                    f"{np.round(y_data[item] - np.median(y_data), 6)}",
+                                    f"{np.round(scs.median_abs_deviation(y_data), 6)}",
+                                ]
+                            )
 
             if cap:
                 md_spike_tab += rows
@@ -1239,8 +1505,8 @@ class Polarimeter:
 
     def spike_CSV(self) -> []:
         """
-            Look up for 'spikes' in the DEM and PWR output of the Polarimeter.\n
-            Create list of str to be written in a CSV file in which the spikes found are listed.
+        Look up for 'spikes' in the DEM and PWR output of the Polarimeter.\n
+        Create list of str to be written in a CSV file in which the spikes found are listed.
         """
         # Initializing a bool to see if the caption of the table is already in the report
         cap = False
@@ -1249,7 +1515,6 @@ class Polarimeter:
         rows = [[""]]
         for type in self.data.keys():
             for exit in self.data[type].keys():
-
                 # Find and store spikes indexes
                 spike_idxs = fz.find_spike(self.data[type][exit], data_type=type)
 
@@ -1260,15 +1525,28 @@ class Polarimeter:
                             [""],
                             ["Spike in dataset"],
                             [""],
-                            ["Spike Number", "Data Type", "Exit", "Spike Time [JHD]", "Spike Value - Median [ADU]"]
+                            [
+                                "Spike Number",
+                                "Data Type",
+                                "Exit",
+                                "Spike Time [JHD]",
+                                "Spike Value - Median [ADU]",
+                            ],
                         ]
                         cap = True
 
                     # [CSV] Storing spikes information
                     for idx, item in enumerate(spike_idxs):
-                        rows.append([f"{idx + 1}", f"{type}", f"{exit}", f"{self.times[item]}",
-                                     f"{self.data[type][exit][item] - np.median(self.data[type][exit])}",
-                                     f""])
+                        rows.append(
+                            [
+                                f"{idx + 1}",
+                                f"{type}",
+                                f"{exit}",
+                                f"{self.times[item]}",
+                                f"{self.data[type][exit][item] - np.median(self.data[type][exit])}",
+                                "",
+                            ]
+                        )
         if cap:
             spike_list = spike_list + rows
         else:
@@ -1276,7 +1554,7 @@ class Polarimeter:
 
         return spike_list
 
-    def Inversion_EO_Time(self, jumps_pos: list, threshold=3.):
+    def Inversion_EO_Time(self, jumps_pos: list, threshold=3.0):
         """
         Find the inversions between even and odd output during the sampling due to time jumps.\n
         It could be also used to find even-odd inversions given a generic vector of position defining the intervals.\n
@@ -1284,12 +1562,13 @@ class Polarimeter:
             Parameters:\n
         - **jump_pos** (``list``): obtained with the function find_jump: it contains the indexes of the time jumps.\n
         """
-        logging.basicConfig(level="INFO", format='%(message)s',
-                            datefmt="[%X]", handlers=[RichHandler()])  # <3
+        logging.basicConfig(
+            level="INFO", format="%(message)s", datefmt="[%X]", handlers=[RichHandler()]
+        )  # <3
         l = len(jumps_pos)
         # No jumps in the Timestamps
         if l == 0:
-            msg = f"No jumps in the timeline: hence no inversions even-odd are due to time jumps.\n"
+            msg = "No jumps in the timeline: hence no inversions even-odd are due to time jumps.\n"
             logging.warning(msg)
             self.warnings["eo_warning"].append(msg)
 
@@ -1312,26 +1591,35 @@ class Polarimeter:
                     for exit in self.data[type].keys():
                         logging.debug(f"{exit}) a: {a}, b: {b}, c: {c}")
                         # Calculate the Mean Absolute Deviation of even/odd Outputs
-                        mad_even = scs.median_abs_deviation(self.data[type][exit][b:c - 1:2])
-                        mad_odd = scs.median_abs_deviation(self.data[type][exit][b + 1:c:2])
+                        mad_even = scs.median_abs_deviation(
+                            self.data[type][exit][b : c - 1 : 2]
+                        )
+                        mad_odd = scs.median_abs_deviation(
+                            self.data[type][exit][b + 1 : c : 2]
+                        )
 
                         # Calculate the Median Value of even/odd Outputs
-                        m_even_1 = np.median(self.data[type][exit][a:b - 1:2])
-                        m_even_2 = np.median(self.data[type][exit][b:c - 1:2])
+                        m_even_1 = np.median(self.data[type][exit][a : b - 1 : 2])
+                        m_even_2 = np.median(self.data[type][exit][b : c - 1 : 2])
 
-                        m_odd_1 = np.median(self.data[type][exit][a + 1:b:2])
-                        m_odd_2 = np.median(self.data[type][exit][b + 1:c:2])
+                        m_odd_1 = np.median(self.data[type][exit][a + 1 : b : 2])
+                        m_odd_2 = np.median(self.data[type][exit][b + 1 : c : 2])
 
                         # Evaluate the inversion between Even and Odd samples
                         if (
-                                (m_even_1 > m_even_2 + threshold * mad_even and m_odd_1 < m_odd_2 - threshold * mad_odd)
-                                or
-                                (m_even_1 < m_even_2 - threshold * mad_even and m_odd_1 > m_odd_2 + threshold * mad_odd)
+                            m_even_1 > m_even_2 + threshold * mad_even
+                            and m_odd_1 < m_odd_2 - threshold * mad_odd
+                        ) or (
+                            m_even_1 < m_even_2 - threshold * mad_even
+                            and m_odd_1 > m_odd_2 + threshold * mad_odd
                         ):
                             # Store the inversion index
                             inversion_jdate = self.times[item]
-                            inversion_date = Time(inversion_jdate, format="mjd").to_datetime().strftime(
-                                "%Y-%m-%d %H:%M:%S")
+                            inversion_date = (
+                                Time(inversion_jdate, format="mjd")
+                                .to_datetime()
+                                .strftime("%Y-%m-%d %H:%M:%S")
+                            )
 
                             msg = f"Inversion Even-Odd at {inversion_date} in {type} Output in channel {exit}.<br />"
 

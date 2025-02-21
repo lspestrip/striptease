@@ -192,7 +192,7 @@ class InstrumentBiases:
         if module_name:
             polarimeter_name = self.module_name_to_polarimeter(module_name)
 
-        if not (polarimeter_name in self.biases):
+        if polarimeter_name not in self.biases:
             valid_names = ", ".join(
                 ['"{0}"'.format(x) for x in sorted(self.biases.keys())]
             )
@@ -345,7 +345,7 @@ class ReferenceBiases:
 
         """
 
-        if not (polarimeter_name in self.data):
+        if polarimeter_name not in self.data:
             valid_names = ", ".join(
                 ['"{0}"'.format(x) for x in sorted(self.biases.keys())]
             )

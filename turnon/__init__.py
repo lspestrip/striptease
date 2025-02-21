@@ -553,7 +553,7 @@ class TurnOnOffProcedure(StripProcedure):
             seconds once the polarimeter has been fully turned on.
         """
 
-        assert not (self.horn is None)
+        assert self.horn is not None
         board_setup = SetupBoard(
             config=self.conf,
             board_name=self.board,
