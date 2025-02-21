@@ -194,7 +194,7 @@ class Spectrum:
 
         if self.remove_drift[0] == 1:
             # raise Exception("lresid was not properly imported")
-            array1 = lresid(array1)
+            array2 = self.lresid(array2)
 
         nlow = np.double((sampfreq / self.lowfreq[0]))
 
