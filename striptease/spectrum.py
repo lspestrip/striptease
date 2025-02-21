@@ -149,7 +149,7 @@ class Spectrum:
             z[:, 0] = dummy[0 : int(nel / 2 + 1)]
 
             if self.remove_drift[0]:
-                #raise Exception("lresid was not properly imported")
+                # raise Exception("lresid was not properly imported")
                 arr = self.lresid(arr)
 
             ft = np.fft.fft(arr)
@@ -193,7 +193,7 @@ class Spectrum:
         from scipy.signal import welch
 
         if self.remove_drift[0] == 1:
-            #raise Exception("lresid was not properly imported")
+            # raise Exception("lresid was not properly imported")
             array1 = lresid(array1)
 
         nlow = np.double((sampfreq / self.lowfreq[0]))
@@ -716,7 +716,7 @@ class Spectrum:
             avwhite = 2.0 * wnl
             avwhitelog = np.log10(avwhite)
             fklog = (avwhitelog - intercept) / slope
-            fk = 10**fklog
+            fk = 10 ** fklog
 
             result = [wnl, fk, slope, intercept]
 
