@@ -1,8 +1,8 @@
 # coding=utf-8
 # Change track
-""" 
+"""
 2025-03-26: added degrees of freedom in noise fitting routine. Now with the linear fitting
-            routine one can choose how many points to choose for start and nfirst. There is also the 
+            routine one can choose how many points to choose for start and nfirst. There is also the
             degree of freedom to choose a max frequency rather than the number of points to fit for
             the 1/f part. The values of start = 5 and nfirst = 15 are maintained by default
 """
