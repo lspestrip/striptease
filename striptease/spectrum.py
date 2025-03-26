@@ -1,4 +1,11 @@
 # coding=utf-8
+# Change track
+""" 
+2025-03-26: added degrees of freedom in noise fitting routine. Now with the linear fitting
+            routine one can choose how many points to choose for start and nfirst. There is also the 
+            degree of freedom to choose a max frequency rather than the number of points to fit for
+            the 1/f part. The values of start = 5 and nfirst = 15 are maintained by default
+"""
 
 
 class Spectrum:
@@ -610,7 +617,7 @@ class Spectrum:
             self.fkguess = 1.0e-1
             self.slopeguess = -1.0
 
-        def fit(self, spectrum):
+        def fit(self, spectrum, start=5, nfirst=15, fmax=-1):
             """
             This function is a wrapper to linear_fit or full_fit. The choice is done by checking spectrum['welch'].
             If windowing is used (welch = True) then the full_fit is called, otherwise the linear_fit is used
@@ -635,6 +642,24 @@ class Spectrum:
             |                         | array            |                                   |
             +-------------------------+------------------+-----------------------------------+
             | spectrum['welch']       | Boolean          | Whether windowing was used        |
+            |                         |                  | If welch==True then the full fit  |
+            |                         |                  | is performed by default           |
+            +-------------------------+------------------+-----------------------------------+
+            | start                   | Int              | How many points to discard in the |
+            |                         |                  | 1/f noise part of the spectrum    |
+            |                         |                  | (Default is start = 5)            |
+            +-------------------------+------------------+-----------------------------------+
+            | nfirst                  | Int              | How many points to select in the  |
+            |                         |                  | 1/f noise part of the spectrum    |
+            |                         |                  | (Default is nfirst = 15)          |
+            +-------------------------+------------------+-----------------------------------+
+            | fmax                    | Double precision | This is in alternative to nfirst  |
+            |                         |                  | it is the maximum frequency to    |
+            |                         |                  | consider to select the 1/f noise  |
+            |                         |                  | part of the spectrum. If fmax is  |
+            |                         |                  | positive then nfirst is ignored,  |
+            |                         |                  | if fmax is negative then nfirst   |
+            |                         |                  | is used                           |
             +-------------------------+------------------+-----------------------------------+
 
 
@@ -648,11 +673,11 @@ class Spectrum:
             +-------------------------+------------------+-----------------------------------+
             """
             if spectrum["welch"]:
-                return self.full_fit(spectrum)
+                return self.full_fit(spectrum, start, nfirst, fmax)
             else:
-                return self.linear_fit(spectrum)
+                return self.linear_fit(spectrum, start, nfirst, fmax)
 
-        def linear_fit(self, spectrum):
+        def linear_fit(self, spectrum, start, nfirst, fmax):
 
             """
             This function calculates noise properties using a linear fit in log-log space
@@ -679,6 +704,22 @@ class Spectrum:
             +-------------------------+------------------+-----------------------------------+
             | spectrum['welch']       | Boolean          | Whether windowing was used        |
             +-------------------------+------------------+-----------------------------------+
+            | start                   | Int              | How many points to discard in the |
+            |                         |                  | 1/f noise part of the spectrum    |
+            |                         |                  | (Default is start = 5)            |
+            +-------------------------+------------------+-----------------------------------+
+            | nfirst                  | Int              | How many points to select in the  |
+            |                         |                  | 1/f noise part of the spectrum    |
+            |                         |                  | (Default is nfirst = 15)          |
+            +-------------------------+------------------+-----------------------------------+
+            | fmax                    | Double precision | This is in alternative to nfirst  |
+            |                         |                  | it is the maximum frequency to    |
+            |                         |                  | consider to select the 1/f noise  |
+            |                         |                  | part of the spectrum. If fmax is  |
+            |                         |                  | positive then nfirst is ignored,  |
+            |                         |                  | if fmax is negative then nfirst   |
+            |                         |                  | is used                           |
+            +-------------------------+------------------+-----------------------------------+
 
 
             *OUTPUT*
@@ -692,17 +733,17 @@ class Spectrum:
             """
 
             import numpy as np
+            import bisect
 
             freqs = spectrum["frequencies"]
             power = spectrum["amplitudes"]
 
-            # choose the first nfirst frequency and power points
+            # select the 1/f part of the spectrum
             if spectrum["welch"]:
                 start = 0
-                nfirst = 15
-            else:
-                start = 5
-                nfirst = 15
+
+            if fmax > 0:  # count how many frequencies are less than fmax
+                nfirst = bisect.bisect_left(freqs, fmax)
 
             freq1f = freqs[start:nfirst]
             power1f = power[start:nfirst]
@@ -716,7 +757,7 @@ class Spectrum:
             avwhite = 2.0 * wnl
             avwhitelog = np.log10(avwhite)
             fklog = (avwhitelog - intercept) / slope
-            fk = 10**fklog
+            fk = 10 ** fklog
 
             result = [wnl, fk, slope, intercept]
 
