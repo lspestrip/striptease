@@ -765,7 +765,7 @@ class Spectrum:
 
         ##
 
-        def full_fit(self, spectrum):
+        def full_fit(self, spectrum, start, nfirst, fmax):
 
             """
             This function calculates noise properties using a three parameters fit of the input
